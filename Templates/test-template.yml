@@ -1,0 +1,14 @@
+.Code_Maven_Test:
+  image: ${MAVEN_IMAGE}      
+  script:              
+    - echo "mvn test"
+  tags:
+    - ${RUNNER}
+
+.Code_Npm_Test:
+  image: ${NODE_IMAGE}     
+  script:              
+    - echo "npm test"
+  tags:
+    - ${RUNNER}
+

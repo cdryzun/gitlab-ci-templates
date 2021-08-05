@@ -1,0 +1,63 @@
+.docker_build_push: &docker-build-push
+  - echo "docker image build -t ${IMG_NAME}:${CI_BUILD_REF_NAME} ."
+  - echo "docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}"
+  - echo "docker push ${IMG_NAME}:${CI_BUILD_REF_NAME}"
+  - echo "docker logout ${CI_REGISTRY}"
+
+.Maven_Template: &maven_template
+  image: ${MAVEN_IMAGE}
+  tags:
+    - ${RUNNER}
+
+.Npm_Template: &npm_template
+  image: ${NODE_IMAGE} 
+  tags:
+    - ${RUNNER}
+
+.Build_Maven_Snapshot_Package:     
+  <<: *maven_template
+  script:
+    - echo "mvn deploy -Dmaven.test.skip=tru"
+
+.Build_Maven_Release_Package:
+  <<: *maven_template
+  script:
+    - echo "mvn deploy -Dims.version=${CI_BUILD_REF_NAME} -Dmaven.test.skip=true"
+
+.Build_Maven_with_Image:
+  <<: *maven_template
+  script:
+    - echo "mvn package -Dmaven.test.skip=true"
+    - echo "mvn docker:build -DpushImage -DdockerImageTags=${CI_COMMIT_REF_NAME}"
+
+.Build_Npm_Package: 
+  <<: *npm_template
+  script:
+    - echo "npm config set registry ${NPM_REGISTRY}"
+    - echo "npm install"
+    - echo "npm run build"
+    - echo "mv build docker/ && cd docker"
+    - echo "docker image build -t ${IMG_NAME}:${CI_BUILD_REF_NAME} ."
+    - echo "docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}"
+    - echo "docker push ${IMG_NAME}:${CI_BUILD_REF_NAME}"
+    - echo "docker logout ${CI_REGISTRY}"
+  cache:
+    untracked: true
+    key: "${CI_PROJECT_NAME}"
+    paths:
+      - "node_modules"
+
+
+.Build_Common_Image:
+  <<: *maven_template
+  script: *docker-build-push
+
+.Release_Image:
+  <<: *maven_template
+  script:
+    - RELEASE_VERSION=release-`echo $CI_COMMIT_TAG | sed 's/^\([0-9]*\.[0-9]*\.0\).*/\1/g'`
+    - echo "docker pull ${IMG_NAME}:${RELEASE_VERSION}"
+    - echo "docker tag ${IMG_NAME}:${RELEASE_VERSION} ${IMG_NAME}:${CI_COMMIT_REF_NAME}"
+    - echo "docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}"
+    - echo "docker push ${IMG_NAME}:${CI_BUILD_REF_NAME}"
+    - echo "docker logout ${CI_REGISTRY}"

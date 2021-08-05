@@ -1,0 +1,6 @@
+.Security_Scan:
+  image: ${TOOLBOX_IMAGE}
+  script:
+    - echo "trivy client --remote ${SCAN_SERVER} --ignore-unfixed  --severity HIGH,CRITICAL ${IMG_NAME}:${CI_BUILD_REF_NAME}"
+  tags:
+    - ${RUNNER}

@@ -1,0 +1,29 @@
+include:
+  - project: 'kunlun/devops/gitlabci-templates'
+    ref: master
+    file: 'Templates/sonar-template.yml'
+
+Common_Sonar_Analyze:
+  stage: sonar
+  extends: .Sonar_Common
+  rules:
+    - if: '$SONAR_COMMON == "true" && $CI_COMMIT_BRANCH =~ "/^(develop|release|master).*$/"'
+      variables:
+        SONAR_GATE: "true"
+    - if: '$SONAR_COMMON == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|fix).*$/"'
+      variables:
+        SONAR_GATE: "false"
+
+Maven_Sonar_Analyze:
+  stage: sonar
+  extends: .Sonar_Maven
+  rules:
+    - if: '$SONAR_MAVEN == "true" && $SONAR_GATE == "true" && $CI_COMMIT_BRANCH =~ "/^(develop|release|master).*$/"'
+      variables:
+        SONAR_GATE: "true"
+    - if: '$SONAR_MAVEN == "true" && $SONAR_GATE == "false" && $CI_COMMIT_BRANCH =~ "/^(develop|release|master).*$/"'
+      variables:
+        SONAR_GATE: "false"
+    - if: '$SONAR_MAVEN == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|fix).*$/"'
+      variables:
+        SONAR_GATE: "false"

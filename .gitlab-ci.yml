@@ -1,0 +1,113 @@
+include:
+  - project: 'kunlun/devops/gitlabci-templates'
+    ref: master
+    file: 'Templates/common-template.yml'
+
+
+variables:
+    # 默认runner
+    RUNNER: "sigma-dev"
+
+    # 默认镜像名字 
+    IMG_NAME: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
+
+    # 默认单元测试
+    MAVEN_TEST: "false"
+    NPM_TEST: "false"
+
+    # 默认sonar配置
+    # java工程maven集成sonar扫描
+    SONAR_MAVEN: "true"
+    # 非java通用sonar扫描
+    SONAR_COMMON: "false"
+    # 开启强制sonar检测，扫描结果不满足规则就中断CI
+    SONAR_GATE: "false"
+    # 默认预设通用工程sonar扫描目录
+    SONAR_DIR: "./src"
+    
+    # 默认构建maven类库
+    BUILD_MAVEN_SNAPSHOT: "false"
+    BUILD_MAVEN_RELEASE: "false"
+
+    # 默认构建镜像
+    BUILD_MAVEN_DOCKER: "true"
+    BUILD_NPM_DOCKER: "false"
+    # 构建通用项目镜像
+    BUILD_COMMON_DOCKER: "false"
+    # 扫描镜像安全漏洞
+    SCAN_IMAGE: "false"
+    
+
+
+
+#-----------------------------自定义配置模版--------------------------------------------------
+#
+# 如需要自行定义每个job的详细操作，可以基于一下job模版进行更改.
+# 注意: 自定义配置前，确保以上环境变量配置原先功能设置为false
+#-------------------------------------------------------------------------------------------
+
+# Maven_Test:
+#   stage: test
+#   extends: .Code_Maven_Test
+#   rules:
+#     - if: $MAVEN_TEST == "true"
+
+# Npm_Test:
+#   stage: test
+#   extends: .Code_Npm_Test
+#   rules:
+#     - if: $NPM_TEST == "true"
+
+# Common_Sonar_Analyze:
+#   stage: sonar
+#   extends: .Sonar_Common
+#   rules:
+#     - if: $SONAR_COMMON == "true"
+
+# Maven_Sonar_Analyze:
+#   stage: sonar
+#   extends: .Sonar_Maven
+#   rules:
+#     - if: $SONAR_MAVEN == "true"
+
+# Maven_Build_Release_Deploy:
+#   stage: build
+#   extends: .Build_Maven_Release_Package
+#   rules:
+#     - if: '$BUILD_MAVEN_RELEASE == "true" && $CI_COMMIT_TAG'
+
+# Maven_Build_Snapshot_Deploy:
+#   stage: build
+#   extends: .Build_Maven_Snapshot_Package
+#   rules:
+#     - if: '$BUILD_MAVEN_SNAPSHOT == "true" && $CI_COMMIT_BRANCH == "develop"'
+
+# Maven_Build_Docker_Image:
+#   stage: build
+#   extends: .Build_Maven_with_Image
+#   rules:
+#     - if: '$BUILD_MAVEN_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|develop|release).*$/"'
+#     - if: '$BUILD_COMMON_DOCKER == "true" || $BUILD_NPM_DOCKER == "true"'
+#       when: never
+
+# Npm_Build_Docker_Image:
+#   stage: build
+#   extends: .Build_Npm_Package
+#   rules:
+#     - if: '$BUILD_NPM_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|develop|release).*$/"'
+#     - if: '$BUILD_COMMON_DOCKER == "true" || $BUILD_MAVEN_DOCKER == "true"'
+#       when: never
+
+# Build_Docker_Image:
+#   stage: build
+#   extends: .Build_Common_Image
+#   rules:
+#     - if: '$BUILD_COMMON_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|develop|release).*$/"'
+#     - if: '$BUILD_NPM_DOCKER == "true" || $BUILD_MAVEN_DOCKER == "true"'
+#       when: never
+
+# Release_Docker_Image:
+#   stage: build
+#   extends: .Release_Image
+#   rules:
+#     - if: '$CI_COMMIT_TAG && $CI_COMMIT_BRANCH =~ "/^\d+\.\d+\.0.*$/"'

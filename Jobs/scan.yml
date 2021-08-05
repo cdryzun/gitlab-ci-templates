@@ -1,0 +1,10 @@
+include:
+  - project: 'kunlun/devops/gitlabci-templates'
+    ref: master
+    file: 'Templates/scan-template.yml'
+
+Security_Scan_Image:
+  stage: sonar
+  extends: .Security_Scan
+  rules:
+    - if: $SCAN_IMAGE == "true"

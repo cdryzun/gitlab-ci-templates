@@ -1,0 +1,58 @@
+# 默认全局变量
+variables:
+    # 默认构建镜像环境
+    MAVEN_IMAGE: "hub.iquantex.com/base/maven:3.6.3-alpine-with-tools"
+    NODE_IMAGE: "hub.iquantex.com/base/node:12-alpine-with-tools"
+    SONAR_IMAGE: "hub.iquantex.com/base/sonar-scanner-cli:latest"
+    TOOLBOX_IMAGE: "hub.iquantex.com/base/toolbox:latest"
+
+    # 默认runner
+    RUNNER: "sigma-dev"
+
+    # 默认镜像仓库信息
+    CI_REGISTRY: "harbor.iquantex.com"
+    CI_REGISTRY_USER: "admin"
+    CI_REGISTRY_PASSWORD: "123456"
+
+    # 默认软件源
+    NPM_REGISTRY: "https://artifact.iquantex.com/repository/npm-proxy/"
+    YARN_REGISTRY: "https://artifact.iquantex.com/repository/npm-proxy/"
+    PYPI: "https://artifact.iquantex.com/repository/pypi/simple/"
+
+    # 默认镜像名字 
+    IMG_NAME: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
+
+    # 默认单元测试
+    MAVEN_TEST: "false"
+    NPM_TEST: "false"
+
+    # 默认sonar配置
+    SONAR_SERVER: "https://sonar.bj.iquantex.com"
+    SONAR_TOKEN: "d473e155bb59ae615e7fcf9720278199b06d7dfc"
+    SONAR_SCAN_ARGS: "-Dsonar.sources=${SONAR_DIR}"
+    # java工程maven集成sonar扫描
+    SONAR_MAVEN: "false"
+    # 非java通用sonar扫描
+    SONAR_COMMON: "false"
+    # 开启强制sonar检测，扫描结果不满足规则就中断CI
+    SONAR_GATE: "false"
+    # 默认预设通用工程sonar扫描目录
+    SONAR_DIR: "./src"
+    
+    # 默认构建maven类库
+    BUILD_MAVEN_SNAPSHOT: "false"
+    BUILD_MAVEN_RELEASE: "false"
+
+    # 默认构建镜像
+    BUILD_MAVEN_DOCKER: "false"
+    BUILD_NPM_DOCKER: "false"
+    # 构建通用项目镜像
+    BUILD_COMMON_DOCKER: "false"
+    # 扫描镜像安全漏洞
+    SCAN_SERVER: "http://10.116.18.91:4954"
+    SCAN_IMAGE: "false"
+
+
+default:
+  # 默认使用镜像,如果一个job不指定镜像，则使用此镜像进行构建.
+  image: ${MAVEN_IMAGE}

@@ -1,0 +1,17 @@
+include:
+  - project: 'kunlun/devops/gitlabci-templates'
+    ref: master
+    file: 'Templates/test-template.yml'
+
+Maven_Test:
+  stage: test
+  extends: .Code_Maven_Test
+  rules:
+    - if: $MAVEN_TEST == "true"
+
+Npm_Test:
+  stage: test
+  extends: .Code_Npm_Test
+  rules:
+    - if: $NPM_TEST == "true"
+

@@ -1,0 +1,50 @@
+include:
+  - project: 'kunlun/devops/gitlabci-templates'
+    ref: master
+    file: 'Templates/build-template.yml'
+  - project: 'kunlun/devops/gitlabci-templates'
+    ref: master
+    file: 'Templates/before-template.yml'
+
+Maven_Build_Release_Deploy:
+  stage: build
+  extends: .Build_Maven_Release_Package
+  rules:
+    - if: '$BUILD_MAVEN_RELEASE == "true" && $CI_COMMIT_TAG'
+      variables:
+        BUILD_MAVEN_DOCKER: "false"
+
+Maven_Build_Snapshot_Deploy:
+  stage: build
+  extends: .Build_Maven_Snapshot_Package
+  rules:
+    - if: '$BUILD_MAVEN_SNAPSHOT == "true" && $CI_COMMIT_BRANCH == "develop"'
+      variables:
+        BUILD_MAVEN_DOCKER: "false"
+
+Maven_Build_Docker_Image:
+  stage: build
+  extends: .Build_Maven_with_Image
+  rules:
+    - if: '$BUILD_MAVEN_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|fix|develop|release|master).*$/" && $BUILD_COMMON_DOCKER == "false" && $BUILD_NPM_DOCKER == "false"'
+
+
+Npm_Build_Docker_Image:
+  stage: build
+  extends: .Build_Npm_Package
+  rules:
+    - if: '$BUILD_NPM_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|fix|develop|release|master).*$/" && $BUILD_COMMON_DOCKER == "false" && $BUILD_MAVEN_DOCKER == "false"'
+
+
+Build_Docker_Image:
+  stage: build
+  extends: .Build_Common_Image
+  rules:
+    - if: '$BUILD_COMMON_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|fix|develop|release|master).*$/" && $BUILD_NPM_DOCKER == "false" && $BUILD_MAVEN_DOCKER == "false"'
+
+
+Release_Docker_Image:
+  stage: build
+  extends: .Release_Image
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_BRANCH =~ "/^\d+\.\d+\.0.*$/"'

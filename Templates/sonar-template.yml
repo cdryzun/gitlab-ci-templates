@@ -1,0 +1,66 @@
+variables: &sonar_args
+    GLOBAL_PROJECT_ARGS: "-Dsonar.projectKey=${CI_PROJECT_NAME} 
+                          -Dsonar.projectName=${CI_PROJECT_NAME} 
+                          -Dsonar.projectVersion=${CI_COMMIT_REF_NAME} 
+                          -Dsonar.projectDescription=${CI_PROJECT_TITLE}"
+    GLOBAL_SERVER_ARGS:  "-Dsonar.ws.timeout=30 
+                          -Dsonar.links.homepage=${CI_PROJECT_URL} 
+                          -Dsonar.host.url=${SCAN_SERVER} 
+                          -Dsonar.login=${SONAR_TOKEN}
+                          -Dsonar.sourceEncoding=UTF-8 "
+    GLOBAL_MR_ARGS: " -Dsonar.pullrequest.key=${CI_MERGE_REQUEST_IID} 
+                      -Dsonar.pullrequest.branch=${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME} 
+                      -Dsonar.pullrequest.base=${CI_MERGE_REQUEST_TARGET_BRANCH_NAME} 
+                      -Dsonar.gitlab.ref_name=${CI_COMMIT_REF_NAME} 
+                      -Dsonar.gitlab.commit_sha=${CI_COMMIT_SHA} 
+                      -Dsonar.gitlab.project_id=${CI_PROJECT_PATH} 
+                      -Dsonar.pullrequest.gitlab.repositorySlug=${CI_PROJECT_ID} "
+    MULTI_BRANCH_ARGS: "-Dsonar.branch.name=${CI_COMMIT_REF_NAME}"
+
+
+.Sonar_Common:
+  image: ${SONAR_IMAGE}
+  variables: 
+    <<: *sonar_args
+  script:
+    - echo ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS}
+    - |
+        if [ $CI_PIPELINE_SOURCE == 'merge_request_event' ];then
+            if [ $SONAR_GATE == "true" ];then
+              echo "sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS} -Dsonar.qualitygate.wait=true"
+            else
+              echo "sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS}"
+            fi 
+        else
+            if [ $SONAR_GATE == "true" ];then
+              echo "sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS} ${MULTI_BRANCH_ARGS} -Dsonar.qualitygate.wait=true"
+            else
+              echo "sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS}  ${MULTI_BRANCH_ARGS}"
+            fi
+        fi
+  tags:
+    - ${RUNNER}
+
+.Sonar_Maven:
+  image: ${MAVEN_IMAGE}
+  variables: 
+    <<: *sonar_args
+  script:
+    - echo ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS}
+    - |
+        if [ $CI_PIPELINE_SOURCE == 'merge_request_event' ];then
+            if [ $SONAR_GATE == "true" ];then
+              echo "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS} -Dsonar.qualitygate.wait=true"
+            else
+              echo "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS}"
+            fi 
+        else
+            if [ $SONAR_GATE == "true" ];then
+              echo "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS} ${MULTI_BRANCH_ARGS} -Dsonar.qualitygate.wait=true"
+            else
+              echo "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} ${SONAR_SCAN_ARGS}  ${MULTI_BRANCH_ARGS}"
+            fi
+        fi
+  tags:
+    - ${RUNNER}
+
