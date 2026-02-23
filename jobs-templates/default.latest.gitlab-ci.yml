@@ -1,0 +1,29 @@
+include:
+  - local: "vars/*.stable.gitlab-ci.yml"
+  - local: "utils/*.stable.gitlab-ci.yml"
+  - local: "jobs-templates/SonarQube.gitlab-ci.yml"
+
+variables:
+  extends: .default_vars
+
+default:
+  image: ${MAVEN_IMAGE}
+
+cache:
+  paths:
+    - ${CACHE_DIR}
+
+stages:
+  !reference [ .general_stage, stages ]
+    
+scan:
+  extends:
+    - .image_scan_base
+
+deploy:
+  extends:
+    - .iamge_deploy_base
+
+workflow:
+  rules:
+    !reference [ .trigger_rule, rules ]

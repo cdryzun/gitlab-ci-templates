@@ -1,0 +1,44 @@
+build:
+  stage: build
+  image: ${BUILD_IMAGE}
+#  before_script:
+#    - !reference [ .utils_shell_function, script ]
+#    - !reference [ .alias, script ]
+#    - !reference [ .check_curl, script ]
+#    - !reference [ .npm_before_jobs, script ]
+#    - !reference [ .check_docker, script ]
+#    - !reference [ .docker_login, script ]
+#    - !reference [ .maven-generate-config, script ]
+#    - !reference [ .npm-generate-config, script ]
+#  allow_failure: true
+  extends:
+    - .runner_tag
+    - .nexus_auth
+    - .sonar_auth
+    - .gitlab_auth_vars
+    - .build_before_jobs
+    - .build_after_script
+    - .load_artifacts_env
+    - .harbor_auth
+    - .gitlab_apitoken_vars
+    - .clean_auth_files
+  script:
+    - |
+      script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
+      script_download _multiarch.${TEMPLATE_CONTEXT}.sh _multiarch.sh
+      script_download build.${TEMPLATE_CONTEXT}.sh
+
+      if [ ! -d "${DOCKER_DAEMON_WORKSPACE}" ];then
+        mkdir -p ${DOCKER_DAEMON_WORKSPACE}
+      fi
+      if [ -n "${CUSTOM_DOCKERFILE_PATH}" ];then
+        cp -rf ${CUSTOM_DOCKERFILE_PATH} ${DOCKER_DAEMON_WORKSPACE}/
+      else
+        dockerfile_download Dockerfile.${TEMPLATE_CONTEXT}.sh Dockerfile.${TEMPLATE_CONTEXT}.sh 
+        cd ${DOCKER_DAEMON_WORKSPACE}
+        bash Dockerfile.${TEMPLATE_CONTEXT}.sh "${PROJECT_TYPE}"
+      fi
+      rm -rf Dockerfile.${TEMPLATE_CONTEXT}.sh
+      cd "${CI_PROJECT_DIR}"
+      chmod +x ./run.sh
+      shell_exec ./run.sh

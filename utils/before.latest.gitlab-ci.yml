@@ -1,0 +1,140 @@
+# 由于 before_script 在当前 gitlab 版本 v14.5.1 版本中，无法对通用的 before_script 阶段 进行锚定，暂时对通用阶段，进行分开编写。
+# 代码构建 前置脚步 
+.build_before_jobs:
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .alias, script ]
+    - !reference [ .check_curl, script ]
+    - !reference [ .npm_before_jobs, script ]
+    - !reference [ .check_docker, script ]
+    - !reference [ .docker_login, script ]
+    - !reference [ .maven-generate-config, script ]
+    - !reference [ .npm-generate-config, script ]
+    - !reference [ .check_glab, script ]
+
+# sonarqube 代码扫描 前置脚步
+.sonar_before_jobs:
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .maven-generate-config, script ]
+    - !reference [ .npm-generate-config, script ]
+    - !reference [ .alias, script ]
+    # - !reference [ .npm_before_jobs, script ]
+
+# 镜像扫描 前置脚步
+.scan_before_jobs:
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .alias, script ]
+    - !reference [ .docker_login, script ]
+    
+# deploy 部署阶段 前置脚步
+.deploy_before_jobs:
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .alias, script ]
+
+# 加载 template 中的 内置 shell 函数
+.load_function_before_jobs:
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+
+###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+.check_docker:
+  script:
+    - |
+      # 检查docker命令,预先创建docker构建目录
+      if [ ! -e /usr/bin/docker ];then
+          curl -fsSL https://nexus.cpinnov.run/repository/static-public/tools/docker -o /usr/bin/docker
+          chmod +x /usr/bin/docker
+      fi
+      # 初始化 docker workspace
+      mkdir -p ${DOCKER_DAEMON_WORKSPACE}
+
+.check_glab:
+  script:
+    - |
+      # 检查 glab 命令是否安装
+      if [ ! -e /usr/bin/glab ];then
+          curl -fsSL https://nexus.cpinnov.run/repository/static-public/tools/glab -o /usr/bin/glab
+          chmod +x /usr/bin/glab
+      fi
+      
+.npm_before_jobs:
+  script:
+    - |
+      # 是否清理 pnpm 锁文件
+      if [ ${PNPM_LOCKFILE_DISABLE} == "true" ];then
+            ls yarn.lock package-lock.json pnpm-lock.yaml || true
+            rm -rf yarn.lock package-lock.json pnpm-lock.yaml
+      fi
+    - |
+      # 检查是否在使用包管理器构建时，不使用缓存
+      if [ ${NODE_CACHE_DISABLE} == "true" ];then
+             if [ ${PACKAGE_MANAGER} == 'yarn' ];then
+                  yarn cache clean
+             else
+                  pnpm store prune
+             fi
+      fi
+      
+.alias:
+  script:
+    - |
+      # 设置别名命令
+      cat > "${BASH_ENV}" << EOF
+      alias mvn="mvn --settings=${CI_PROJECT_DIR}/.settings.xml"
+      alias pnpm="pnpm --config=${CI_PROJECT_DIR}/.npmrc"
+      shopt -s expand_aliases
+      EOF
+
+.check_helm:
+  script:
+    - |
+      if [ ! -e /usr/local/bin/helm ];then
+        curl -fsSL https://nexus.cpinnov.run/repository/static-public/tools/helm -o /usr/bin/helm
+        chmod +x /usr/bin/helm
+      fi
+
+.check_curl:
+  script:
+    - |
+      if [ ! -e /usr/bin/curl ];then
+        if [ ! -e /etc/alpine-release ];then
+            apt update
+            apt install apt-transport-https ca-certificates -y
+            sed -i 's#http://deb.debian.org#${NEXUS_URL}/repository#g' /etc/apt/sources.list
+            sed -i 's#http://security.debian.org#${NEXUS_URL}/repository#g' /etc/apt/sources.list
+            apt-get update
+            apt-get install -y --no-install-recommends curl
+        elif [ -e /etc/alpine-release ];then
+            echo "${NEXUS_URL}/repository/alpine-main/" >/etc/apk/repositories
+            echo "${NEXUS_URL}/repository/alpine-community/" >>/etc/apk/repositories
+            apk --no-cache add openssl curl
+        fi
+      fi
+
+
+.docker_login:
+  script:
+    - |
+      set +x
+      docker login -u ${HARBOR_USER}` -p ${HARBOR_PASSWD}` ${HARBOR_URL##https://}
+
+      # 创建 docker login 锁文件
+      mkdir -p ~/.docker-lock
+      touch ~/.docker-lock/${CI_PIPELINE_ID}-${CI_JOB_NAME}.lock
+      set -x
+
+.sonar_check:
+  script:
+    - |
+      # sonarqube 扫描 Java 工程时, 进行生成所需依赖二进制目录
+      set -x
+      if [ -f pom.xml ] && [ ! -d target/classes ];then
+          if [ "${TEST_SHELL}" ];then
+              shell_exec "${TEST_SHELL}"
+          else
+              shell_exec "${BUILD_SHELL}"
+          fi
+      fi

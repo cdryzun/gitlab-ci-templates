@@ -1,0 +1,75 @@
+.general_stage:
+  stages:
+    - sonar
+    - build
+    - scan
+    - deploy
+    - rollback
+
+###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+.runner_tag:
+  tags:
+    - "${RUNNER}"
+
+.job-retry:
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+.node-cache:
+  cache:
+    untracked: true
+    key: "${CI_PROJECT_NAME}"
+    paths:
+      - "node_modules"
+
+.load_artifacts_env:
+  dependencies:
+    - pre
+
+
+
+# Open Source Version - Tool shell functions
+# These functions are loaded in the before stage and available throughout the pipeline
+
+# 工具类 shell 函数，在 before 阶段进行载入，提供给整个 stage 阶段赋能
+.utils_shell_function:
+  script:
+    - |
+      function shell_exec(){
+          echo "${1}"|bash
+      }
+      # 载入 shell 执行函数，防止 alias 别名失效问题，依赖 bash 解释器的使用
+      # 使用示例 shell_exec "${BUILD_SHELL}"
+    - |
+      # 载入字体颜色输出类
+      echo=echo
+      for cmd in `echo /bin/echo`; do
+        $cmd >/dev/null 2>&1 || continue
+        if ! $cmd -e "" | grep -qE '^-e'; then
+          echo=$cmd
+          break
+        fi
+      done
+    - |
+      # Download script from GitHub raw URL
+      # Usage: script_download _utils.stable.sh _utils.sh (optional, defaults to run.sh)
+      function script_download(){
+        set +x
+        local script_name="${1}"
+        local output_name="${2:-run.sh}"
+        curl -fsSL "${TEMPLATE_REPO_RAW_URL}/scripts/${script_name}" -o "${output_name}"
+        set -x
+      }
+    - |
+      # Download dockerfile from GitHub raw URL
+      # Usage: dockerfile_download Dockerfile.stable.sh Dockerfile.stable.sh
+      function dockerfile_download(){
+        set +x
+        local dockerfile_name="${1}"
+        local output_name="${2:-Dockerfile}"
+        curl -fsSL "${TEMPLATE_REPO_RAW_URL}/dockerfile/${dockerfile_name}" -o "${DOCKER_DAEMON_WORKSPACE}/${output_name}"
+        set -x
+      }

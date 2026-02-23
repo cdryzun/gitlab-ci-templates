@@ -1,0 +1,36 @@
+include:
+  - project: 'devops/ci-templates'
+    ref: devops
+    file: 'jobs-templates/dev.stable.gitlab-ci.yml'
+
+stages:
+  - build
+
+variables:
+  BUILD_VERSION: "echo"
+  BUILD_SHELL: "echo ${BUILD_VERSION} && echo ${hello}"
+  ENV_FILE: "build.env"
+
+set_env_vars:
+  stage: .pre
+  script:
+    - echo "BUILD_VERSION=hello" >> ${ENV_FILE}
+    - echo "hello=world" >> ${ENV_FILE}
+  artifacts:
+    expire_in: 14 days
+    reports:
+      dotenv: ${ENV_FILE}
+
+build:
+  stage: build
+  script:
+    - echo "$BUILD_SHELL"|bash
+  dependencies:
+    - set_env_vars
+
+#build:
+#  stage: build
+#  tags:
+#    - k8s
+#  script:
+#    - sleep 1800

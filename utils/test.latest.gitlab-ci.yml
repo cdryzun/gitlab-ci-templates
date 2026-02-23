@@ -1,0 +1,109 @@
+
+.unit_test_base:
+  extends:
+    - .runner_tag
+    - .nexus_auth
+    - .sonar_auth
+    - .build_before_jobs
+    - .build_after_script
+
+
+###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+.code_maven_test: &code_maven_test
+  - |
+    set -x
+    shell_exec "${TEST_SHELL:-"mvn test"}"
+
+.code_npm_test: &code_npm_test
+  - |
+    set -x
+    if [ "${PACKAGE_MANAGER}" == 'yarn' ];then
+        shell_exec "${TEST_SHELL:-"yarn run test"}"
+    else
+        shell_exec "${TEST_SHELL:-"pnpm run test"}"
+    fi
+
+.maven_test:
+  stage: test
+  image: ${MAVEN_IMAGE}
+  rules:
+    - if: $MAVEN_TEST == "true"
+  script:
+    - !reference [ .maven-generate-config, script ]
+    - *code_maven_test
+
+.gradle_test:
+  stage: test
+  image: ${GRADLE_IMAGE:-${MAVEN_IMAGE}}
+  rules:
+    - if: $GRADLE_TEST == "true"
+  script:
+    - |
+      set -x
+      shell_exec "${TEST_SHELL:-"gradle test"}"
+
+.npm_test:
+  stage: test
+  image: ${NODE_IMAGE}
+  rules:
+    - if: $NPM_TEST == "true"
+  script:
+    - !reference [ .npm-generate-config, script ]
+    - *code_npm_test
+  artifacts:
+    expire_in: 14 days
+    reports:
+      cobertura: coverage/clover.xml
+
+# Junit 单元测试
+.junit_test:
+  stage: test
+  script:
+    - $TEST_SHELL
+    - ls
+  artifacts:
+    expire_in: 14 days
+    reports:
+      junit: ${JUNIT_REPORT_PATH}
+
+.py_test:
+  stage: test
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    expire_in: 14 days
+    when: always
+    reports:
+      junit: coverage/report.xml
+  rules:
+    - if: $PY_TEST == "true"
+  script:
+    - |
+      set -x
+      if [-e /sbin/apk ];then
+        apk --no-cache add gcc g++ musl-dev
+      else
+        apt update
+        apt install gcc g++ -y
+      fi
+    - |
+      set -x
+      if [ -e requirements.txt ];then 
+        pip3 install -r requirements.txt -i ${PYPI}
+      else
+        pip3 install pytest pytest-cov -i ${PYPI}
+      fi
+    # 如果小于上面定义的最小覆盖率则中断CI，并输出当前覆盖率结果.
+    - python3 -m pytest | awk -F'[% ]+' -vm=$MIN_COVERAGE '/TOTAL/{if($(NF-1)>=m){print $0;exit 0}else{print $0;exit 1}}'
+
+.go_test:
+  stage: test
+  image: ${GO_IMAGE}
+  rules:
+    - if: $GO_TEST == "true"
+  script:
+    - |
+      set -x
+      if [ -f go.mod ]; then
+          echo "module found, start to download dependencies..."
+      fi
+      ${TEST_SHELL:-"go test ./..."}

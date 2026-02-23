@@ -1,0 +1,77 @@
+variables:
+  # -------------基本配置----------------------
+  # 用于前端构建时所执行的命令，根据自己的需求更改使用。当存在多条命令时 使用 "&&" 相连接。使用 yarn 构建时，配合着 "PACKAGE_MANAGER" 使用
+  BUILD_SHELL: "pnpm run build"
+
+  # 默认预设的 sonarqube 扫描目录
+  SONAR_DIR: "./app"
+
+  # 是否执行单元测试
+  NPM_TEST: "false"
+
+  # 如果开启单元测试时所执行的命令，根据自己的需求更改使用。当存在多条命令时 使用 "&&" 相连接
+  TEST_SHELL: "pnpm install && pnpm run test"
+
+  # 指定要使用的自定义nginx配置，默认为项目下的docker/nginx.conf
+  CUSTOM_NGINX_CONF: "docker/nginx.conf"
+
+  # -------------高级配置(一般无需配置，使用默认配置即可,如需配置请仔细看注释说明按需配置,)----------------------
+
+  # 是否删除pnpm锁文件,如果在构建时强依赖版本锁定，不要打开此参数，强制使用锁文件中指定的版本
+  PNPM_LOCKFILE_DISABLE: "false"
+
+  # nodejs V8引擎的内存堆配置，一些应用构建时需要配置此参数，非必需不用打开.
+  # NODE_OPTIONS: "--max-old-space-size=4096"
+
+  # 镜像漏洞扫描
+  DOCKER_IMAGE_SCAN_IMAGE: "true"
+
+  # 如果漏洞等级为中高以上则强制中断CI
+  ENFORCE_EXIT: "false"
+
+  # 前端打包生成的静态文件夹, 默认 dist 无需设置更改
+  STATIC_FILE_NAME: "dist"
+
+  # 是否将包构建完成后，再构建 docker 镜像
+  DOCKER_IMAGE_BUILD: "true"
+
+  # 是否关闭 安装依赖时的缓存，区别设置 为 true 时每次会去私服重新拉取依赖。增加构建时长 为不建议开启参数。
+  NODE_CACHE_DISABLE: "false"
+
+  # 前端包管理器选择 (pnpm/yarn)
+  PACKAGE_MANAGER: "pnpm"
+
+  # 分阶段构建时的缓存目录
+  CACHE_DIR: "dist/"
+
+  # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
+  DOCKER_BUILD_FLAGS: ''
+
+
+
+include:
+  - project: 'devops/ci-templates'
+    ref: devops
+    file: 'jobs-templates/web.stable.gitlab-ci.yml'
+
+# 自定义前端工程build任务命令
+# build:
+#   #--继承公共模版内变量和参数---start--
+#   image: "${NODE_IMAGE}"
+#   extends:
+#     - .before_jobs
+#     - .build_after_script
+#     - .nexus_auth
+#     - .harbor_auth
+#     - .runner_tag
+#   #--继承公共模版内变量和参数---end--
+#   script:
+#     # 继承模版动作，生成默认配置，不要修改此行.
+#     - !reference [ .npm-generate-config, script ]
+#     - !reference [ .docker_login, script ]
+#     # 自定义命令1
+#     - pnpm install
+#     # 自定义命令2
+#     - pnpm run build dist
+#     # 自定义命令n
+#     - pnpm run build prod

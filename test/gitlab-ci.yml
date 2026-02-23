@@ -1,0 +1,14 @@
+# Test configuration for gitlab-ci-templates
+# This file tests the remote include approach
+
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/main/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  # Build configuration
+  BUILD_SHELL: "echo 'Hello from gitlab-ci-templates test'"
+  UNIT_TEST_ENABLE: "false"
+  DOCKER_IMAGE_BUILD: "false"
+
+  # Use public Docker Hub images
+  DOCKER_REGISTRY: "docker.io"

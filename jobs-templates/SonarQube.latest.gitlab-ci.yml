@@ -1,0 +1,35 @@
+
+# .common_sonar_rules:
+#   rules:
+#     - if: '$SONAR_COMMON == "true"
+#       && ($CI_COMMIT_REF_NAME =~ /^(dev|master|develop|release)((-|_)[-_0-9a-z]{1,12})?$/ 
+#       || $CI_COMMIT_REF_NAME =~ /^v?\d+\.\d+\.\d+((\-[a-zA-Z0-9]+)+)?$/)'
+#       variables:
+#         SONAR_GATE: "true"
+#     - if: '$SONAR_COMMON == "true"
+#       && $CI_COMMIT_BRANCH =~ /^(feat|fix|hotfix)((-|_)[-_0-9a-z]{1,12})?$/'
+#       variables:
+#         SONAR_GATE: "false"
+#     - when: on_success
+
+sonar:
+  stage: sonar
+  image: ${SONAR_IMAGE}
+  extends:
+    - .runner_tag
+    - .sonar_before_jobs
+    - .gitlab_auth_vars
+    - .sonar_auth_vars
+    - .nexus_auth
+    - .sonar_auth
+    - .load_artifacts_env
+  allow_failure: true
+  script:
+    - !reference [ .sonar_check, script ]
+    - |
+      script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
+      script_download sonarqube.${TEMPLATE_CONTEXT}.sh
+      chmod +x ./run.sh
+      shell_exec './run.sh'
+  # rules:
+  #   !reference [ .common_sonar_rules, rules ]

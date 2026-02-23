@@ -1,0 +1,29 @@
+# .rollback:
+#   rules:
+#     - if: '$DEPLOY_REPO'
+#       when: manual
+
+cd-rollback:
+  image: "${CD_DEPLOY_IMAGE}"
+  stage: rollback
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .alias, script ]
+    - !reference [ .check_glab, script ]
+  # dependencies:
+  #   - pre
+  #   - cd-deploy
+  script:
+    - |
+      script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
+      script_download rollback.${TEMPLATE_CONTEXT}.sh
+      chmod +x ./run.sh
+      shell_exec ./run.sh
+  extends:
+    - .runner_tag
+    - .deploy_gitlab_auth_vars
+    - .gitlab_auth_vars
+    - .gitlab_apitoken_vars
+  rules:
+    !reference [ .cd_deploy, rules ]
+  when: manual

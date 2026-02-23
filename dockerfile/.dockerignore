@@ -1,0 +1,13 @@
+*.md
+!README.md
+Dockerfile
+.dockerignore
+test?
+tests/
+.git/
+.gitignore
+.gitlab-ci.yml
+*.log
+.DS_Store
+node_modules/
+.pnpm-store/

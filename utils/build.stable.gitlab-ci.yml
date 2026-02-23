@@ -1,0 +1,279 @@
+.build_base:
+  image: "${MAVEN_IMAGE}"
+  stage: build
+  extends:
+    - .runner_tag
+    - .nexus_auth
+    - .sonar_auth
+    - .build_before_jobs
+    - .build_after_script
+    - .harbor_auth
+    - .gitlab_auth
+
+.custom_build:
+  extends:
+    - .build_base
+
+###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+.docker_build_push: &docker_build_push
+  - !reference [ .check_docker, script ]
+  - !reference [ .docker_login, script ]
+  - |
+    # 根据环境变量 是否构建 docker 镜像
+    if [ ${DOCKER_IMAGE_BUILD} == "true" ];then
+        cd "${DOCKER_DAEMON_WORKSPACE}"
+        if [ -e nginx.conf ];then sed -i "/RUN/iADD nginx.conf /etc/nginx/conf.d/nginx.conf" Dockerfile;fi
+        docker image build \
+        -t ${DOCKER_IMAGE_NAME} . \
+        ${DOCKER_BUILD_FLAGS} --build-arg COMMIT_ID=$CI_COMMIT_SHORT_SHA  \
+        --build-arg BUILD_DATE="$(date +%Y-%m-%d/%H:%M)" \
+        --build-arg APP_NAME=${CI_PROJECT_NAME} --target "${DOCKER_APP_TYPE}"
+        
+        docker push ${DOCKER_IMAGE_NAME} && docker rmi -f ${DOCKER_IMAGE_NAME}
+    fi
+
+.maven-generate-config:
+  # extends 引用此段需要在上层关联导入的项
+  # extends:
+  #   - .nexus_auth
+  #   - .sonar_auth
+  script:
+    - |
+      set +x
+      cat > "${CI_PROJECT_DIR}/.settings.xml" << EOF
+      <?xml version="1.0" encoding="UTF-8"?>
+      <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+          <mirrors>
+              <mirror>
+                  <id>public</id>
+                  <name>public</name>
+                  <url>${MAVEN_REGISTRY}</url>
+                  <mirrorOf>*</mirrorOf>
+              </mirror>
+          </mirrors>
+          <servers>
+              <server>
+                  <id>releases</id>
+                  <username>${NEXUS_USER}</username>
+                  <password>${NEXUS_PASSWD}</password>
+              </server>
+              <server>
+                  <id>snapshots</id>
+                  <username>${NEXUS_USER}</username>
+                  <password>${NEXUS_PASSWD}</password>
+              </server>
+              <server>
+                  <id>public</id>
+                  <username>${NEXUS_USER}</username>
+                  <password>${NEXUS_PASSWD}</password>
+              </server>
+              <server>
+                      <id>quantex-docker-registry</id>
+                      <username>${HARBOR_USER}</username>
+                      <password>${HARBOR_PASSWD}</password>
+                      <configuration>
+                      <email>${HARBOR_USER}@cpdevice.com</email>
+                      </configuration>
+              </server>
+          </servers>
+          <pluginGroups>
+              <pluginGroup>org.sonarsource.scanner.maven</pluginGroup>
+          </pluginGroups>
+          <profiles>
+              <profile>
+                  <id>jsfund</id>
+                  <repositories>
+                      <repository>
+                          <id>public</id>
+                          <url>${MAVEN_REGISTRY}</url>
+                          <releases> <enabled>true</enabled><updatePolicy>always</updatePolicy></releases>
+                          <snapshots> <enabled>true</enabled><updatePolicy>always</updatePolicy></snapshots>
+                      </repository>
+                  </repositories>
+              </profile>
+              <profile>
+                  <id>sonar</id>
+                  <activation>
+                      <activeByDefault>true</activeByDefault>
+                  </activation>
+                  <properties>
+                      <!-- Optional URL to server. Default value is http://localhost:9000 -->
+                      <sonar.host.url>
+                      ${SONAR_URL}
+                      </sonar.host.url>
+                      <sonar.login>
+                      ${SONAR_TOKEN}
+                      </sonar.login>
+                  </properties>
+              </profile>
+          </profiles>
+          <activeProfiles>
+              <activeProfile>jsfund</activeProfile>
+          </activeProfiles>
+      </settings>
+      EOF
+      set -x
+
+.npm-generate-config:
+  # extends 引用此段需要在上层关联导入的项
+  # extends:
+  #   - .nexus_auth
+  script:
+    - |
+      set +x
+      cat > "${CI_PROJECT_DIR}"/.npmrc << EOF
+      always-auth=true
+      //${NODE_REGISTRY##https://}:_authToken=NpmToken.${NEXUS_NPM_TOKEN}
+      registry=${NODE_REGISTRY}
+      sass_binary_site=https://npm.taobao.org/mirrors/node-sass/
+      disturl=https://npmmirror.com/mirrors/node/
+      EOF
+      set -x
+
+.pypi-generate-config:
+  script:
+    - |
+      mkdir -p /root/.pip && \
+      cat > /root/.pip/pip.conf << EOF
+      [global]
+      index-url = https://${NEXUS_USER}:${NEXUS_PASSWD}@$(echo ${PYPI##https://})
+      index = https://${NEXUS_USER}:${NEXUS_PASSWD}@$(echo ${PYPI##https://})
+      EOF
+
+.maven_build:
+  image: "${MAVEN_IMAGE}"
+  stage: build
+  # extends 引用此段需要在上层关联导入的项
+  # extends:
+  #   - .nexus_auth
+  #   - .sonar_auth
+  #   - .harbor_auth
+  #   - .gitlab_auth
+  #   - .build_after_script
+  #   - .before_jobs
+  script:
+    - !reference [ .maven-generate-config, script ]
+    - sed -i '/<finalName>/d' pom.xml # `先做一下删除，防止冲突`
+    - sed -i "/<build>/a <finalName>${MAVEN_APP_NAME-"app"}<\/finalName>" pom.xml
+    - |
+      set -x
+      if [ ${RELEASE_BUILD} == 'true' ];then
+          shell_exec "${BUILD_SHELL-'mvn clean package'} -Dversion=${CI_COMMIT_REF_NAME##v}"
+      else
+          shell_exec "${BUILD_SHELL-'mvn clean package'}"
+      fi
+    - *docker_build_push
+
+#  artifacts:
+#    paths:
+#      - "target/app.jar"
+
+.gradle_build:
+  image: "${GRADLE_IMAGE:-${MAVEN_IMAGE}}"
+  stage: build
+  script:
+    - |
+      set -x
+      if [ ${RELEASE_BUILD} == 'true' ];then
+        shell_exec "${BUILD_SHELL-'gradle clean build -x test'} -Pversion=${CI_COMMIT_REF_NAME##v}"
+      else
+        shell_exec "${BUILD_SHELL-'gradle clean build -x test'}"
+      fi
+    - *docker_build_push
+
+.npm_build:
+  stage: build
+  # extends 引用此段需要在上层关联导入的项
+  # extends:
+    # - .before_jobs
+    # - .build_after_script
+    # - .nexus_auth
+    # - .harbor_auth
+    # - .gitlab_auth
+  image: ${NODE_IMAGE}
+  script:
+    - !reference [ .npm-generate-config, script ]
+    - |
+      set -x 
+      # 检查项目下是否存在docker/nginx.conf
+      if [ -e ${CUSTOM_NGINX_CONF} ];then
+          mv ${CUSTOM_NGINX_CONF} ${DOCKER_DAEMON_WORKSPACE}/nginx.conf
+      fi
+    - |
+      set -x
+      if [ ${PACKAGE_MANAGER} == 'yarn' ];then
+          export YARN_REGISTRY=${NODE_REGISTRY}
+          yarn config set registry ${NODE_REGISTRY}
+          yarn install
+          shell_exec "${BUILD_SHELL:-"yarn run build"}"
+      else
+          pnpm config set registry ${NODE_REGISTRY}
+          pnpm install
+          shell_exec "${BUILD_SHELL:-"pnpm run build"}"
+      fi
+    - *docker_build_push
+
+.python_build:
+  stage: build
+  # extends 引用此段需要在上层关联导入的项
+  # extends:
+  #   - .before_jobs
+  #   - .build_after_script
+  #   - .nexus_auth
+  #   - .harbor_auth
+  image: ${PYTHON_IMAGE}
+  script:
+    - !reference [ .check_docker, script ]
+    - !reference [ .docker_login, script ]
+    - shell_exec "${BUILD_SHELL}"
+    - |
+      set -x
+      if [ -e docker/Dockerfile ];then
+        cp docker/Dockerfile ${DOCKER_DAEMON_WORKSPACE}
+      fi
+    - |
+      set -x
+      if [ ! -e ./Dockerfile ];then
+        echo "Not Found Dockerfile, Exit CI.."
+        exit 1
+      fi
+    - *docker_build_push
+
+
+.go_build:
+  stage: build
+  image: ${GO_IMAGE}
+  script:
+    - !reference [ .check_docker, script ]
+    - !reference [ .docker_login, script ]
+    - |
+      set -x
+      # 生成 Dockerfile（使用内置模板）
+      if [ ! -d "${DOCKER_DAEMON_WORKSPACE}" ];then
+        mkdir -p "${DOCKER_DAEMON_WORKSPACE}"
+      fi
+      dockerfile_download Dockerfile.${TEMPLATE_CONTEXT}.sh Dockerfile.${TEMPLATE_CONTEXT}.sh
+      cd "${DOCKER_DAEMON_WORKSPACE}"
+      sh Dockerfile.${TEMPLATE_CONTEXT}.sh "golang"
+      rm -f Dockerfile.${TEMPLATE_CONTEXT}.sh
+      cd "${CI_PROJECT_DIR}"
+    - |
+      set -x
+      # Go 构建（禁用 CGO，Linux/amd64，输出名与项目名一致）
+      export CGO_ENABLED="${GO_CGO_ENABLED:-0}"
+      export GOOS=linux
+      export GOARCH="${GO_ARCH:-amd64}"
+      if [ -f go.mod ]; then
+          echo "module found, start to download dependencies..."
+      fi
+      go build -ldflags "-s -w" -o "${CI_PROJECT_NAME}" ./
+    - |
+      set -x
+      # 拷贝二进制到 docker 构建目录
+      cp -a "${CI_PROJECT_DIR}/${CI_PROJECT_NAME}" "${DOCKER_DAEMON_WORKSPACE}/"
+    - *docker_build_push
+
+
+    

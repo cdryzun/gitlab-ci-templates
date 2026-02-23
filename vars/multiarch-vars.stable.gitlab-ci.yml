@@ -1,0 +1,136 @@
+# ============================================
+# Multi-Architecture Build Variables
+# 多架构构建配置变量
+# ============================================
+
+.multiarch_vars:
+  variables:
+    # ========================================
+    # 多架构构建总开关
+    # ========================================
+    # 是否启用多架构构建
+    # true: 启用 Docker Buildx 多架构构建
+    # false: 使用传统单架构构建（默认）
+    MULTIARCH_BUILD_ENABLE: "false"
+
+    # ========================================
+    # 目标平台配置
+    # ========================================
+    # 构建的目标平台列表（逗号分隔）
+    # 常用平台：
+    #   - linux/amd64       (x86_64, Intel/AMD 处理器)
+    #   - linux/arm64       (aarch64, ARM 64位, 如 AWS Graviton, 阿里云倚天)
+    #   - linux/arm/v7      (armv7, ARM 32位)
+    #   - linux/arm/v6      (armv6, Raspberry Pi 等)
+    #   - linux/386         (x86 32位)
+    #   - linux/ppc64le     (PowerPC 64位)
+    #   - linux/s390x       (IBM Z 大型机)
+    DOCKER_BUILD_PLATFORMS: "linux/amd64,linux/arm64"
+
+    # ========================================
+    # Buildx Builder 配置
+    # ========================================
+    # Builder 实例名称
+    BUILDX_BUILDER_NAME: "multiarch-builder"
+
+    # Builder 驱动类型
+    # 可选值：
+    #   - docker-container (推荐，支持全部平台)
+    #   - kubernetes (K8s 环境)
+    #   - docker (本地 Docker，功能有限)
+    BUILDX_DRIVER: "docker-container"
+
+    # ========================================
+    # Golang 多架构构建模式
+    # ========================================
+    # 多架构构建模式
+    # 可选值：
+    #   - dockerfile   (推荐) 在 Dockerfile 中编译多架构二进制
+    #   - precompile   提前编译多个架构的二进制，再构建镜像
+    GOLANG_MULTIARCH_MODE: "dockerfile"
+
+    # ========================================
+    # 构建缓存配置
+    # ========================================
+    # 是否启用构建缓存（加速后续构建）
+    # true: 使用 Registry 缓存
+    # false: 不使用缓存
+    BUILDX_CACHE_ENABLE: "false"
+
+    # ========================================
+    # 镜像推送配置
+    # ========================================
+    # 是否推送镜像到 Registry
+    # true: 构建完成后自动推送
+    # false: 仅本地构建（用于测试）
+    DOCKER_IMAGE_PUSH: "true"
+
+    # ========================================
+    # Golang 编译配置（多架构）
+    # ========================================
+    # Go 版本（用于 Dockerfile 构建）
+    GO_VERSION: "1.23"
+
+    # CGO 是否启用
+    # 0: 禁用 CGO（推荐，纯静态编译）
+    # 1: 启用 CGO（需要交叉编译工具链）
+    GO_CGO_ENABLED: "0"
+
+    # Go 编译的链接器标志
+    # -s: 去除符号表
+    # -w: 去除 DWARF 调试信息
+    # 作用：减小二进制文件体积
+    GO_BUILD_LDFLAGS: "-s -w"
+
+    # ========================================
+    # 应用运行时配置
+    # ========================================
+    # 应用监听端口
+    APP_PORT: "2025"
+
+    # 应用名称（默认使用项目名）
+    APP_NAME: "${CI_PROJECT_NAME}"
+
+# ============================================
+# 预设配置模板（快速启用）
+# ============================================
+
+# 预设 1: 仅 AMD64（默认，向后兼容）
+.multiarch_amd64_only:
+  extends: .multiarch_vars
+  variables:
+    MULTIARCH_BUILD_ENABLE: "false"
+    DOCKER_BUILD_PLATFORMS: "linux/amd64"
+
+# 预设 2: AMD64 + ARM64（推荐，覆盖 90% 场景）
+.multiarch_common:
+  extends: .multiarch_vars
+  variables:
+    MULTIARCH_BUILD_ENABLE: "true"
+    DOCKER_BUILD_PLATFORMS: "linux/amd64,linux/arm64"
+    GOLANG_MULTIARCH_MODE: "dockerfile"
+
+# 预设 3: 全平台支持（包含 ARM v7）
+.multiarch_full:
+  extends: .multiarch_vars
+  variables:
+    MULTIARCH_BUILD_ENABLE: "true"
+    DOCKER_BUILD_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+    GOLANG_MULTIARCH_MODE: "dockerfile"
+
+# 预设 4: 仅 ARM64（云原生 ARM 服务器）
+.multiarch_arm64_only:
+  extends: .multiarch_vars
+  variables:
+    MULTIARCH_BUILD_ENABLE: "true"
+    DOCKER_BUILD_PLATFORMS: "linux/arm64"
+    GOLANG_MULTIARCH_MODE: "dockerfile"
+
+# 预设 5: 高性能模式（预编译 + 缓存）
+.multiarch_performance:
+  extends: .multiarch_vars
+  variables:
+    MULTIARCH_BUILD_ENABLE: "true"
+    DOCKER_BUILD_PLATFORMS: "linux/amd64,linux/arm64"
+    GOLANG_MULTIARCH_MODE: "precompile"
+    BUILDX_CACHE_ENABLE: "true"

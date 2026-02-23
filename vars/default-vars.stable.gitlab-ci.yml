@@ -1,0 +1,139 @@
+# Open Source Version - Default Variables
+# All images are hosted on Docker Hub: docker.io/cdryzun/glci-*
+
+.default_vars:
+    # Runner tag
+    RUNNER: default
+
+    # Template repository - GitHub raw URL for open source
+    TEMPLATE_BRANCH_NAME: "open"
+    TEMPLATE_REPO_RAW_URL: "https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/${TEMPLATE_BRANCH_NAME}"
+
+    # ArgoCD server address (configure in your GitLab CI/CD variables)
+    # ARGOCD_SERVER: "argocd.example.com:443"
+
+    # Environment variables
+    BASH_ENV: "${CI_PROJECT_DIR}/_alias"
+    ENV_FILE: "build.env"
+    CI_DEBUG_TRACE: "false"
+    LOG_LEVEL: "info"
+
+    extends:
+      - .test_vars
+      - .scan_vars
+      - .build_vars
+      - .cd_vars
+      - .default_image_vars
+      - .repo_list_vars
+
+# Unit test configuration
+.test_vars:
+  UNIT_TEST_ENABLE: "true"
+  PYTHON_UNIT_TEST_SHELL: ""
+  NODE_UNIT_TEST_SHELL: ""
+  GO_UNIT_TEST_SHELL: ""
+  JAVA_UNIT_TEST_SHELL: ""
+  MAVEN_TEST: "false"
+  GRADLE_TEST: "false"
+
+# SonarQube scan configuration
+# Configure SONAR_URL and SONAR_TOKEN in your GitLab CI/CD variables
+.scan_vars:
+  SONAR_DIR: "./src"
+  SONAR_SCAN_ARGS: ""
+  SONAR_MAVEN: "false"
+  SONAR_COMMON: "true"
+  SONAR_GATE: "false"
+  SONAR_BINARIES: 'target/classes'
+  SONAR_TEST_BINARIES: 'target/test-classes'
+  MIN_COVERAGE: "80"
+
+# Build configuration
+.build_vars:
+  PACKAGE_MANAGER: "pnpm"
+  NODE_CACHE_DISABLE: "false"
+  NODE_OPTIONS: "--max_old_space_size=4096"
+  STATIC_FILE_NAME: ""
+  MAVEN_APP_NAME: "app"
+  BUILD_MAVEN_SNAPSHOT: "false"
+  IMG_NAME: "${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
+  PNPM_LOCKFILE_DISABLE: "false"
+  DEV_DOCKER_TAG_PERFIX: "${CI_COMMIT_REF_NAME}"
+  DOCKER_DAEMON_WORKSPACE: './docker-build'
+  DOCKER_IMAGE_TAG: ""
+  RELEASE_BUILD: "false"
+  DOCKER_IMAGE_BUILD: "true"
+  FEAT_DOCKER_IMAGE_BUILD: "false"
+  DOCKER_BUILD_FLAGS: '--no-cache'
+  CUSTOM_NGINX_CONF: "docker/nginx.conf"
+  CUSTOM_DOCKERFILE_PATH: ""
+  CUSTOM_DOCKERFILE: ""
+  DOCKER_WORKSPACE_PREPARE_CMD: ""
+  BUILD_MAVEN_POM_FILE: "pom.xml"
+  PRD_CD_CREATE_TAG_NUM: "20"
+  PRD_CD_CREATE_TAG_MESSAGE: "Release created by gitlab-ci pipeline"
+  PRD_BUILD_CREATE_TAG: "true"
+  RELEASE_LIB_BUILD: "false"
+  SNAPSHOTS_LIB_BUILD: "true"
+  DOCKER_BUILDKIT: 1
+
+# CD deployment configuration
+.cd_vars:
+  RELEASE_RETAG_DISABLE: "false"
+  GIT_AUTO_COMMIT_NAME: "ci-bot"
+  GIT_AUTO_COMMIT_EMAIL: "ci-bot@example.com"
+  CD_DEPLOY_IMGAGE: ""
+  REMOTE_BRANCH: "dev"
+  DEPLOY_COMMIT_MESSAGE: "chore: helm values updated by gitlab-ci pipeline"
+  ROLLBACK_COMMIT_MESSAGE: "chore: helm values rollback by gitlab-ci pipeline"
+  DEPLOY_REPO_YAML_TAG: ".image.tag"
+  DEPLOY_VALUE_FILE: "values.yaml"
+  DEPLOY_REPO_PROJ: ""
+  CD_ENV_FILE: "cd.env"
+  FEAT_CD_AUTO_DEPLOY: "false"
+  DEV_CD_AUTO_DEPLOY: "true"
+  SIT_CD_AUTO_DEPLOY: "true"
+  PRD_CD_AUTO_DEPLOY: "true"
+  PRD_CD_CREATE_TAG: "true"
+  DOCKERFILE_BUILD_JDK_VERSION: "17-alpine"
+
+# Default images - Using Docker Hub public images
+.default_image_vars:
+  BASE_BUILD_IMAGE: ""
+  MAVEN_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
+  GRADLE_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
+  NODE_IMAGE: "docker.io/cdryzun/glci-builder-nodejs:20"
+  SONAR_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
+  TOOLBOX_IMAGE: "docker.io/cdryzun/glci-toolbox:latest"
+  PYTHON_IMAGE: "docker.io/cdryzun/glci-builder-python:3.11"
+  GO_IMAGE: "docker.io/cdryzun/glci-builder-golang:1.23"
+  CD_DEPLOY_IMAGE: "${TOOLBOX_IMAGE}"
+  TEST_IMAGE: "${TOOLBOX_IMAGE}"
+
+# Repository URLs - Configure these in your GitLab CI/CD variables
+.repo_list_vars:
+  DOCKER_REGISTRY: "docker.io"
+  NODE_REGISTRY: "https://registry.npmmirror.com"
+  PYPI: "https://pypi.org/simple"
+
+# Vault configuration (optional)
+# Configure VAULT_SERVER_URL, VAULT_AUTH_ROLE in your GitLab CI/CD variables
+.vault_vars:
+  LDAP_USER: "${NEXUS_USER}"
+  LDAP_PASSWD: "${NEXUS_PASSWORD}"
+  HARBOR_USER: "${REGISTRY_USER}"
+  HARBOR_PASSWD: "${REGISTRY_PASSWORD}"
+  SONAR_TOKEN: "${SONARQUBE_TOKEN}"
+  GITLAB_READ_TOKEN: "${GITLAB_TOKEN}"
+  GITLAB_REPO_COMMIT_TOKEN: "${GITLAB_TOKEN}"
+  GITLAB_API_TOKEN: "${GITLAB_TOKEN}"
+
+# Artifacts configuration
+.default_artifacts:
+  artifacts:
+    expire_in: 14 days
+
+# Docker image scan configuration
+.image_scan:
+  DOCKER_IMAGE_SCAN_IMAGE: "false"
+  ENFORCE_EXIT: "false"

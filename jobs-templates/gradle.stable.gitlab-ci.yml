@@ -1,0 +1,40 @@
+include:
+  - local: "vars/*.stable.gitlab-ci.yml"
+  - local: "utils/*.stable.gitlab-ci.yml"
+  - local: "jobs-templates/SonarQube.gitlab-ci.yml" # sonarqube 代码扫描
+
+variables:
+  extends: .default_vars
+
+default:
+  image: ${GRADLE_IMAGE:-${MAVEN_IMAGE}}
+
+cache:
+  paths:
+    - ${CACHE_DIR}
+    - .gradle/
+
+stages:
+  !reference [ .general_stage, stages ]
+
+test:
+  extends:
+    - .gradle_test
+    - .unit_test_base
+
+build:
+  extends:
+    - .gradle_build
+    - .build_base
+
+scan:
+  extends:
+    - .image_scan_base
+
+deploy:
+  extends:
+    - .iamge_deploy_base
+
+workflow:
+  rules:
+    !reference [ .trigger_rule, rules ]

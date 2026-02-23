@@ -1,0 +1,21 @@
+pre:
+  stage: .pre
+  extends:
+    - .runner_tag
+    - .load_artifacts_env
+    - .gitlab_auth_vars
+  script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .check_docker, script ]
+    - |
+      script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
+      script_download pre.${TEMPLATE_CONTEXT}.sh
+      chmod +x ./run.sh
+      shell_exec './run.sh'
+      cat "${ENV_FILE}"
+  artifacts:
+    expire_in: 14 days
+    reports:
+      dotenv: "${ENV_FILE}"
+  rules:
+    !reference [ .release_version_rules, rules ]

@@ -1,0 +1,157 @@
+# ci deploy 阶段 密钥组
+.deploy_secrets:
+  extends:
+    - .deploy_gitlab_auth_vars
+    - .argocd_auth_vars
+
+# https://gitlab.iquantex.com/ci-cd/scripts-exec 脚本执行库，相关依赖。
+.script_exec_vars:
+  extends:
+    - .script_exec_db_vars
+    - .script_exec_k8s
+
+###################### 此分割线以下放置 拆分成段的 secrets 段，按功能 or 模块 进行拆分
+# 变量映射后面带 "#*" 表示开启 Gitlab 密钥遮掩 (且对 _vars 后缀段进行生效)， 相关 issue: https://gitlab.iquantex.com/devops/gitops/-/issues/2
+# 注意: 密钥遮掩，值需要满足如下文档中所述的要求: https://docs.gitlab.com/ee/ci/variables/#mask-a-cicd-variable
+
+.nas_taskfile_deploy_vars:
+  secrets:
+    NAS_SMB_PD_TASKFILE_DEPLOY:
+      vault: infrastructure/nas/TASKFILE_DEPLOY@secrets #*
+      file: false
+
+.script_exec_k8s_vars:
+  secrets:
+    QUANTEX_PAAS_KUBE_CONFIG:
+      vault: infrastructure/k8s/QUANTEX_PAAS@secrets
+      file: false
+
+.script_exec_k8s:
+  secrets:
+    QUANTEX_PAAS_KUBE_CONFIG:
+      vault: infrastructure/k8s/QUANTEX_PAAS@secrets 
+
+.script_exec_db_vars:
+  secrets:
+    MYSQL_JMS_ROOT_PASSWD:
+      vault: infrastructure/mysql/JMS_PASSWD@secrets #*
+      file: false
+
+.harbor_auth:
+  secrets:
+    HARBOR_USER:
+      vault: infrastructure/harbor/USER@secrets
+    HARBOR_PASSWD:
+      vault: infrastructure/harbor/PASSWD@secrets #*
+
+.harbor_auth_vars:
+  secrets:
+    HARBOR_USER:
+      vault: infrastructure/harbor/USER@secrets
+      file: false
+    HARBOR_PASSWD:
+      vault: infrastructure/harbor/PASSWD@secrets #*
+      file: false
+
+.sonar_auth:
+  secrets:
+    SONAR_TOKEN:
+      vault: infrastructure/sonar/TOKEN@secrets 
+
+.sonar_auth_vars:
+  secrets:
+    SONAR_TOKEN:
+      vault: infrastructure/sonar/TOKEN@secrets #*
+      file: false
+
+.gitlab_auth:
+  secrets:
+    GITLAB_READ_TOKEN:
+      vault: infrastructure/gitlab/READ_TOKEN@secrets
+  
+.gitlab_auth_vars:
+  secrets:
+    GITLAB_READ_TOKEN:
+      vault: infrastructure/gitlab/READ_TOKEN@secrets #*
+      file: false
+
+.nexus_auth:
+  secrets:
+    NEXUS_USER:
+      vault: infrastructure/nexus/USER@secrets
+    NEXUS_PASSWD:
+      vault: infrastructure/nexus/PASSWD@secrets
+    NEXUS_NPM_TOKEN:
+      vault: infrastructure/nexus/NPM_TOKEN@secrets
+
+.nexus_auth_vars:
+  secrets:
+    NEXUS_USER:
+      vault: infrastructure/nexus/USER@secrets
+      file: false
+    NEXUS_PASSWD:
+      vault: infrastructure/nexus/PASSWD@secrets #*
+      file: false
+    NEXUS_NPM_TOKEN:
+      vault: infrastructure/nexus/NPM_TOKEN@secrets #*
+      file: false
+
+.argocd_auth:
+  secrets:
+    ARGOCD_AUTH_TOKEN:
+      vault: infrastructure/argocd/TOKEN@secrets 
+      file: false
+
+.argocd_auth_vars:
+  secrets:
+    ARGOCD_AUTH_TOKEN:
+      vault: infrastructure/argocd/TOKEN@secrets #*
+      file: false
+
+.deploy_gitlab_auth:
+  secrets:
+    GITLAB_REPO_COMMIT_TOKEN:
+      vault: infrastructure/gitlab/COMMIT_TOKEN@secrets
+      file: false
+
+.deploy_gitlab_auth_vars:
+  secrets:
+    GITLAB_REPO_COMMIT_TOKEN:
+      vault: infrastructure/gitlab/COMMIT_TOKEN@secrets #*
+      file: false
+
+.huaweicloud_web_site:
+  secrets:
+    HUB_HARBOR_URL:
+      vault: infrastructure/huaweicloud-web-site/HARBOR_URL@secrets
+      file: false
+    HUB_HARBOR_USER:
+      vault: infrastructure/huaweicloud-web-site/HARBOR_USER@secrets
+      file: false
+    HUB_HARBOR_PASSWD:
+      vault: infrastructure/huaweicloud-web-site/HARBOR_PASSWD@secrets #*
+      file: false
+    HUAWEI_CLOUD_IP:
+      vault: infrastructure/huaweicloud-web-site/HUAWEI_CLOUD_IP@secrets
+      file: false
+    HUAWEI_CLOUD_SSH_USER:
+      vault: infrastructure/huaweicloud-web-site/HUAWEI_CLOUD_SSH_USER@secrets
+      file: false
+    HUAWEI_CLOUD_SSH_PASS:
+      vault: infrastructure/huaweicloud-web-site/HUAWEI_CLOUD_SSH_PASS@secrets #*
+      file: false
+
+
+.gitlab_apitoken_vars:
+  secrets:
+    GITLAB_API_TOKEN:
+      vault: infrastructure/gitlab/API_TOKEN@secrets #*
+      file: false
+
+.gitlab_apitoken:
+  secrets:
+    GITLAB_API_TOKEN:
+      vault: infrastructure/gitlab/API_TOKEN@secrets
+
+
+

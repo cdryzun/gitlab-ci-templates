@@ -1,0 +1,18 @@
+# 全局公共变量
+include:
+  - project: 'devops/ci-templates'
+    ref: devops
+    file: 'jobs-templates/argocd.stable.gitlab-ci.yml'
+
+variables:
+  GLOBAL_DOMAIN: "iquantex.com"
+  # 部署项目仓库地址
+  REPO_URL: "${CI_PROJECT_URL}.git"
+  # 部署工具定义的项目名称，需要找运维获取
+  ARGOCD_PROJECT: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
+  # 环境域名
+  ENV_URL: "http://${CI_COMMIT_BRANCH}.${CI_PROJECT_NAMESPACE}.${GLOBAL_DOMAIN}"
+  # 生产域名
+  PROD_DOMAIN: "${CI_PROJECT_NAME}.${CI_PROJECT_NAMESPACE}.${GLOBAL_DOMAIN}"
+  KUBE_NAMESPACE: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
+  ARGOCD_ENV: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"

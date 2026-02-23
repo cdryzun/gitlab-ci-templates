@@ -1,5 +1,0 @@
-.before_docker: &docker_login
-  - docker login -u "${CI_REGISTRY_USER}"" -p "${CI_REGISTRY_PASSWORD}" ${CI_REGISTRY}
-
-.before_script:
-  - *docker_login

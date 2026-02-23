@@ -1,0 +1,32 @@
+# .cd_deploy:
+#   rules:
+#     - if: '$DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true" && $FEAT_DOCKER_IMAGE_BUILD == "true"'
+#       when: manual
+
+.deploy_build: &deploy_build
+  image: "${CD_DEPLOY_IMAGE}"
+  stage: deploy
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .alias, script ]
+    - !reference [ .check_glab, script ]
+  script:
+    - |
+      script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
+      script_download cd-deploy.${TEMPLATE_CONTEXT}.sh
+      chmod +x ./run.sh
+      shell_exec ./run.sh
+  extends:
+    - .runner_tag
+    - .load_artifacts_env
+    - .deploy_gitlab_auth_vars
+    - .gitlab_auth_vars
+    - .gitlab_apitoken_vars
+  artifacts:
+    expire_in: 14 days
+    reports:
+      dotenv: "${CD_ENV_FILE}"
+  rules:
+    !reference [ .cd_deploy, rules ]
+
+cd-deploy: *deploy_build

@@ -1,113 +1,87 @@
 include:
-  - project: 'kunlun/devops/gitlabci-templates'
-    ref: master
-    file: 'Templates/common-template.yml'
-
+  - local: "vars/default-vars.stable.gitlab-ci.yml"
+  - local: "vars/vault.stable.gitlab-ci.yml"
 
 variables:
-    # 默认runner
-    RUNNER: "sigma-dev"
+  DEPLOY_COMMIT_MESSAGE: "files updated by gitlab-ci pipeline in change-manifests task"
+  extends: .default_vars
 
-    # 默认镜像名字 
-    IMG_NAME: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
+default:
+  image: ${TOOLBOX_IMAGE}
 
-    # 默认单元测试
-    MAVEN_TEST: "false"
-    NPM_TEST: "false"
+stages:
+  - mask
+  - push-remote
 
-    # 默认sonar配置
-    # java工程maven集成sonar扫描
-    SONAR_MAVEN: "true"
-    # 非java通用sonar扫描
-    SONAR_COMMON: "false"
-    # 开启强制sonar检测，扫描结果不满足规则就中断CI
-    SONAR_GATE: "false"
-    # 默认预设通用工程sonar扫描目录
-    SONAR_DIR: "./src"
-    
-    # 默认构建maven类库
-    BUILD_MAVEN_SNAPSHOT: "false"
-    BUILD_MAVEN_RELEASE: "false"
+gitlabSecretsMask:
+  stage: mask
+  tags:
+    - k8s
+  variables:
+    TF_ROOT: "${CI_PROJECT_DIR}/terraform"
+    ARTIFACTORY_SUBPATH: "${CI_COMMIT_BRANCH}-gitlabci-templates-terraform"
+    TF_PLUGIN_CACHE_DIR: "/root/.terraform.d/plugin-cache"
+    VAULT_ADDR: "https://vault.cpinnov.run"
+    VAULT_TOKEN: "s.OKcEcupXVNWptvAAzYUPodqa"
+    TF_VAR_gitlab_token: "xpF17NiiJR7pN_fB9Bhr"
+    extends: .default_vars
+    # https_proxy: http://user:quantex@10.10.10.101:1081  # 添加代理，与 terraform 中 host 配置不冲突
+    # no_proxy: '10.116.18.0/23,10.116.20.0/23,10.10.0.0/16' # 添加不使用代理的列表
+  image: harbor.cpinnov.run/library/gitlab-build-image:terraform
+  script:
+    - |
+      sh scripts/secretsToFile.stable.sh
+      ls -lha terraform/
+      keys=""
+      for key_file in $(ls terraform/*.vault);do
+        key=$(echo "$key_file"|awk -F '[./]' '{print $2}' )
+        if [ -z "${keys}" ];then
+          keys="\"${key}\""
+        else
+          keys="${keys},\"${key}\""
+        fi
+      done
+      cd "${TF_ROOT}"
+      sed -i "s#subpath-#${ARTIFACTORY_SUBPATH}#g" backend.tf
+      terraform init && terraform plan -var="vault_key=[${keys}]" \
+      && terraform apply -auto-approve -var="vault_key=[${keys}]"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
 
-    # 默认构建镜像
-    BUILD_MAVEN_DOCKER: "true"
-    BUILD_NPM_DOCKER: "false"
-    # 构建通用项目镜像
-    BUILD_COMMON_DOCKER: "false"
-    # 扫描镜像安全漏洞
-    SCAN_IMAGE: "false"
-    
+ciTemplatePushRemote:
+  stage: push-remote
+  extends:
+    - .deploy_gitlab_auth_vars
+  tags:
+    - k8s
+  script:
+    - |
+      # add git command tools
+      apk update
+      apk add git
+    - |
+      # convert global rules
+      bash hack/convert-globalrules.sh
+    - |
+      set -eu
+      git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
+      git config --global user.name "${GIT_AUTO_COMMIT_NAME}"
+      git clone --depth 1 https://${GIT_AUTO_COMMIT_NAME}:${GITLAB_REPO_COMMIT_TOKEN}@gitlab-ee.cpinnov.run/devops/template.git repo
+      cd repo/
+      git rm -rf gitlab-ci/
+      cp -a ${CI_PROJECT_DIR}/templates ./gitlab-ci
 
-
-
-#-----------------------------自定义配置模版--------------------------------------------------
-#
-# 如需要自行定义每个job的详细操作，可以基于一下job模版进行更改.
-# 注意: 自定义配置前，确保以上环境变量配置原先功能设置为false
-#-------------------------------------------------------------------------------------------
-
-# Maven_Test:
-#   stage: test
-#   extends: .Code_Maven_Test
-#   rules:
-#     - if: $MAVEN_TEST == "true"
-
-# Npm_Test:
-#   stage: test
-#   extends: .Code_Npm_Test
-#   rules:
-#     - if: $NPM_TEST == "true"
-
-# Common_Sonar_Analyze:
-#   stage: sonar
-#   extends: .Sonar_Common
-#   rules:
-#     - if: $SONAR_COMMON == "true"
-
-# Maven_Sonar_Analyze:
-#   stage: sonar
-#   extends: .Sonar_Maven
-#   rules:
-#     - if: $SONAR_MAVEN == "true"
-
-# Maven_Build_Release_Deploy:
-#   stage: build
-#   extends: .Build_Maven_Release_Package
-#   rules:
-#     - if: '$BUILD_MAVEN_RELEASE == "true" && $CI_COMMIT_TAG'
-
-# Maven_Build_Snapshot_Deploy:
-#   stage: build
-#   extends: .Build_Maven_Snapshot_Package
-#   rules:
-#     - if: '$BUILD_MAVEN_SNAPSHOT == "true" && $CI_COMMIT_BRANCH == "develop"'
-
-# Maven_Build_Docker_Image:
-#   stage: build
-#   extends: .Build_Maven_with_Image
-#   rules:
-#     - if: '$BUILD_MAVEN_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|develop|release).*$/"'
-#     - if: '$BUILD_COMMON_DOCKER == "true" || $BUILD_NPM_DOCKER == "true"'
-#       when: never
-
-# Npm_Build_Docker_Image:
-#   stage: build
-#   extends: .Build_Npm_Package
-#   rules:
-#     - if: '$BUILD_NPM_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|develop|release).*$/"'
-#     - if: '$BUILD_COMMON_DOCKER == "true" || $BUILD_MAVEN_DOCKER == "true"'
-#       when: never
-
-# Build_Docker_Image:
-#   stage: build
-#   extends: .Build_Common_Image
-#   rules:
-#     - if: '$BUILD_COMMON_DOCKER == "true" && $CI_COMMIT_BRANCH =~ "/^(feat|develop|release).*$/"'
-#     - if: '$BUILD_NPM_DOCKER == "true" || $BUILD_MAVEN_DOCKER == "true"'
-#       when: never
-
-# Release_Docker_Image:
-#   stage: build
-#   extends: .Release_Image
-#   rules:
-#     - if: '$CI_COMMIT_TAG && $CI_COMMIT_BRANCH =~ "/^\d+\.\d+\.0.*$/"'
+      ls -la
+      if ! git diff-index --quiet HEAD --; then
+        git status
+        git add .
+        git commit -m "${DEPLOY_COMMIT_MESSAGE}"
+        git push origin
+      else
+          echo "no changes, git repository is up to date"
+      fi
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH' 
+      changes:
+        - templates/*
+        - utils/rules.stable.gitlab-ci.yml

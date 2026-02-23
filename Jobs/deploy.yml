@@ -1,9 +1,0 @@
-.Deploy_Artifact_To_Maven:
-  image: ${MAVEN_IMAGE}
-  script:
-    - echo "Start deploy to maven "
-
-.Deploy_Artifact_To_Npm:
-  image: ${NODE_IMAGE}
-  script:
-    - echo "Start deploy to npm ."

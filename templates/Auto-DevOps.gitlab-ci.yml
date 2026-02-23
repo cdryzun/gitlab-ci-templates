@@ -1,0 +1,69 @@
+# Open Source Version - Auto DevOps Template
+# This file uses remote includes to reference files from GitHub
+# Base URL: https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/
+
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Auto-DevOps.gitlab-ci.yml'
+
+# Feature flags reference: https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/vars/default-vars.stable.gitlab-ci.yml
+
+###############################  JAVA Project Example
+# variables:
+#   BUILD_SHELL: "mvn clean package -Dmaven.test.skip=true"
+#   UNIT_TEST_ENABLE: "true"
+
+### JAVA project with jar not in root directory
+# variables:
+#   BUILD_SHELL: "mvn clean install -Dmaven.test.skip=true \
+#     && mkdir -p ./target \
+#     && mv spring-cloud-gateway/target/spring-cloud-gateway.jar ./target/app.jar"
+#   UNIT_TEST_ENABLE: "true"
+
+### JAVA scaffold project, no image build, only upload artifacts to nexus
+# variables:
+#   BUILD_SHELL: "mvn clean install -Dmaven.test.skip=true \
+#     && mkdir -p ./target \
+#     && mv spring-cloud-gateway/target/spring-cloud-gateway.jar ./target/app.jar"
+#   UNIT_TEST_ENABLE: "true"
+#   DOCKER_IMAGE_BUILD: "false"
+
+### For projects where pom.xml is not in root directory
+# variables:
+#   BUILD_MAVEN_POM_FILE: "spring-cloud-gateway/pom.xml"
+#   BUILD_SHELL: "mvn clean install -Dmaven.test.skip=true \
+#     && mkdir -p ./target \
+#     && mv spring-cloud-gateway/target/*.jar ./target/app.jar"
+#   UNIT_TEST_ENABLE: "true"
+
+
+#-----------------------------------------------------
+
+###############################   WEB Project Example
+# variables:
+#   BUILD_SHELL: "pnpm run dist"
+#   UNIT_TEST_ENABLE: "false"
+
+### WEB project with environment-based build
+# variables:
+#   BUILD_SHELL: "pnpm run ${BUILD_ENV}"
+#   UNIT_TEST_ENABLE: "false"
+
+### WEB project with non-default output directory
+# variables:
+#   BUILD_SHELL: "pnpm run dist && mv docs dist"
+#   UNIT_TEST_ENABLE: "false"
+
+
+###############################   Python Project Example
+
+### Provide requirements.txt (required), entry point is main.py
+# variables:
+#   UNIT_TEST_ENABLE: "false"
+#   DOCKER_DAEMON_WORKSPACE: "/tmp/docker-workspace"
+
+### Build whl package without Docker image
+# variables:
+#   UNIT_TEST_ENABLE: "false"
+#   BUILD_SHELL: "python3 setup.py bdist_wheel"
+#   PROJECT_TYPE: "python"
+#   PYTHON_UNIT_TEST_SHELL: "python -m unittest"

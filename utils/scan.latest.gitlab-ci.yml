@@ -1,0 +1,146 @@
+.common_sonar_base:
+  image: "${SONAR_IMAGE}"
+  extends:
+    - .common_sonar_analyze
+    - .sonar_auth
+    - .runner_tag
+    - .sonar_before_jobs
+
+
+.image_scan_base:
+  image: "${TOOLBOX_IMAGE}"
+  extends:
+    - .security_scan_docker_image
+    - .runner_tag
+    - .nexus_auth
+    - .sonar_auth
+
+.custom_scan_base:
+  image: "${SONAR_IMAGE}"
+  extends:
+    - .common_sonar_analyze
+    - .sonar_auth
+    - .runner_tag
+    - .nexus_auth
+    - .sonar_before_jobs
+
+###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+.security_scan_docker_image:
+  stage: scan
+  extends: 
+    - .harbor_auth
+    - .container_security_scan
+    - .build_after_script
+    - .scan_before_jobs
+  rules:
+    !reference [ .image_scan_rules, rules ]
+
+.common_sonar_analyze:
+  stage: sonar
+  extends: 
+    - .sonar_common
+
+
+# ------------------------
+.sonar_common:
+  stage: sonar
+  script:
+    - |
+      set +x
+      GLOBAL_PROJECT_ARGS="-Dsonar.projectKey=${CI_PROJECT_NAME} 
+                            -Dsonar.projectName=${CI_PROJECT_NAME} 
+                            -Dsonar.projectVersion=${CI_COMMIT_REF_NAME} 
+                            -Dsonar.projectDescription=${CI_PROJECT_TITLE}"
+      GLOBAL_SERVER_ARGS="-Dsonar.ws.timeout=30
+                            -Dsonar.links.homepage=${CI_PROJECT_URL} 
+                            -Dsonar.host.url=${SONAR_URL}
+                            -Dsonar.login=${SONAR_TOKEN}
+                            -Dsonar.sourceEncoding=UTF-8
+                            -Dsonar.java.binaries="${SONAR_BINARIES}"
+                            -Dsonar.java.test.binaries="${SONAR_TEST_BINARIES}"
+                            -Dsonar.java.surefire.report=target/surefire-reports"
+      GLOBAL_MR_ARGS="-Dsonar.pullrequest.key=${CI_MERGE_REQUEST_IID} 
+                      -Dsonar.pullrequest.branch=${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME} 
+                      -Dsonar.pullrequest.base=${CI_MERGE_REQUEST_TARGET_BRANCH_NAME} 
+                      -Dsonar.gitlab.ref_name=${CI_COMMIT_REF_NAME} 
+                      -Dsonar.gitlab.commit_sha=${CI_COMMIT_SHA} 
+                      -Dsonar.gitlab.project_id=${CI_PROJECT_PATH} 
+                      -Dsonar.pullrequest.gitlab.repositorySlug=${CI_PROJECT_ID}"
+      MULTI_BRANCH_ARGS="-Dsonar.branch.name=${CI_COMMIT_REF_NAME}"
+      set -x
+    - !reference [ .sonar_check, script ]
+    - |
+      set +x
+      echo sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+          ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS} | sed "s#${SONAR_TOKEN}#******#g"
+      if [ $CI_PIPELINE_SOURCE == 'merge_request_event' ];then
+          if [ $SONAR_GATE == "true" ];then
+              sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+                  ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS} -Dsonar.qualitygate.wait=true
+          else
+              sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+                  ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS}
+          fi
+      else
+          if [ $SONAR_GATE == "true" ];then
+              sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+                  ${SONAR_SCAN_ARGS} -Dsonar.qualitygate.wait=true
+          else
+              sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+                  ${SONAR_SCAN_ARGS}
+          fi
+      fi
+      set -x
+
+.sonar_maven:
+  stage: sonar
+  script:
+    - !reference [ .maven-generate-config, script ]
+    - |
+      set +x
+      echo "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+          ${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS}" | sed "s#${SONAR_TOKEN}#******#g"
+      if [ $CI_PIPELINE_SOURCE == 'merge_request_event' ];then
+          if [ $SONAR_GATE == "true" ];then
+              shell_exec "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+                  ${GLOBAL_MR_ARGS} -Dsonar.qualitygate.wait=true"
+          else
+              shell_exec "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+                  ${GLOBAL_MR_ARGS}"
+          fi
+      else
+          if [ $SONAR_GATE == "true" ];then
+              shell_exec "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
+                  -Dsonar.qualitygate.wait=true"
+          else
+              shell_exec "mvn sonar:sonar ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS}"
+        fi
+      fi
+      set -x
+
+
+# trivy docker 镜像安全扫描
+.container_security_scan:
+  image: ${TOOLBOX_IMAGE}
+  script:
+    - |
+      # 确保已登录 Harbor
+      echo "${Info}验证 Docker 登录状态..."
+      docker info | grep -i "registry" || true
+
+      # 使用 trivy image 命令扫描（支持已认证的私有仓库）
+      function scan_image(){
+        local image_name="${1}"
+        echo "${Info}扫描镜像: ${image_name}"
+
+        if [ "${ENFORCE_EXIT}" == "true" ];then
+          trivy image --ignore-unfixed \
+              --severity HIGH,CRITICAL "${image_name}" --exit-code 1
+        else
+          trivy image --ignore-unfixed \
+              --severity HIGH,CRITICAL "${image_name}"
+        fi
+      }
+
+      # 扫描当前构建的镜像
+      scan_image "${DOCKER_IMAGE_NAME}"

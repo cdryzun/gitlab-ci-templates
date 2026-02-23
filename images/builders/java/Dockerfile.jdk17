@@ -1,0 +1,54 @@
+# Java Builder Image - JDK 17
+# For Maven/Gradle builds with SonarQube scanner
+
+FROM eclipse-temurin:17-jdk-jammy
+
+LABEL maintainer="cdryzun"
+LABEL description="Java builder image with Maven, Gradle and SonarQube scanner"
+LABEL org.opencontainers.image.source="https://github.com/cdryzun/gitlab-ci-templates"
+
+# Versions
+ARG MAVEN_VERSION=3.9.6
+ARG GRADLE_VERSION=8.5
+ARG SONAR_SCANNER_VERSION=5.0.1.3006
+
+# Environment
+ENV MAVEN_HOME=/opt/maven \
+    GRADLE_HOME=/opt/gradle \
+    SONAR_SCANNER_HOME=/opt/sonar-scanner \
+    PATH="${PATH}:/opt/maven/bin:/opt/gradle/bin:/opt/sonar-scanner/bin"
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    wget \
+    git \
+    unzip \
+    ca-certificates \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Maven
+RUN curl -fsSL https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    | tar -xzC /opt \
+    && mv /opt/apache-maven-${MAVEN_VERSION} ${MAVEN_HOME}
+
+# Install Gradle
+RUN curl -fsSL https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip \
+    -o /tmp/gradle.zip \
+    && unzip /tmp/gradle.zip -d /opt \
+    && mv /opt/gradle-${GRADLE_VERSION} ${GRADLE_HOME} \
+    && rm /tmp/gradle.zip
+
+# Install SonarScanner (allow failure - optional tool)
+RUN curl -fsSL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip \
+    -o /tmp/sonar-scanner.zip \
+    && unzip /tmp/sonar-scanner.zip -d /opt \
+    && mv /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux ${SONAR_SCANNER_HOME} \
+    && rm /tmp/sonar-scanner.zip || echo "SonarScanner installation skipped"
+
+# Set working directory
+WORKDIR /build
+
+# Default command
+CMD ["mvn", "--version"]

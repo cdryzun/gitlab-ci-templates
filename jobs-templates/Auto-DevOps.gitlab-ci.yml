@@ -1,0 +1,44 @@
+# Open Source Version - Auto DevOps Job Orchestrator
+# This file uses remote includes to reference files from GitHub
+# Base URL: https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/
+
+include:
+  # Variables
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/vars/default-vars.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/vars/multiarch-vars.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/vars/vault.stable.gitlab-ci.yml'
+  # Utils
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/utils/rules.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/utils/before.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/utils/after.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/utils/build.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/utils/deploy.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/utils/scan.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/utils/test.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/utils/manage.stable.gitlab-ci.yml'
+  # Jobs
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/PreJob.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/SonarQube.stable.gitlab-ci.yml'
+  # - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Test.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Build.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Trivy-Container-Scanning.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Gitlab-Container-Scanning.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Deploy.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Rollback.stable.gitlab-ci.yml'
+
+# Variable priority: script(bash) > gitlab web > gitlab template > os system default
+# GitLab web priority: gitlab project > gitlab group > gitlab platform default
+variables:
+  extends: .default_vars
+  TEMPLATE_CONTEXT: 'stable'
+
+cache:
+  paths:
+    - ${CACHE_DIR}
+
+stages:
+  !reference [ .general_stage, stages ]
+
+workflow:
+  rules:
+    !reference [ .trigger_rule, rules ]

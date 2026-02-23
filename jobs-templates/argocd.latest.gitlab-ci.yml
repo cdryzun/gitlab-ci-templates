@@ -1,0 +1,145 @@
+include:
+  - local: "vars/*.stable.gitlab-ci.yml"
+  - local: "utils/*.stable.gitlab-ci.yml"
+
+stages:
+  - test
+  - scan
+  - deploy
+  - clean
+
+# 默认操作命令镜像,如需单独使用其他镜像，请在stage内单独配置.
+default:
+  image: ${TOOLBOX_IMAGE}
+
+# 全局公共变量
+variables:
+  GLOBAL_DOMAIN: "iquantex.com"
+  # 部署项目仓库地址
+  REPO_URL: "${CI_PROJECT_URL}.git"
+  # 部署工具定义的项目名称，需要找运维获取
+  ARGOCD_PROJECT: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
+  # 环境域名
+  ENV_URL: "http://${CI_COMMIT_BRANCH}.${CI_PROJECT_NAMESPACE}.${GLOBAL_DOMAIN}"
+  # 生产域名
+  PROD_DOMAIN: "${CI_PROJECT_NAME}.${CI_PROJECT_NAMESPACE}.${GLOBAL_DOMAIN}"
+  KUBE_NAMESPACE: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
+  ARGOCD_ENV: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
+  extends: .default_vars
+  TEMPLATE_CONTEXT: 'latest'
+# 合并前检查charts语法  
+all_charts_syntax_check:
+  stage: test
+  script:
+    - for i in $(ls |grep -Ev 'README|sync.sh|argocd|.gitlab|plottool|turing-ide');do helm lint $i 2>/dev/null;done
+
+.deploy_env: &deploy_env
+  environment:
+    name: ${CI_COMMIT_BRANCH}
+    url: ${ENV_URL}
+
+.deploy_rule: &deploy_rule
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: $CI_COMMIT_REF_PROTECTED
+      changes:
+       - ${CI_PROJECT_DIR}/**/*.yaml
+      variables:
+        ACTION: "create_all"
+      when: manual
+
+.get_sync_sh:
+  before_script:
+    - |
+      curl -fsSL --header "PRIVATE-TOKEN: ${GITLAB_READ_TOKEN}" ${TEMPLATE_REPO%/devops*}/api/v4/projects/${TEMPLATE_REPO_PROJECT_ID}/repository/files/scripts%2Fsync.${TEMPLATE_CONTEXT}.sh/raw?ref=${TEMPLATE_BRANCH_NAME} -o sync.sh
+      chmod +x ./sync.sh
+    - |
+      set -x
+      if [ ! -e /usr/local/bin/argocd ];then
+        curl -fsSL https://nexus.iquantex.com/repository/static-file/tools/argocd -o /usr/local/bin/argocd
+        chmod +x /usr/local/bin/argocd
+      fi
+
+.argocd_exec: &argocd_exec
+  script:
+    - | 
+      # 匹配动作
+      case ${ACTION} in
+        "create_all")
+          # 执行创建所有部署.
+          bash ./sync.sh create ${REPO_URL} ${KUBE_NAMESPACE} ${ARGOCD_PROJECT} ${ARGOCD_ENV}
+          ;;
+        "sync_all")
+          # 执行强制同步所有部署
+          bash ./sync.sh sync ${REPO_URL} ${KUBE_NAMESPACE} ${ARGOCD_PROJECT} ${ARGOCD_ENV}
+          ;;
+        "delete_all")
+          # 执行删除所有部署环境
+          bash ./sync.sh delete ${REPO_URL} ${KUBE_NAMESPACE} ${ARGOCD_PROJECT} ${ARGOCD_ENV}
+          ;;
+          *)
+          echo "nothing to do, goto next"
+          ;;
+      esac
+      # 如果设定命令变量和应用名称则只更新单个应用
+      if [ ${CMD} ] && [ ${APP_NAME} ];then
+        bash ./sync.sh ${CMD} ${REPO_URL} ${KUBE_NAMESPACE} ${ARGOCD_PROJECT} ${ARGOCD_ENV} ${APP_NAME}
+      fi
+
+.clean_config: &clean_config
+  after_script:
+    - echo "clean config"
+    - if [ -e ~/.argocd/config ];then rm -f ~/.argocd/config;fi
+
+.deploy_to_cluster:
+  stage: deploy
+  extends:
+    - .gitlab_auth
+    - .argocd_auth
+    - .runner_tag
+    - .deploy_env
+    - .deploy_rule
+    - .get_sync_sh
+    - .argocd_exec
+    - .clean_config
+
+# 创建所有应用部署
+Create_Apps_To_Cluster:
+  extends: .deploy_to_cluster
+
+# 强制同步环境所有应用部署
+Sync_Apps_To_Cluster:
+  extends: .deploy_to_cluster
+  rules:
+    - if: $CI_COMMIT_REF_PROTECTED
+      changes:
+       - ${CI_PROJECT_DIR}/**/*.yaml
+      variables:
+        ACTION: "sync_all"
+      when: manual
+
+# 删除环境所有应用部署,只有手工运行流水线才可操作，并且需要手动操作,防止误操作.
+Delete_Apps_From_Cluster:
+  extends: .deploy_to_cluster
+  rules:
+    - if: '$CI_COMMIT_REF_PROTECTED && $CI_PIPELINE_SOURCE == "web"'
+      variables:
+        ACTION: "delete_all"
+      when: manual
+      # 如果不是手工执行流水线，则不允许操作
+    - if: $CI_PIPELINE_SOURCE != "web"
+      when: never
+
+# 强制同步开发环境指定应用部署,根据触发参数执行对应动作，如创建、同步、删除应用等操作.
+Sync_One_Apps_To_Cluster:
+  extends: .deploy_to_cluster
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "trigger" && $APP_NAME && $CMD'
+      when: always
+    - if: $APP_NAME && $CMD
+      when: manual
+
+workflow:
+  rules:
+    !reference [ .argocd_trigger, rules ]

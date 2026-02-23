@@ -1,0 +1,13 @@
+include:
+  - local: "vars/*.stable.gitlab-ci.yml"
+  - local: "utils/*.stable.gitlab-ci.yml"
+
+variables:
+  extends: .default_vars
+
+default:
+  image: ${MAVEN_IMAGE}
+  
+workflow:
+  rules:
+    !reference [ .trigger_rule, rules ]

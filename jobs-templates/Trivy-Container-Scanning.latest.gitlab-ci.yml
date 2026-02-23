@@ -1,0 +1,45 @@
+
+# .trivy_scan_rules:
+#   rules:
+#     - if: '$DOCKER_IMAGE_SCAN_IMAGE == "true"
+#       && $DOCKER_IMAGE_SCAN_SERVER && $DOCKER_IMAGE_BUILD == "true"'
+
+trivy_scan:
+  stage: scan
+  image: ${TOOLBOX_IMAGE}
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .alias, script ]
+    - !reference [ .docker_login, script ]
+#  allow_failure: true
+  extends:
+    - .runner_tag
+    - .harbor_auth
+    - .gitlab_auth_vars
+    - .load_artifacts_env
+    - .build_after_script
+  script:
+    - |
+      script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
+    - |
+      # 执行镜像扫描
+      set -eo
+      set +x
+      # 加载 工具类及 模块脚本
+      for sh in _*.sh;do
+        [[ -e "$sh" ]] || break
+        source "${sh}"
+      done
+
+      function scan_image(){
+        if [ ${ENFORCE_EXIT} == "true" ];then
+        trivy client --remote ${DOCKER_IMAGE_SCAN_SERVER} --ignore-unfixed \
+        --severity HIGH,CRITICAL ${1} --exit-code 1
+        else
+        trivy client --remote ${DOCKER_IMAGE_SCAN_SERVER} --ignore-unfixed \
+        --severity HIGH,CRITICAL ${1}
+        fi
+      }
+      scan_image "${DOCKER_IMAGE_NAME}"
+  rules:
+    !reference [ .image_scan_rules, rules ]

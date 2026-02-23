@@ -1,0 +1,77 @@
+variables:
+  # -------------基本配置----------------------
+  # 用于 Gradle 构建时所执行的命令，根据自己的需求更改使用。当存在多条命令时 使用 "&&" 相连接
+  BUILD_SHELL: "gradle clean build -x test"
+
+  # 是否执行单元测试
+  GRADLE_TEST: "false"
+
+  # Gradle 测试命令
+  TEST_SHELL: ""
+
+  # 默认预设的 sonarqube 扫描目录
+  SONAR_DIR: "./src"
+
+  # 是否将包构建完成后，再构建 docker 镜像
+  DOCKER_IMAGE_BUILD: "true"
+
+  # -------------高级配置(一般无需配置，使用默认配置即可,如需配置请仔细看注释说明按需配置,)----------------------
+
+  # 镜像漏洞扫描
+  DOCKER_IMAGE_SCAN_IMAGE: "true"
+
+  # 如果漏洞等级为中高以上则强制中断CI
+  ENFORCE_EXIT: "false"
+
+  # sonarqube 扫描的二进制程序目录，多个用 "," 连接
+  # Gradle 默认输出目录与 Maven 不同
+  SONAR_BINARIES: 'build/classes'
+
+  # sonarqube 扫描的测试二进制程序目录，多个用 "," 连接
+  SONAR_TEST_BINARIES: 'build/test-classes'
+
+  # 使用的 sonarqube 地址, 默认无需修改
+  # SONAR_URL: "https://sonarqube.cpinnov.run"
+
+  # Gradle 生成的 jar 包名称，默认 app
+  # MAVEN_APP_NAME: "app"
+
+  # 分阶段构建时的缓存目录
+  # Gradle 的缓存目录包含 build 目录和 .gradle 目录
+  CACHE_DIR: "build/"
+
+  # DEV 环境 生成的 docker 镜像的 "前缀"，下面默认将会，生成 dev-xxx 的 tag 镜像。
+  # DEV_DOCKER_TAG_PERFIX: 'dev'
+
+  # docker image 制品仓库，默认无需修改
+  # HARBOR_URL: "https://harbor.iquantex.com"
+
+  # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
+  DOCKER_BUILD_FLAGS: ''
+
+  # Gradle 工程使用通用 sonar 扫描
+  SONAR_MAVEN: "false"
+
+  # 非 java 通用 sonar 扫描，使用 sonar-scanner-cli 命令行进行集成扫描
+  SONAR_COMMON: "true"
+
+include:
+  - project: 'devops/ci-templates'
+    ref: devops
+    file: 'jobs-templates/gradle.stable.gitlab-ci.yml'
+
+
+  # 自定义后端工程 build 任务命令
+# build:
+#   image: "${GRADLE_IMAGE:-${MAVEN_IMAGE}}"
+#   extends:
+#     - .before_jobs
+#     - .harbor_auth
+#     - .runner_tag
+#     - .build_after_script
+#   script:
+#     - !reference [ .docker_login, script ]
+#     # 自定义命令1
+#     - shell_exec "gradle clean"
+#     # 自定义命令2
+#     - shell_exec "gradle build"

@@ -1,0 +1,58 @@
+variables:
+  # -------------基本配置----------------------
+  # 是否开启单元测试
+  PY_TEST: "true"
+
+  # 构建wheel package时所执行的命令，根据自己的需要更改使用。单存在多条命令时 使用 "&&" 相连接，如果有较复杂的操作命令，编写成 build.sh 放在项目根目录下。
+  BUILD_SHELL: ""
+  
+  # 是否将包构建完成后，再构建 docker 镜像, 如果不需要构建package包，只需要开启构建镜像即可.
+  DOCKER_IMAGE_BUILD: "true"
+
+  # -------------高级配置(一般无需配置，使用默认配置即可,如需配置请仔细看注释说明按需配置,)----------------------
+
+  # 镜像漏洞扫描
+  DOCKER_IMAGE_SCAN_IMAGE: "true"
+
+  # 如果漏洞等级为中高以上则强制中断CI
+  ENFORCE_EXIT: "false"
+
+  # 默认预设的 sonarqube 扫描目录
+  SONAR_DIR: "./src"
+
+  # docker image 制品仓库，默认无需修改
+  HARBOR_URL: "harbor.iquantex.com"
+
+  # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
+  DOCKER_BUILD_FLAGS: ''
+
+
+
+include:
+  - project: 'devops/ci-templates'
+    ref: devops
+    file: 'jobs-templates/python.stable.gitlab-ci.yml'
+
+
+# 自定义工程build任务，任务名固定为build,请不要更改.
+# build:
+#   #--继承公共模版内变量和参数---start--
+#   image: "${MAVEN_IMAGE}"
+#   extends:
+#     - .before_jobs
+#     - .nexus_auth
+#     - .harbor_auth
+#     - .runner_tag
+#     - .build_after_script
+#   #--继承公共模版内变量和参数---end--
+#   script:
+#     # 继承模版动作，生成默认配置，按需打开注释.
+#     - !reference [ .maven-generate-config, script ]
+#     - !reference [ .npm-generate-config, script ]
+#     - !reference [ .docker_login, script ]
+#     # 自定义命令1
+#     - echo "command1"
+#     # 自定义命令2
+#     - echo "command2"
+#     # 自定义命令
+#     - echo "command3"

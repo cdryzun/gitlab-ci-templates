@@ -1,0 +1,29 @@
+
+.unit_test_rules:
+  rules:
+    - if: '$UNIT_TEST_ENABLE == "true"'
+      # variables:
+      #   TEST_IMAGE: "${TEST_IMAGE}"
+
+unit_test:
+  stage: test
+  image: ${TEST_IMAGE}
+  before_script:
+    - !reference [ .utils_shell_function, script ]
+    - !reference [ .maven-generate-config, script ]
+    - !reference [ .npm-generate-config, script ]
+    - !reference [ .alias, script ]
+  allow_failure: true
+  extends:
+    - .runner_tag
+    - .gitlab_auth_vars
+    - .nexus_auth
+    - .load_artifacts_env
+  script:
+    - |
+      script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
+      script_download unit-test.${TEMPLATE_CONTEXT}.sh
+      chmod +x ./run.sh
+      shell_exec ./run.sh
+  rules:
+    !reference [ .unit_test_rules, rules ]

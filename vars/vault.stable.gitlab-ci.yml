@@ -1,0 +1,89 @@
+# Open Source Version - Authentication Variables
+# This file provides placeholder definitions for auth extensions
+# Users should configure these variables in their GitLab CI/CD settings
+
+# Harbor (Docker Registry) authentication
+# Set in GitLab CI/CD variables: REGISTRY_USER, REGISTRY_PASSWORD
+.harbor_auth:
+  variables:
+    HARBOR_AUTH_PLACEHOLDER: "true"
+.harbor_auth_vars:
+  variables:
+    HARBOR_AUTH_PLACEHOLDER: "true"
+
+# SonarQube authentication
+# Set in GitLab CI/CD variables: SONARQUBE_TOKEN
+.sonar_auth:
+  variables:
+    SONAR_AUTH_PLACEHOLDER: "true"
+.sonar_auth_vars:
+  variables:
+    SONAR_AUTH_PLACEHOLDER: "true"
+
+# GitLab authentication
+# Set in GitLab CI/CD variables: GITLAB_TOKEN
+.gitlab_auth:
+  variables:
+    GITLAB_AUTH_PLACEHOLDER: "true"
+.gitlab_auth_vars:
+  variables:
+    GITLAB_AUTH_PLACEHOLDER: "true"
+
+# Nexus authentication (if using private Maven/NPM repository)
+# Set in GitLab CI/CD variables: NEXUS_USER, NEXUS_PASSWORD
+.nexus_auth:
+  variables:
+    NEXUS_AUTH_PLACEHOLDER: "true"
+.nexus_auth_vars:
+  variables:
+    NEXUS_AUTH_PLACEHOLDER: "true"
+
+# ArgoCD authentication
+# Set in GitLab CI/CD variables: ARGOCD_AUTH_TOKEN
+.argocd_auth:
+  variables:
+    ARGOCD_AUTH_PLACEHOLDER: "true"
+.argocd_auth_vars:
+  variables:
+    ARGOCD_AUTH_PLACEHOLDER: "true"
+
+# GitLab API token
+# Set in GitLab CI/CD variables: GITLAB_TOKEN
+.gitlab_apitoken:
+  variables:
+    GITLAB_APITOKEN_PLACEHOLDER: "true"
+.gitlab_apitoken_vars:
+  variables:
+    GITLAB_APITOKEN_PLACEHOLDER: "true"
+
+# Deploy GitLab authentication
+# Set in GitLab CI/CD variables: GITLAB_TOKEN
+.deploy_gitlab_auth:
+  variables:
+    DEPLOY_GITLAB_AUTH_PLACEHOLDER: "true"
+.deploy_gitlab_auth_vars:
+  variables:
+    DEPLOY_GITLAB_AUTH_PLACEHOLDER: "true"
+
+# Deploy secrets group
+.deploy_secrets:
+  secrets: {}
+
+# Script execution vars
+.script_exec_vars:
+  variables:
+    SCRIPT_EXEC_PLACEHOLDER: "true"
+.script_exec_k8s_vars:
+  variables:
+    SCRIPT_EXEC_K8S_PLACEHOLDER: "true"
+.script_exec_k8s:
+  variables:
+    SCRIPT_EXEC_K8S_PLACEHOLDER: "true"
+.script_exec_db_vars:
+  variables:
+    SCRIPT_EXEC_DB_PLACEHOLDER: "true"
+
+# Clean auth files utility
+.clean_auth_files:
+  after_script:
+    - rm -f ~/.docker/config.json 2>/dev/null || true

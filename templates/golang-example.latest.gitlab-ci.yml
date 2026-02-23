@@ -1,0 +1,22 @@
+###############################  GOLANG 工程示例
+# 功能开关参照: vars/default-vars.stable.gitlab-ci.yml
+
+variables:
+  BUILD_SHELL: "go build -ldflags '-s -w' -o $CI_PROJECT_NAME ./"
+  UNIT_TEST_ENABLE: "false" # 是否关闭单元测试 (如需启用，设置 GO_TEST: "true")
+  DOCKER_IMAGE_SCAN_IMAGE: "false" # 是否开启 镜像扫描
+  DEV_CD_AUTO_DEPLOY: "true" # DEV CD 自动部署
+  SIT_CD_AUTO_DEPLOY: "true" # SIT CD 自动部署
+  PRD_BUILD_CREATE_TAG: "true" # PRD CI 自动创建 Tag
+  FEAT_DOCKER_IMAGE_BUILD: "false"  # feat 分支是否 构建 Docker 镜像
+  FEAT_CD_AUTO_DEPLOY: "true" # feat 自动部署
+  ENV_FILE: build.env
+  # Golang 编译参数（可选）
+  GO_CGO_ENABLED: "0"
+  GO_ARCH: "amd64"
+
+include:
+  - project: 'devops/ci-templates'
+    ref: devops
+    file: 'jobs-templates/golang.latest.gitlab-ci.yml'
+

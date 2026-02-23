@@ -1,0 +1,94 @@
+# Java 应用 - 准备外部配置文件示例
+# 场景：将配置文件打包到镜像中，运行时覆盖默认配置
+
+include:
+  - project: 'devops/ci-templates'
+    ref: devops
+    file: 'jobs-templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  # Maven 构建命令
+  BUILD_SHELL: "mvn clean package -Dmaven.test.skip=true"
+
+  # 启用单元测试
+  UNIT_TEST_ENABLE: "true"
+
+  # 准备配置文件
+  DOCKER_WORKSPACE_PREPARE_CMD: |
+    echo "准备 Spring Boot 外部配置文件..."
+
+    # 创建配置目录
+    mkdir -p config
+
+    # 复制应用配置文件
+    cp ${CI_PROJECT_DIR}/deploy/application.yml config/
+    cp ${CI_PROJECT_DIR}/deploy/application-${BUILD_ENV}.yml config/
+
+    # 复制 logback 配置
+    cp ${CI_PROJECT_DIR}/deploy/logback-spring.xml config/
+
+    # 如果存在，复制数据库配置
+    if [ -f "${CI_PROJECT_DIR}/deploy/db.properties" ]; then
+      cp ${CI_PROJECT_DIR}/deploy/db.properties config/
+    fi
+
+    # 生成启动脚本
+    cat > start.sh << 'EOF'
+    #!/bin/sh
+    # Spring Boot 启动脚本，使用外部配置
+    java -jar \
+      -Dspring.config.location=/opt/deployments/config/ \
+      -Dlogging.config=/opt/deployments/config/logback-spring.xml \
+      -XX:+UseContainerSupport \
+      -XX:MaxRAMPercentage=90.0 \
+      /opt/deployments/${APP}.jar
+    EOF
+
+    chmod +x start.sh
+
+    echo "配置文件准备完成："
+    ls -lha
+    ls -lha config/
+
+  # 使用自定义 Dockerfile
+  CUSTOM_DOCKERFILE_PATH: "docker/Dockerfile"
+
+# 对应的自定义 Dockerfile (docker/Dockerfile):
+#
+# ARG OPENJDK_VERSION=8-alpine
+# FROM hub.iquantex.com/base/openjdk:${OPENJDK_VERSION}
+#
+# ARG APP_NAME="app"
+# ENV APP=${APP_NAME}
+#
+# WORKDIR /opt/deployments
+#
+# # 复制 JAR 文件
+# COPY app*.jar /opt/deployments/${APP}.jar
+#
+# # 复制配置文件目录
+# COPY config/ /opt/deployments/config/
+#
+# # 复制启动脚本
+# COPY start.sh /opt/deployments/
+#
+# RUN chown -R daemon:daemon /opt/deployments
+# USER daemon
+#
+# # 使用自定义启动脚本
+# CMD ["/opt/deployments/start.sh"]
+
+# 项目目录结构示例：
+# your-project/
+# ├── src/
+# ├── deploy/
+# │   ├── application.yml
+# │   ├── application-dev.yml
+# │   ├── application-sit.yml
+# │   ├── application-prd.yml
+# │   ├── logback-spring.xml
+# │   └── db.properties
+# ├── docker/
+# │   └── Dockerfile
+# ├── pom.xml
+# └── .gitlab-ci.yml
