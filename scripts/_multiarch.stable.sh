@@ -413,8 +413,8 @@ function smart_docker_build_push() {
             sed -i "/RUN/iADD nginx.conf /etc/nginx/conf.d/nginx.conf" Dockerfile
         fi
 
-        # Single-architecture Docker build
-        docker image build \
+        # Single-architecture Docker build (disable BuildKit to avoid buildx dependency)
+        DOCKER_BUILDKIT=0 docker image build \
             -t "${DOCKER_IMAGE_NAME}" . \
             ${DOCKER_BUILD_FLAGS} \
             --build-arg CI_COMMIT_SHORT_SHA="$CI_COMMIT_SHORT_SHA" \

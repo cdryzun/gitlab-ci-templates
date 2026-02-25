@@ -230,7 +230,8 @@ function docker_build_push(){
     docker_secret
     # Pull latest base image #58
     docker_base_pull_latest
-    echo """docker build ${DOCKER_SECRET_ARGS}  \
+    # Disable BuildKit for single-architecture builds (requires buildx plugin)
+    echo """DOCKER_BUILDKIT=0 docker build ${DOCKER_SECRET_ARGS}  \
     -t "${DOCKER_IMAGE_NAME}" . \
     "${DOCKER_BUILD_FLAGS}" \
     --build-arg CI_COMMIT_SHORT_SHA="$CI_COMMIT_SHORT_SHA" \
