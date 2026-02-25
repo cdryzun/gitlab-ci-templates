@@ -1,46 +1,46 @@
 # Golang Multi-Architecture Dockerfile Template
-# 支持 linux/amd64, linux/arm64, linux/arm/v7 等多架构构建
-# 使用 Docker Buildx 进行跨平台编译和镜像构建
+# Supports multi-architecture builds for linux/amd64, linux/arm64, linux/arm/v7, etc.
+# Uses Docker Buildx for cross-platform compilation and image building
 
 # ============================================
-# Build Stage: 编译阶段（多架构）
+# Build Stage: Compilation stage (multi-architecture)
 # ============================================
 ARG GO_VERSION=1.23
 FROM golang:${GO_VERSION}-alpine AS builder
 
-# 自动注入的 Buildx 平台变量
+# Buildx auto-injected platform variables
 ARG TARGETPLATFORM
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-# 构建参数
+# Build arguments
 ARG CGO_ENABLED=0
 ARG APP_NAME="app"
 ARG BUILD_LDFLAGS="-s -w"
 
-# 打印构建信息（调试用）
+# Print build information (for debugging)
 RUN echo "Building for platform: ${TARGETPLATFORM}" && \
     echo "  OS: ${TARGETOS}" && \
     echo "  ARCH: ${TARGETARCH}" && \
     echo "  VARIANT: ${TARGETVARIANT}"
 
-# 安装必要的构建工具
+# Install necessary build tools
 RUN apk add --no-cache git make
 
-# 设置工作目录
+# Set working directory
 WORKDIR /build
 
-# 复制 go.mod 和 go.sum（利用 Docker 缓存层）
+# Copy go.mod and go.sum (leverage Docker cache layer)
 COPY go.mod go.sum* ./
 
-# 下载依赖（单独层，加速后续构建）
+# Download dependencies (separate layer to speed up subsequent builds)
 RUN go mod download
 
-# 复制源代码
+# Copy source code
 COPY . .
 
-# 交叉编译（根据 TARGETOS 和 TARGETARCH 自动编译）
+# Cross-compile (automatically compiled based on TARGETOS and TARGETARCH)
 RUN GOOS=${TARGETOS} \
     GOARCH=${TARGETARCH} \
     CGO_ENABLED=${CGO_ENABLED} \
@@ -49,12 +49,12 @@ RUN GOOS=${TARGETOS} \
     -o /build/${APP_NAME} \
     ./
 
-# 验证二进制文件（可选，调试用）
+# Verify binary file (optional, for debugging)
 RUN file /build/${APP_NAME} && \
     ls -lh /build/${APP_NAME}
 
 # ============================================
-# Runtime Stage: 运行时阶段（多架构）
+# Runtime Stage: Runtime stage (multi-architecture)
 # ============================================
 FROM alpine:3.22
 
@@ -97,14 +97,19 @@ RUN apk update && \
 # 设置工作目录
 WORKDIR /app
 
-# 从构建阶段复制二进制文件
+# Copy binary file from build stage
 COPY --from=builder /build/${APP_NAME} /app/${APP_NAME}
 
-# 确保可执行权限
+# Ensure executable permission
 RUN chmod +x /app/${APP_NAME}
 
-# 暴露端口
+# Expose port
 EXPOSE ${PORT}
 
-# 启动命令
+# Health check
+# Customize according to application's health endpoint
+HEALTHCHECK --start-period=10s --interval=20s --timeout=3s --retries=3 \
+    CMD curl -fs http://localhost:${PORT}/health || exit 1
+
+# Start command
 CMD ["/bin/sh", "-c", "exec /app/${APP_NAME}"]
