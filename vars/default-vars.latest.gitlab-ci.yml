@@ -19,7 +19,7 @@
       - .scan_vars
       - .build_vars
       - .cd_vars
-      - .default_iamge_vars
+      - .default_image_vars
       - .repo_list_vars
       - .tools_download_vars
       - .vault_vars
@@ -146,7 +146,7 @@
   DOCKERFILE_BUILD_JDK_VERSION: "jdk17"
 
 # Default image list - Using Docker Hub public images
-.default_iamge_vars:
+.default_image_vars:
   # Base build image used in pipeline build stage, will auto-select corresponding image based on project type
   # To override build image for specific project type, set this variable directly
   BASE_BUILD_IMAGE: ""
