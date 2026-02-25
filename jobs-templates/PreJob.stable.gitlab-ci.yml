@@ -1,5 +1,6 @@
 pre:
   stage: .pre
+  image: ${TOOLBOX_IMAGE}
   extends:
     - .runner_tag
     - .load_artifacts_env
