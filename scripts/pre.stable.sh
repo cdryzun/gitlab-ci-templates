@@ -15,8 +15,21 @@ BUILD_TIME=`date +"%Y%m%d%H%M"` # Timestamp in container Tag, accurate to minute
 
 dotenv LOG_LEVEL ${LOG_LEVEL}
 
-# Docker image name
-dotenv IMG_NAME ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+# Docker image name construction
+# For Docker Hub, use DOCKER_HUB_ORGANIZATION instead of CI_PROJECT_NAMESPACE
+# because Docker Hub only supports single-level organization/username
+if [ "${DOCKER_REGISTRY}" = "docker.io" ] && [ -n "${DOCKER_HUB_ORGANIZATION}" ]; then
+  # Docker Hub format: docker.io/{organization}/{project-name}
+  dotenv IMG_NAME ${DOCKER_REGISTRY}/${DOCKER_HUB_ORGANIZATION}/${CI_PROJECT_NAME}
+elif [ "${DOCKER_REGISTRY}" = "docker.io" ] && [ -z "${DOCKER_HUB_ORGANIZATION}" ]; then
+  # Docker Hub without organization, use CI_PROJECT_NAMESPACE but flatten it
+  # Replace slashes with dashes for Docker Hub compatibility
+  local _flat_namespace=$(echo "${CI_PROJECT_NAMESPACE}" | tr '/' '-')
+  dotenv IMG_NAME ${DOCKER_REGISTRY}/${_flat_namespace}/${CI_PROJECT_NAME}
+else
+  # Private registry: use original format
+  dotenv IMG_NAME ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+fi
 
 # Determine docker image tag name based on branch name
 if [ "${RELEASE_BUILD}" == 'true' ];then

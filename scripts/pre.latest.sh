@@ -6,8 +6,23 @@ dotenv _CI_COMMIT_REF_NAME `echo ${CI_COMMIT_REF_NAME}|tr '/' '-'`
 # _BUILD_ENV=`echo "${CI_COMMIT_REF_NAME}"|awk -F '/' '{print $2}'`
 BUILD_TIME=`date +"%Y%m%d%H%M"` # Timestamp in container Tag, accurate to minute
 
-# Docker image name
-dotenv IMG_NAME ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+dotenv LOG_LEVEL ${LOG_LEVEL}
+
+# Docker image name construction
+# For Docker Hub, use DOCKER_HUB_ORGANIZATION instead of CI_PROJECT_NAMESPACE
+# because Docker Hub only supports single-level organization/username
+if [ "${DOCKER_REGISTRY}" = "docker.io" ] && [ -n "${DOCKER_HUB_ORGANIZATION}" ]; then
+  # Docker Hub format: docker.io/{organization}/{project-name}
+  dotenv IMG_NAME ${DOCKER_REGISTRY}/${DOCKER_HUB_ORGANIZATION}/${CI_PROJECT_NAME}
+elif [ "${DOCKER_REGISTRY}" = "docker.io" ] && [ -z "${DOCKER_HUB_ORGANIZATION}" ]; then
+  # Docker Hub without organization, use CI_PROJECT_NAMESPACE but flatten it
+  # Replace slashes with dashes for Docker Hub compatibility
+  local _flat_namespace=$(echo "${CI_PROJECT_NAMESPACE}" | tr '/' '-')
+  dotenv IMG_NAME ${DOCKER_REGISTRY}/${_flat_namespace}/${CI_PROJECT_NAME}
+else
+  # Private registry: use original format
+  dotenv IMG_NAME ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+fi
 
 # Determine docker image tag name based on branch name
 if [ "${RELEASE_BUILD}" == 'true' ];then
@@ -48,6 +63,15 @@ if [ -z "${PROJECT_TYPE}" ];then
 elif [ -z "${BUILD_SHELL}" ] && [ "${PROJECT_TYPE}" == 'python' ];then
   # Python type without BUILD_SHELL set, update project type to model, subsequent execution will copy full source code
   dotenv PROJECT_TYPE 'py_model'
+fi
+
+# When DOCKERFILE_BUILD_JDK_VERSION jdk version is set, automatically set corresponding image version
+if [[ ! ${DOCKERFILE_BUILD_JDK_VERSION} =~ '8' ]];then
+    _jdk_version=$(echo ${DOCKERFILE_BUILD_JDK_VERSION}|awk -F '-' '{print $1}')
+    _MAVEN_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
+    _SONAR_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
+    dotenv MAVEN_IMAGE ${_MAVEN_IMAGE}
+    dotenv SONAR_IMAGE ${_SONAR_IMAGE}
 fi
 
 # Unit test image list - maps PROJECT_TYPE to corresponding builder image

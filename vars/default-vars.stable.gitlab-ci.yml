@@ -59,6 +59,14 @@
   STATIC_FILE_NAME: ""
   MAVEN_APP_NAME: "app"
   BUILD_MAVEN_SNAPSHOT: "false"
+  # Docker Hub configuration
+  # For Docker Hub (docker.io), use DOCKER_HUB_ORGANIZATION to specify your organization/username
+  # Example: DOCKER_HUB_ORGANIZATION: "cdryzun"
+  # If not specified, CI_PROJECT_NAMESPACE will be flattened (slashes replaced with dashes)
+  DOCKER_HUB_ORGANIZATION: ""
+  # Docker image name
+  # For private registries: ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+  # For Docker Hub: ${DOCKER_REGISTRY}/${DOCKER_HUB_ORGANIZATION}/${CI_PROJECT_NAME} (if DOCKER_HUB_ORGANIZATION is set)
   IMG_NAME: "${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
   PNPM_LOCKFILE_DISABLE: "false"
   DEV_DOCKER_TAG_PERFIX: "${CI_COMMIT_REF_NAME}"
