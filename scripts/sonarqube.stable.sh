@@ -27,28 +27,51 @@ function sonar_scan(){
 		fi
 	fi
 
-	# Check if SONAR_DIR set in gitlab ci exists, if not, automatically set based on actual usage
+	# Check if SONAR_DIR set in gitlab ci exists, if not, automatically set based on project type
 	if [ ! -d "${SONAR_DIR}" ];then
-		local SONAR_DIR='./src'
-		# When not found in first level directory, try searching in second level
-		if [ ! -d "${SONAR_DIR}" ];then
-			# Check if ./*/src directories exist before listing
-			if ls ./*/src 2>/dev/null | grep -q src; then
-				for SOURCE_PATH in $(ls ./*/src 2>/dev/null | grep src | tr -d ':'); do
-					if [ ! "${SONAR_DIR_LIST}" ];then
-						SONAR_DIR_LIST="$SOURCE_PATH"
-					else
-						SONAR_DIR_LIST="${SONAR_DIR_LIST},${SOURCE_PATH}"
-					fi
-				done
-				local SONAR_DIR=${SONAR_DIR_LIST}
-			else
-				# When src not found in first or second level directory, try setting to app
-				local SONAR_DIR='./app'
-				if [ ! -d "${SONAR_DIR}" ];then
-					# Check if ./*/app directories exist before listing
-					if ls ./*/app 2>/dev/null | grep -q app; then
-						for SOURCE_PATH in $(ls ./*/app 2>/dev/null | grep app | tr -d ':'); do
+		# Set source directory based on project type
+		case "${PROJECT_TYPE}" in
+			golang)
+				# Go projects typically have source files in root directory
+				local SONAR_DIR='./'
+				echo "[Info] Go project detected, using project root as source directory"
+				;;
+			java)
+				# Java projects typically use src/main/java
+				if [ -d "./src/main/java" ]; then
+					local SONAR_DIR='./src/main/java'
+				elif [ -d "./src" ]; then
+					local SONAR_DIR='./src'
+				else
+					local SONAR_DIR='./'
+				fi
+				;;
+			nodejs|web)
+				# Node.js/Web projects may have src directory
+				if [ -d "./src" ]; then
+					local SONAR_DIR='./src'
+				else
+					local SONAR_DIR='./'
+				fi
+				;;
+			python)
+				# Python projects may have src or app directory
+				if [ -d "./src" ]; then
+					local SONAR_DIR='./src'
+				elif [ -d "./app" ]; then
+					local SONAR_DIR='./app'
+				else
+					local SONAR_DIR='./'
+				fi
+				;;
+			*)
+				# For unknown project types, try to detect source directory
+				local SONAR_DIR='./src'
+				if [ ! -d "${SONAR_DIR}" ]; then
+					# Try searching in subdirectories
+					if ls ./*/src 2>/dev/null | grep -q src; then
+						SONAR_DIR_LIST=""
+						for SOURCE_PATH in $(ls ./*/src 2>/dev/null | grep src | tr -d ':'); do
 							if [ ! "${SONAR_DIR_LIST}" ];then
 								SONAR_DIR_LIST="$SOURCE_PATH"
 							else
@@ -57,17 +80,23 @@ function sonar_scan(){
 						done
 						local SONAR_DIR=${SONAR_DIR_LIST}
 					else
-						# If none of the above are satisfied, use project root directory
-						echo "[Warning] Unable to find corresponding source directory, setting to default directory ./"
-						SONAR_DIR='./'
+						# Use project root as fallback
+						echo "[Warning] Unable to find source directory, using project root ./"
+						local SONAR_DIR='./'
 					fi
 				fi
-			fi
-		fi
+				;;
+		esac
 	fi
 
 	# Configure SONAR_BINARIES variable directory based on SONAR_DIR, required for JAVA
-	local SONAR_BINARIES=`echo ${SONAR_DIR}|sed 's#/src#/target/classes#g'`
+	# Only apply this for Java projects to avoid unnecessary transformations
+	if [ "${PROJECT_TYPE}" == "java" ] && [[ "${SONAR_DIR}" == *"/src"* ]]; then
+		local SONAR_BINARIES=$(echo "${SONAR_DIR}" | sed 's#/src#/target/classes#g')
+	else
+		# For non-Java projects, binaries directory is not applicable
+		local SONAR_BINARIES=""
+	fi
 	local ARGS="-Dsonar.sources=${SONAR_DIR}"
 
 	local SONAR_SCAN_ARGS="${SONAR_SCAN_ARGS} ${ARGS}" # Add to args variable set in gitlab ci
