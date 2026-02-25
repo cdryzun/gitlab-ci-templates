@@ -31,20 +31,10 @@ function sonar_scan(){
 	if [ ! -d "${SONAR_DIR}" ];then
 		local SONAR_DIR='./src'
 		# When not found in first level directory, try searching in second level
-		if [ ! -d "${SONAR_DIR}" -a `ls ./*/src|grep src|tr -d ':'|wc -l` -ge  1 ];then
-			for SOURCE_PATH in `ls ./*/src|grep src|tr -d ':'`;do
-				if [ ! "${SONAR_DIR_LIST}" ];then
-					SONAR_DIR_LIST="$SOURCE_PATH"
-				else
-					SONAR_DIR_LIST="${SONAR_DIR_LIST},${SOURCE_PATH}"
-				fi
-			done
-			local SONAR_DIR=${SONAR_DIR_LIST}
-		elif [ ! -d "${SONAR_DIR}" ];then
-			# When src not found in first or second level directory, try setting to app
-			local SONAR_DIR='./app'
-			if [ ! -d "${SONAR_DIR}" -a `ls ./*/app|grep app|tr -d ':'|wc -l` -ge  1 ];then
-				for SOURCE_PATH in `ls ./*/src|grep src|tr -d ':'`;do
+		if [ ! -d "${SONAR_DIR}" ];then
+			# Check if ./*/src directories exist before listing
+			if ls ./*/src 2>/dev/null | grep -q src; then
+				for SOURCE_PATH in $(ls ./*/src 2>/dev/null | grep src | tr -d ':'); do
 					if [ ! "${SONAR_DIR_LIST}" ];then
 						SONAR_DIR_LIST="$SOURCE_PATH"
 					else
@@ -53,9 +43,25 @@ function sonar_scan(){
 				done
 				local SONAR_DIR=${SONAR_DIR_LIST}
 			else
-				# If none of the above are satisfied, program exits with error
-				echo "${Error}Unable to find corresponding source directory, setting to default directory ${CRED}./${CEND}"
-				SONAR_DIR='./'
+				# When src not found in first or second level directory, try setting to app
+				local SONAR_DIR='./app'
+				if [ ! -d "${SONAR_DIR}" ];then
+					# Check if ./*/app directories exist before listing
+					if ls ./*/app 2>/dev/null | grep -q app; then
+						for SOURCE_PATH in $(ls ./*/app 2>/dev/null | grep app | tr -d ':'); do
+							if [ ! "${SONAR_DIR_LIST}" ];then
+								SONAR_DIR_LIST="$SOURCE_PATH"
+							else
+								SONAR_DIR_LIST="${SONAR_DIR_LIST},${SOURCE_PATH}"
+							fi
+						done
+						local SONAR_DIR=${SONAR_DIR_LIST}
+					else
+						# If none of the above are satisfied, use project root directory
+						echo "[Warning] Unable to find corresponding source directory, setting to default directory ./"
+						SONAR_DIR='./'
+					fi
+				fi
 			fi
 		fi
 	fi

@@ -1,16 +1,27 @@
 
-# .common_sonar_rules:
-#   rules:
-#     - if: '$SONAR_COMMON == "true"
-#       && ($CI_COMMIT_REF_NAME =~ /^(dev|master|develop|release)((-|_)[-_0-9a-z]{1,12})?$/ 
-#       || $CI_COMMIT_REF_NAME =~ /^v?\d+\.\d+\.\d+((\-[a-zA-Z0-9]+)+)?$/)'
-#       variables:
-#         SONAR_GATE: "true"
-#     - if: '$SONAR_COMMON == "true"
-#       && $CI_COMMIT_BRANCH =~ /^(feat|fix|hotfix)((-|_)[-_0-9a-z]{1,12})?$/'
-#       variables:
-#         SONAR_GATE: "false"
-#     - when: on_success
+# Common rules for SonarQube scanning
+.common_sonar_rules:
+  rules:
+    # Skip if SONAR_URL is not configured
+    - if: '$SONAR_URL == null || $SONAR_URL == ""'
+      when: never
+    # Skip if SONAR_COMMON is disabled
+    - if: '$SONAR_COMMON != "true"'
+      when: never
+    # Production branches with quality gate
+    - if: '$CI_COMMIT_REF_NAME =~ /^(dev|master|develop|release|sit|prd)((-|_)[-_0-9a-z]{1,12})?$/'
+      variables:
+        SONAR_GATE: "true"
+    # Feature branches without quality gate
+    - if: '$CI_COMMIT_REF_NAME =~ /^(feat|fix|hotfix|bugfix)((-|_)[-_0-9a-z]{1,12})?$/'
+      variables:
+        SONAR_GATE: "false"
+    # Release tags
+    - if: '$CI_COMMIT_REF_NAME =~ /^v?\d+\.\d+\.\d+((\-[a-zA-Z0-9]+)+)?$/'
+      variables:
+        SONAR_GATE: "true"
+    # Default: don't run
+    - when: never
 
 sonar:
   stage: sonar
@@ -32,5 +43,5 @@ sonar:
       script_download sonarqube.${TEMPLATE_CONTEXT}.sh
       chmod +x ./run.sh
       shell_exec './run.sh'
-  # rules:
-  #   !reference [ .common_sonar_rules, rules ]
+  rules:
+    !reference [ .common_sonar_rules, rules ]
