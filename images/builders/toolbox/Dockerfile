@@ -13,7 +13,7 @@ ARG JQ_VERSION=1.7
 ARG HELM_VERSION=3.14.0
 ARG KUBECTL_VERSION=1.29.2
 ARG DOCKER_VERSION=24.0.7
-ARG GLAB_VERSION=1.37.0
+ARG GLAB_VERSION=1.86.0
 ARG ARGOCD_VERSION=2.10.0
 
 # Install base dependencies
@@ -57,9 +57,10 @@ RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-${D
 
 # Install glab (GitLab CLI)
 RUN curl -fsSL https://gitlab.com/gitlab-org/cli/-/releases/v${GLAB_VERSION}/downloads/glab_${GLAB_VERSION}_linux_amd64.tar.gz \
-    | tar -xzC /tmp && \
+    -o /tmp/glab.tar.gz && \
+    tar -xzf /tmp/glab.tar.gz -C /tmp && \
     mv /tmp/bin/glab /usr/local/bin/glab && \
-    rm -rf /tmp/bin
+    rm -rf /tmp/bin /tmp/glab.tar.gz
 
 # Install ArgoCD CLI
 RUN curl -fsSL https://github.com/argoproj/argo-cd/releases/download/v${ARGOCD_VERSION}/argocd-linux-amd64 \
