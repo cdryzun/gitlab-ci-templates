@@ -14,7 +14,7 @@ dotenv LOG_LEVEL ${LOG_LEVEL}
 # Also flatten multi-level namespace into image name to avoid conflicts
 if [ "${DOCKER_REGISTRY}" = "docker.io" ]; then
   # Flatten namespace: replace / with -
-  local _flat_namespace=$(echo "${CI_PROJECT_NAMESPACE}" | tr '/' '-')
+  _flat_namespace=$(echo "${CI_PROJECT_NAMESPACE}" | tr '/' '-')
   if [ -n "${DOCKER_HUB_ORGANIZATION}" ]; then
     # Docker Hub format: docker.io/{organization}/{namespace-project}
     # Use _ to separate flattened namespace and project name
