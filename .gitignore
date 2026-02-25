@@ -30,6 +30,9 @@ logs/
 .DS_Store
 Thumbs.db
 
+# IDE and editor tools
+.serena/
+
 # h2 data
 *.db
 .vscode/*
