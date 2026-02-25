@@ -89,12 +89,14 @@ declare -A BRANCH_TYPE_LIST=(
 	["prod"]="latest"
 )
 
-# Unit test image list
+# Unit test image list - maps PROJECT_TYPE to corresponding builder image
+# Project types: java, web, python, golang, py_model
 declare -A UNIT_IMAGE_LIST=(
 	["java"]="${MAVEN_IMAGE}"
 	["web"]="${NODE_IMAGE}"
 	["python"]="${PYTHON_IMAGE}"
 	["golang"]="${GO_IMAGE}"
+	["py_model"]="${PYTHON_IMAGE}"
 )
 
 # Docker Build Secret ID dictionary

@@ -79,23 +79,29 @@ if [[ ! ${DOCKERFILE_BUILD_JDK_VERSION} =~ '8' ]];then
     dotenv SONAR_IMAGE ${_SONAR_IMAGE}
 fi
 
-# Unit test image list
+# Unit test image list - maps PROJECT_TYPE to corresponding builder image
+# Project types: java, web, python, golang, py_model
 declare -A UNIT_IMAGE_LIST=(
 	["java"]="${MAVEN_IMAGE}"
 	["web"]="${NODE_IMAGE}"
 	["python"]="${PYTHON_IMAGE}"
 	["golang"]="${GO_IMAGE}"
+	["py_model"]="${PYTHON_IMAGE}"
 )
 
-# Set base image used for unit testing
-if [ -z ${UNIT_IMAGE_LIST[$PROJECT_TYPE]} ];then
-  dotenv _BUILD_IMAGE "${UNIT_IMAGE_LIST[python]}"
+# Set base image used for unit testing and build
+if [ -z "${UNIT_IMAGE_LIST[$PROJECT_TYPE]}" ];then
+  echo "${Error}Unknown PROJECT_TYPE: ${PROJECT_TYPE}, falling back to toolbox image"
+  dotenv _BUILD_IMAGE "${TOOLBOX_IMAGE}"
 else
   dotenv _BUILD_IMAGE "${UNIT_IMAGE_LIST[$PROJECT_TYPE]}"
 fi
 
-# When prd branch runs build stage, no need to build image, instead need to create branch, using git command, some images don't have git
-# If BASE_BUILD_IMAGE variable is set, prioritize using the image defined by that variable
+# Determine final BUILD_IMAGE based on context:
+# 1. prd branch: use toolbox (needs git for tag creation)
+# 2. BASE_BUILD_IMAGE override: use user-specified image
+# 3. Golang with Docker build: use toolbox (contains Docker CLI, Go compilation in Dockerfile)
+# 4. Default: use project-type-specific builder image
 if [ "${CI_COMMIT_REF_NAME}" == 'prd' ];then
     dotenv BUILD_IMAGE "${TOOLBOX_IMAGE}"
 elif [ -n "${BASE_BUILD_IMAGE}" ];then
