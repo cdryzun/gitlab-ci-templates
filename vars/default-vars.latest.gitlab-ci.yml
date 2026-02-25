@@ -69,11 +69,14 @@
   # Docker Hub configuration
   # For Docker Hub (docker.io), use DOCKER_HUB_ORGANIZATION to specify your organization/username
   # Example: DOCKER_HUB_ORGANIZATION: "cdryzun"
-  # If not specified, CI_PROJECT_NAMESPACE will be flattened (slashes replaced with dashes)
+  # Docker Hub only supports single-level organization, so multi-level namespace is flattened:
+  #   GitLab path: sre/devops/go-hello → Docker image: docker.io/cdryzun/sre-devops_go-hello
+  #   GitLab path: team/backend/api     → Docker image: docker.io/cdryzun/team-backend_api
+  # This avoids conflicts when different namespaces have same project names
   DOCKER_HUB_ORGANIZATION: ""
-  # Docker image name
+  # Docker image name (processed in pre stage)
   # For private registries: ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
-  # For Docker Hub: ${DOCKER_REGISTRY}/${DOCKER_HUB_ORGANIZATION}/${CI_PROJECT_NAME} (if DOCKER_HUB_ORGANIZATION is set)
+  # For Docker Hub: ${DOCKER_REGISTRY}/${DOCKER_HUB_ORGANIZATION}/${flat-namespace}_${CI_PROJECT_NAME}
   IMG_NAME: "${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
   # Command for program build
   #BUILD_SHELL: "mvn clean package -Dmaven.test.skip=true"

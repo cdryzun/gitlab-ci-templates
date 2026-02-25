@@ -18,16 +18,20 @@ dotenv LOG_LEVEL ${LOG_LEVEL}
 # Docker image name construction
 # For Docker Hub, use DOCKER_HUB_ORGANIZATION instead of CI_PROJECT_NAMESPACE
 # because Docker Hub only supports single-level organization/username
-if [ "${DOCKER_REGISTRY}" = "docker.io" ] && [ -n "${DOCKER_HUB_ORGANIZATION}" ]; then
-  # Docker Hub format: docker.io/{organization}/{project-name}
-  dotenv IMG_NAME ${DOCKER_REGISTRY}/${DOCKER_HUB_ORGANIZATION}/${CI_PROJECT_NAME}
-elif [ "${DOCKER_REGISTRY}" = "docker.io" ] && [ -z "${DOCKER_HUB_ORGANIZATION}" ]; then
-  # Docker Hub without organization, use CI_PROJECT_NAMESPACE but flatten it
-  # Replace slashes with dashes for Docker Hub compatibility
+# Also flatten multi-level namespace into image name to avoid conflicts
+if [ "${DOCKER_REGISTRY}" = "docker.io" ]; then
+  # Flatten namespace: replace / with -
   local _flat_namespace=$(echo "${CI_PROJECT_NAMESPACE}" | tr '/' '-')
-  dotenv IMG_NAME ${DOCKER_REGISTRY}/${_flat_namespace}/${CI_PROJECT_NAME}
+  if [ -n "${DOCKER_HUB_ORGANIZATION}" ]; then
+    # Docker Hub format: docker.io/{organization}/{namespace-project}
+    # Use _ to separate flattened namespace and project name
+    dotenv IMG_NAME ${DOCKER_REGISTRY}/${DOCKER_HUB_ORGANIZATION}/${_flat_namespace}_${CI_PROJECT_NAME}
+  else
+    # Docker Hub without organization: use flattened namespace as organization
+    dotenv IMG_NAME ${DOCKER_REGISTRY}/${_flat_namespace}/${_flat_namespace}_${CI_PROJECT_NAME}
+  fi
 else
-  # Private registry: use original format
+  # Private registry: use original multi-level namespace format
   dotenv IMG_NAME ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
 fi
 
