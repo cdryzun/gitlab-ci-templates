@@ -120,6 +120,7 @@
 # Tools are pre-installed in the glci-toolbox image
 # No need to download them during CI pipeline
 .tools_download_vars:
+  TOOLS_DOWNLOAD_DISABLED: "true"
 
 # Vault configuration (optional)
 # Configure VAULT_SERVER_URL, VAULT_AUTH_ROLE in your GitLab CI/CD variables
