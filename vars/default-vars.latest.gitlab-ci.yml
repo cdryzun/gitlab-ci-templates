@@ -52,6 +52,8 @@
 
 # Image & build related variables
 .build_vars:
+  # Cache directory for build artifacts
+  CACHE_DIR: "${CI_PROJECT_DIR}/.cache"
   # Package manager for frontend build (pnpm/yarn)
   PACKAGE_MANAGER: "pnpm"
   # Disable frontend cache
