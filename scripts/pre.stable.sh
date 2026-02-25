@@ -100,6 +100,10 @@ if [ "${CI_COMMIT_REF_NAME}" == 'prd' ];then
     dotenv BUILD_IMAGE "${TOOLBOX_IMAGE}"
 elif [ -n "${BASE_BUILD_IMAGE}" ];then
     dotenv BUILD_IMAGE "${BASE_BUILD_IMAGE}"
+elif [ "${PROJECT_TYPE}" == 'golang' ] && [ "${DOCKER_IMAGE_BUILD}" == 'true' ];then
+    # For Go projects that need to build Docker images, use toolbox image (contains Docker CLI)
+    # Go compilation will be done inside the Docker build process using multi-stage builds
+    dotenv BUILD_IMAGE "${TOOLBOX_IMAGE}"
 else
     dotenv BUILD_IMAGE "${_BUILD_IMAGE}"
 fi
