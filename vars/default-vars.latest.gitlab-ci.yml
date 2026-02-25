@@ -1,21 +1,19 @@
 .default_vars:
     # 默认使用的 runner tag
-    RUNNER: k3s-paas
+    RUNNER: default
 
-    # 此段中的变量由 gitlab 使用使用全局变量进行配置 
-    # TEMPLATE_REPO: "${CI_PROJECT_URL}"
-    # TEMPLATE_REPO_PROJECT_ID: "${CI_PROJECT_ID}"
+    # Template repository - GitHub raw URL for open source
+    TEMPLATE_BRANCH_NAME: "open"
+    TEMPLATE_REPO_RAW_URL: "https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/${TEMPLATE_BRANCH_NAME}"
 
-    # 指定 ci template 仓库所使用的分支是哪个，默认 master
-    TEMPLATE_BRANCH_NAME: "devops"
-    # argocd server address，依赖密钥，封装在 vautl 中
-    ARGOCD_SERVER: "argocd.cpinnov.run:443"
+    # ArgoCD server address (configure in your GitLab CI/CD variables)
+    # ARGOCD_SERVER: "argocd.example.com:443"
 
     # 继承父进程环境变量和别名时，所使用的临时暂存文件
     BASH_ENV: "${CI_PROJECT_DIR}/_alias"
-    ENV_FILE: "build.env" # artifacts:reports:dotenv 所指定的文件 ，docs: https://docs.gitlab.com/ee/ci/yaml/artifacts_reports.html#artifactsreportsdotenv
-    CI_DEBUG_TRACE: "false" # 开启 CI pipeline log 详细日志
-    LOG_LEVEL: "info" # job 中 脚本执行 log 等级，如 “CI_DEBUG_TRACE” 开启后将自动设置为 debug
+    ENV_FILE: "build.env"
+    CI_DEBUG_TRACE: "false"
+    LOG_LEVEL: "info"
     extends:
       - .test_vars
       - .scan_vars
@@ -23,6 +21,7 @@
       - .cd_vars
       - .default_iamge_vars
       - .repo_list_vars
+      - .tools_download_vars
       - .vault_vars
       - .image_scan
 
@@ -39,25 +38,16 @@
   # 进行单元测试时所使用的命令，使用 bash 为其设置 初始值 ${TEST_SHELL:-"xxx"}
   # TEST_SHELL: ""
 
-# sonarqube 扫描相关变量
+# SonarQube scan configuration
+# Configure SONAR_URL and SONAR_TOKEN in your GitLab CI/CD variables
 .scan_vars:
-  # 使用的 sonarqube 连接地址
-  SONAR_URL: "https://sonarqube.cpinnov.run"
-  # 默认预设通用工程sonar扫描目录，多个已逗号相连接
   SONAR_DIR: "./src"
-  # 配置在扫描时 sonarqube 所传入的 args 参数
   SONAR_SCAN_ARGS: ""
-  # java工程maven集成sonar扫描，与下面的 SONAR_COMMON 二选一
   SONAR_MAVEN: "false"
-  # 非java通用sonar扫描
   SONAR_COMMON: "true"
-  # 开启强制sonar检测，扫描结果不满足规则就中断CI, 后端会使用正则，对重要的分支进行强制开启。
   SONAR_GATE: "false"
-  # sonarqube 扫描的 二级制程序目录，一般无需修改
   SONAR_BINARIES: 'target/classes'
-  # sonarqube 扫描的 测试二级制程序目录，一般无需修改
   SONAR_TEST_BINARIES: 'target/test-classes'
-  # 单元测试覆盖率最小百分比,不满足这个条件则中断CI
   MIN_COVERAGE: "80"
 
 # 镜像 & 构建 相关变量
@@ -122,14 +112,14 @@
   # 开启 Docker buildkit,  内置变量勿动
   DOCKER_BUILDKIT: 1
 
-# CD 部署环境变量 ，docs-url:  https://confluence.iquantex.com/pages/viewpage.action?pageId=114175811
+# CD 部署环境变量
 .cd_vars:
   # tag 的 image build 阶段是否关闭 retag，而选择重新构建生成
   RELEASE_RETAG_DISABLE: "false"
   # 自动 commit 中 使用的名字
-  GIT_AUTO_COMMIT_NAME: "ci-cd"
+  GIT_AUTO_COMMIT_NAME: "ci-bot"
   # 自动 commit 中 使用的邮箱
-  GIT_AUTO_COMMIT_EMAIL: "ci-cd@cpinnov.run"
+  GIT_AUTO_COMMIT_EMAIL: "ci-bot@example.com"
   # CD 部署阶段所使用的镜像名称，设置后将替换 "${DEV_DOCKER_TAG_PERFIX}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}" 这个默认版本
   CD_DEPLOY_IMGAGE: ""
   # 默认 commit push 的远端分支
@@ -155,36 +145,55 @@
   PRD_CD_CREATE_TAG: "true"
   DOCKERFILE_BUILD_JDK_VERSION: "jdk17"
 
-# 默认的镜像列表
+# 默认的镜像列表 - Using Docker Hub public images
 .default_iamge_vars:
   # 流水线构建阶段使用的基础构建镜像，将根据项目类型自动选择对应的镜像
   # 如需覆盖特定项目类型的构建镜像，请直接设置此变量
   BASE_BUILD_IMAGE: ""
-  MAVEN_IMAGE: "harbor.cpinnov.run/library/base-image:gradle-maven-sonar-jdk17-debian"
-  GRADLE_IMAGE: "harbor.cpinnov.run/library/base-image:gradle-maven-sonar-jdk17-debian"
-  NODE_IMAGE: "harbor.cpinnov.run/library/base-image:nodejs-12-with-tools-debian"
-  SONAR_IMAGE: "harbor.cpinnov.run/library/base-image:gradle-maven-sonar-jdk17-debian"
-  TOOLBOX_IMAGE: "harbor.cpinnov.run/library/base-image:ci-buildbox"
-  PYTHON_IMAGE: "harbor.cpinnov.run/library/base-image:micromamba-1.1.0"
-  GO_IMAGE: "harbor.cpinnov.run/library/base-image:golang1.25.0-rk-debian-amd64"
+  MAVEN_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
+  GRADLE_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
+  NODE_IMAGE: "docker.io/cdryzun/glci-builder-nodejs:20"
+  SONAR_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
+  TOOLBOX_IMAGE: "docker.io/cdryzun/glci-toolbox:latest"
+  PYTHON_IMAGE: "docker.io/cdryzun/glci-builder-python:3.11"
+  GO_IMAGE: "docker.io/cdryzun/glci-builder-golang:1.23"
   CD_DEPLOY_IMAGE: "${TOOLBOX_IMAGE}"
   TEST_IMAGE: "${TOOLBOX_IMAGE}"
 
-# 工具私服地址变量
+# 工具私服地址变量 - Configure these in your GitLab CI/CD variables for internal use
 .repo_list_vars:
-  # harbor docker 私服地址
-  HARBOR_URL: "harbor.cpinnov.run"
-  NEXUS_URL: "https://nexus.cpinnov.run"
+  # Docker registry (default: docker.io)
+  DOCKER_REGISTRY: "docker.io"
+  # Node.js registry (Chinese mirror for faster downloads)
   NODE_REGISTRY: "https://registry.npmmirror.com"
-  PYPI: "https://nexus.cpinnov.run/repository/pypi/simple/"
-  PYPI_PRIVATE: "https://nexus.cpinnov.run/repository/pypi-local/"
-  MAVEN_REGISTRY: "https://nexus.cpinnov.run/repository/maven-public/"
+  # Python package index (default: PyPI)
+  PYPI: "https://pypi.org/simple"
+  # Maven central repository
+  MAVEN_REGISTRY: "https://repo1.maven.org/maven2/"
+  # Optional: Override above with your internal registry by setting these in GitLab CI/CD variables
+  # HARBOR_URL: "harbor.example.com"
+  # NEXUS_URL: "https://nexus.example.com"
+  # PYPI_PRIVATE: "https://nexus.example.com/repository/pypi-local/"
 
-# vault连接相关控制变量，默认
+# Tools are pre-installed in the glci-toolbox image
+# No need to download them during CI pipeline
+.tools_download_vars:
+  TEMPLATE_REPO_RAW_URL: "https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/${TEMPLATE_BRANCH_NAME}"
+
+# Vault configuration (optional)
+# Configure VAULT_SERVER_URL, VAULT_AUTH_ROLE in your GitLab CI/CD variables
 .vault_vars:
-  # VAULT_SERVER_URL: "https://vault.cpinnov.run"
   VAULT_AUTH_ROLE: "ci-vault"
   VAULT_AUTH_PATH: "jwt"
+  # Optional: Credentials for internal services (configure in GitLab CI/CD variables)
+  LDAP_USER: "${NEXUS_USER:-}"
+  LDAP_PASSWD: "${NEXUS_PASSWORD:-}"
+  HARBOR_USER: "${REGISTRY_USER:-}"
+  HARBOR_PASSWD: "${REGISTRY_PASSWORD:-}"
+  SONAR_TOKEN: "${SONARQUBE_TOKEN:-}"
+  GITLAB_READ_TOKEN: "${GITLAB_TOKEN:-}"
+  GITLAB_REPO_COMMIT_TOKEN: "${GITLAB_TOKEN:-}"
+  GITLAB_API_TOKEN: "${GITLAB_TOKEN:-}"
 
 # artifacts 默认配置
 .default_artifacts:
@@ -194,11 +203,10 @@
 # docker 镜像扫描相关变量
 .image_scan:
   # 扫描镜像安全漏洞
-  DOCKER_IMAGE_SCAN_IMAGE: "true"
-  DOCKER_IMAGE_SCAN_SERVER: "http://10.16.18.166:28080"
+  DOCKER_IMAGE_SCAN_IMAGE: "false"
   # 如果扫描 iamge 漏洞等级为中高以上时 是否强制中断CI
   ENFORCE_EXIT: "false"
   # gitlab 容器扫描变量
-  CS_ANALYZER_IMAGE: "proxyhub.cpinnov.run/cloudir/container-scanning:latest"
+  CS_ANALYZER_IMAGE: "docker.io/aquasec/trivy:latest"
   IMAGE_NAME: "$IMG_NAME"
   CI_REGISTRY_IMAGE: "$IMAGE_NAME"

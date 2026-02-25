@@ -7,7 +7,7 @@ dotenv _CI_COMMIT_REF_NAME `echo ${CI_COMMIT_REF_NAME}|tr '/' '-'`
 BUILD_TIME=`date +"%Y%m%d%H%M"` # 容器 Tag 中的时间戳，精确到分
 
 # docker image 的名称
-dotenv IMG_NAME ${HARBOR_URL##https://}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+dotenv IMG_NAME ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
 
 # 根据 分支名称来确定 docker image tag name
 if [ "${RELEASE_BUILD}" == 'true' ];then
@@ -106,7 +106,7 @@ fi
 
 if [ -n "${DOCKERFILE_TO_CHECK}" ];then
   if [ $(cat "${DOCKERFILE_TO_CHECK}"|egrep -v "^#|^$"|egrep "^(ENTRYPOINT|USER|WORKDIR|HEALTHCHECK|LABEL|MAINTAINER|CMD)"|wc -l) -gt 0 ];then
-      echo "${Error} 检测到 自定义 Dockerfile (${DOCKERFILE_TO_CHECK}) 中存在无效指令，详情请查看: https://gitlab.cpinnov.run/devops/ci-templates/-/issues/9"
+      echo "${Error} 检测到 自定义 Dockerfile (${DOCKERFILE_TO_CHECK}) 中存在无效指令"
       exit 1
   else
       dotenv CUSTOM_DOCKERFILE 'true'

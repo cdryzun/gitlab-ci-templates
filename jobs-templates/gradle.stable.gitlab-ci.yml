@@ -33,7 +33,7 @@ scan:
 
 deploy:
   extends:
-    - .iamge_deploy_base
+    - .image_deploy_base
 
 workflow:
   rules:

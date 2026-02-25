@@ -1,87 +1,89 @@
-include:
-  - local: "vars/default-vars.stable.gitlab-ci.yml"
-  - local: "vars/vault.stable.gitlab-ci.yml"
+# GitLab CI Configuration for gitlab-ci-templates Repository
+# This is used for testing the templates themselves, not for end users
 
-variables:
-  DEPLOY_COMMIT_MESSAGE: "files updated by gitlab-ci pipeline in change-manifests task"
-  extends: .default_vars
+# For internal use only - this CI pipeline validates template changes
+# Commented out for open source version as it requires internal infrastructure
 
-default:
-  image: ${TOOLBOX_IMAGE}
-
-stages:
-  - mask
-  - push-remote
-
-gitlabSecretsMask:
-  stage: mask
-  tags:
-    - k8s
-  variables:
-    TF_ROOT: "${CI_PROJECT_DIR}/terraform"
-    ARTIFACTORY_SUBPATH: "${CI_COMMIT_BRANCH}-gitlabci-templates-terraform"
-    TF_PLUGIN_CACHE_DIR: "/root/.terraform.d/plugin-cache"
-    VAULT_ADDR: "https://vault.cpinnov.run"
-    VAULT_TOKEN: "s.OKcEcupXVNWptvAAzYUPodqa"
-    TF_VAR_gitlab_token: "xpF17NiiJR7pN_fB9Bhr"
-    extends: .default_vars
-    # https_proxy: http://user:quantex@10.10.10.101:1081  # 添加代理，与 terraform 中 host 配置不冲突
-    # no_proxy: '10.116.18.0/23,10.116.20.0/23,10.10.0.0/16' # 添加不使用代理的列表
-  image: harbor.cpinnov.run/library/gitlab-build-image:terraform
-  script:
-    - |
-      sh scripts/secretsToFile.stable.sh
-      ls -lha terraform/
-      keys=""
-      for key_file in $(ls terraform/*.vault);do
-        key=$(echo "$key_file"|awk -F '[./]' '{print $2}' )
-        if [ -z "${keys}" ];then
-          keys="\"${key}\""
-        else
-          keys="${keys},\"${key}\""
-        fi
-      done
-      cd "${TF_ROOT}"
-      sed -i "s#subpath-#${ARTIFACTORY_SUBPATH}#g" backend.tf
-      terraform init && terraform plan -var="vault_key=[${keys}]" \
-      && terraform apply -auto-approve -var="vault_key=[${keys}]"
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
-
-ciTemplatePushRemote:
-  stage: push-remote
-  extends:
-    - .deploy_gitlab_auth_vars
-  tags:
-    - k8s
-  script:
-    - |
-      # add git command tools
-      apk update
-      apk add git
-    - |
-      # convert global rules
-      bash hack/convert-globalrules.sh
-    - |
-      set -eu
-      git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
-      git config --global user.name "${GIT_AUTO_COMMIT_NAME}"
-      git clone --depth 1 https://${GIT_AUTO_COMMIT_NAME}:${GITLAB_REPO_COMMIT_TOKEN}@gitlab-ee.cpinnov.run/devops/template.git repo
-      cd repo/
-      git rm -rf gitlab-ci/
-      cp -a ${CI_PROJECT_DIR}/templates ./gitlab-ci
-
-      ls -la
-      if ! git diff-index --quiet HEAD --; then
-        git status
-        git add .
-        git commit -m "${DEPLOY_COMMIT_MESSAGE}"
-        git push origin
-      else
-          echo "no changes, git repository is up to date"
-      fi
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH' 
-      changes:
-        - templates/*
-        - utils/rules.stable.gitlab-ci.yml
+# include:
+#   - local: "vars/default-vars.stable.gitlab-ci.yml"
+#   - local: "vars/vault.stable.gitlab-ci.yml"
+#
+# variables:
+#   DEPLOY_COMMIT_MESSAGE: "files updated by gitlab-ci pipeline"
+#   extends: .default_vars
+#
+# default:
+#   image: ${TOOLBOX_IMAGE}
+#
+# stages:
+#   - mask
+#   - push-remote
+#
+# gitlabSecretsMask:
+#   stage: mask
+#   tags:
+#     - k8s
+#   variables:
+#     TF_ROOT: "${CI_PROJECT_DIR}/terraform"
+#     ARTIFACTORY_SUBPATH: "${CI_COMMIT_BRANCH}-gitlabci-templates-terraform"
+#     TF_PLUGIN_CACHE_DIR: "/root/.terraform.d/plugin-cache"
+#     VAULT_ADDR: "https://vault.example.com"
+#     extends: .default_vars
+#   image: docker.io/cdryzun/glci-toolbox:latest
+#   script:
+#     - |
+#       sh scripts/secretsToFile.stable.sh
+#       ls -lha terraform/
+#       keys=""
+#       for key_file in $(ls terraform/*.vault);do
+#         key=$(echo "$key_file"|awk -F '[./]' '{print $2}' )
+#         if [ -z "${keys}" ];then
+#           keys="\"${key}\""
+#         else
+#           keys="${keys},\"${key}\""
+#         fi
+#       done
+#       cd "${TF_ROOT}"
+#       sed -i "s#subpath-#${ARTIFACTORY_SUBPATH}#g" backend.tf
+#       terraform init && terraform plan -var="vault_key=[${keys}]" \
+#       && terraform apply -auto-approve -var="vault_key=[${keys}]"
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+#
+# ciTemplatePushRemote:
+#   stage: push-remote
+#   extends:
+#     - .deploy_gitlab_auth_vars
+#   tags:
+#     - k8s
+#   script:
+#     - |
+#       # add git command tools
+#       apk update
+#       apk add git
+#     - |
+#       # convert global rules
+#       bash hack/convert-globalrules.sh
+#     - |
+#       set -eu
+#       git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
+#       git config --global user.name "${GIT_AUTO_COMMIT_NAME}"
+#       git clone --depth 1 https://${GIT_AUTO_COMMIT_NAME}:${GITLAB_REPO_COMMIT_TOKEN}@gitlab.example.com/devops/template.git repo
+#       cd repo/
+#       git rm -rf gitlab-ci/
+#       cp -a ${CI_PROJECT_DIR}/templates ./gitlab-ci
+#
+#       ls -la
+#       if ! git diff-index --quiet HEAD --; then
+#         git status
+#         git add .
+#         git commit -m "${DEPLOY_COMMIT_MESSAGE}"
+#         git push origin
+#       else
+#           echo "no changes, git repository is up to date"
+#       fi
+#   rules:
+#     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+#       changes:
+#         - templates/*
+#         - utils/rules.stable.gitlab-ci.yml

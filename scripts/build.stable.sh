@@ -220,7 +220,7 @@ function docker_build_push(){
         local dockerfile_source="${CUSTOM_DOCKERFILE_PATH:-${CI_PROJECT_DIR}/Dockerfile}"
         rm -rf Dockerfile && cp "${dockerfile_source}" .
         # Dockerfile 添加 image 元数据信息
-        sed -ie '/^FROM.*base-image.*$/a\ARG CI_COMMIT_SHORT_SHA="develop"     CI_BUILD_DATE=""     APP_NAME="app"     CI_COMMIT_REF_NAME=""     CI_COMMIT_AUTHOR=""     CI_PROJECT_NAME=""\nLABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR}       CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA}       CI_BUILD_DATE=${CI_BUILD_DATE}       CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}       DOCKER_FILE_FORM="https://gitlab.cpinnov.run/ci-cd/build-image.git"       CI_PROJECT_NAME=${CI_PROJECT_NAME}\nENV APP=${APP_NAME}' Dockerfile
+        sed -ie '/^FROM.*base-image.*$/a\ARG CI_COMMIT_SHORT_SHA="develop"     CI_BUILD_DATE=""     APP_NAME="app"     CI_COMMIT_REF_NAME=""     CI_COMMIT_AUTHOR=""     CI_PROJECT_NAME=""\nLABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR}       CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA}       CI_BUILD_DATE=${CI_BUILD_DATE}       CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}       DOCKER_FILE_FORM="https://github.com/cdryzun/gitlab-ci-templates"       CI_PROJECT_NAME=${CI_PROJECT_NAME}\nENV APP=${APP_NAME}' Dockerfile
     fi
 
     if [ -e nginx.conf ] && [ "${PROJECT_TYPE}" == 'web' ];then
@@ -266,15 +266,20 @@ function auto_delete_tag(){
         echo "${Tip} 正在进行删除 Docker 镜像: ${CRED}${IMG_NAME}:${claen_tag}${CEND}..."
         _PROJECT_NAME=$(echo `glab repo view|head -n 1|sed 's# / #%252F#g;s#name:##g'`)
 
-        # 清理 harbor 镜像
-		if [[ `curl -u ${HARBOR_USER}:${HARBOR_PASSWD}  -X 'DELETE' \
-		"${HARBOR_URL}/api/v2.0/projects/"${CI_PROJECT_NAME}"/repositories/${_PROJECT_NAME}/artifacts/${claen_tag}/tags/${claen_tag}" \
-		-H 'accept: application/json' \
-		-H 'X-Harbor-CSRF-Token: j8Uot7L4+17WtFRlT2O7TunAGMeKgZKfcjUXehiExpcnU8nv0vFBA+PKktX/B+vk/g3Si/+fURNJRRa0MQ7Aiw==' 2>&1` =~ (errors) ]];then
-			echo "${Tip} 镜像删除失败, 请进行检查..."
-		else
-			echo "${Info} 镜像清理成功..."
-		fi
+        # 清理 registry 镜像 (Harbor API 示例)
+        # 用户可以配置 REGISTRY_CLEANUP_API 变量来启用镜像清理
+        # 例如: REGISTRY_CLEANUP_API="https://harbor.example.com/api/v2.0"
+        if [ -n "${REGISTRY_CLEANUP_API}" ] && [ -n "${REGISTRY_USER}" ] && [ -n "${REGISTRY_PASSWORD}" ]; then
+            if curl -u ${REGISTRY_USER}:${REGISTRY_PASSWORD} -X 'DELETE' \
+                "${REGISTRY_CLEANUP_API}/projects/${CI_PROJECT_NAME}/repositories/${_PROJECT_NAME}/artifacts/${claen_tag}/tags/${claen_tag}" \
+                -H 'accept: application/json' 2>&1 | grep -q "errors"; then
+                echo "${Tip} 镜像删除失败, 请进行检查..."
+            else
+                echo "${Info} 镜像清理成功..."
+            fi
+        else
+            echo "${Tip} 未配置 REGISTRY_CLEANUP_API，跳过镜像清理..."
+        fi
     done
 }
 

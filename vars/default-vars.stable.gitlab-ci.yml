@@ -25,6 +25,7 @@
       - .cd_vars
       - .default_image_vars
       - .repo_list_vars
+      - .tools_download_vars
 
 # Unit test configuration
 .test_vars:
@@ -115,6 +116,10 @@
   DOCKER_REGISTRY: "docker.io"
   NODE_REGISTRY: "https://registry.npmmirror.com"
   PYPI: "https://pypi.org/simple"
+
+# Tools are pre-installed in the glci-toolbox image
+# No need to download them during CI pipeline
+.tools_download_vars:
 
 # Vault configuration (optional)
 # Configure VAULT_SERVER_URL, VAULT_AUTH_ROLE in your GitLab CI/CD variables

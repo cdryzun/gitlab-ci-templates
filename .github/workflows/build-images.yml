@@ -3,7 +3,7 @@ name: Build and Push Docker Images
 on:
   push:
     branches:
-      - main
+      - open
     paths:
       - 'images/**'
       - '.github/workflows/build-images.yml'

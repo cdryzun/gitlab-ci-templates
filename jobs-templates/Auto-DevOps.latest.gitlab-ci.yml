@@ -12,7 +12,7 @@ include:
   # 多架构构建支持（可选，通过变量启用）
   - local: "vars/multiarch-vars.latest.gitlab-ci.yml"
 
-# 载入默认变量 ，变量值可以被上层替换，详情查看链接: https://gitlab.cpinnov.run/devops/ci-templates/-/blob/devops/vars/default-vars.stable.gitlab-ci.yml
+# 载入默认变量 ，变量值可以被上层替换
 # 变量优先级  script(bash) > gitlab web >  gitlab template > os system default;
 # 其中 gitlab web 又存在有优先级问题：
 # gitlab project > gitlab group > gitlab platform default

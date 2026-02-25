@@ -74,7 +74,7 @@
                       <username>${HARBOR_USER}</username>
                       <password>${HARBOR_PASSWD}</password>
                       <configuration>
-                      <email>${HARBOR_USER}@cpdevice.com</email>
+                      <email>${REGISTRY_USER}@example.com</email>
                       </configuration>
               </server>
           </servers>

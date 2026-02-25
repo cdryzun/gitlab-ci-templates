@@ -193,17 +193,19 @@ function depthProjectExec() {
 # URL 环境前缀转换函数
 # 参数: 目标 URL
 # 功能: 根据 URL 中的环境标识 (PRE/TEST/PROD)，将其替换为对应的内部前缀
+# 注意: 这是一个示例实现，用户可以根据自己的需求修改
 function convert_url() {
   local url=$1
-  local decURL='http://10.16.18.31:8000'
-  local baseURL='https://next.cpinnov.run'
+  # 用户可以配置自己的内部 URL 前缀
+  local internalURL="${INTERNAL_URL_PREFIX:-http://internal.example.com}"
+  local baseURL="${BASE_URL:-https://api.example.com}"
 
   # 定义环境与内部地址的映射
   declare -A envDict
   envDict=(
-    ["PRE"]="${decURL}/pre/os-pre/"
-    ["TEST"]="${decURL}/test/os-test/"
-    ["PROD"]="${decURL}/prod/prod-os/"
+    ["PRE"]="${internalURL}/pre/"
+    ["TEST"]="${internalURL}/test/"
+    ["PROD"]="${internalURL}/prod/"
   )
 
   # 检查 URL 属于哪个环境，并替换前缀

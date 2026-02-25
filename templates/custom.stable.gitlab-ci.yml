@@ -1,16 +1,14 @@
 # 导入公共模板
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/custom.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/custom.stable.gitlab-ci.yml'
 
-# 载入默认变量 ，变量值可以被上层替换，详情查看链接: https://gitlab.cpinnov.run/devops/ci-templates/-/blob/devops/vars/default-vars.stable.gitlab-ci.yml
-# 变量优先级  script(bash) > gitlab web >  gitlab template > os system default; 
+# 载入默认变量 ，变量值可以被上层替换
+# 变量优先级  script(bash) > gitlab web >  gitlab template > os system default;
 # 其中 gitlab web 又存在有优先级问题：
 # gitlab project > gitlab group > gitlab platform default
 variables:
   extends: .default_vars
-  
+
 # sonar:
 #   extends:
 #     - .custom_scan_base
@@ -44,12 +42,12 @@ build:
       && shell_exec ./run.sh
 
 # build1:  名称不要与 上面的 build 重复
-#   image: ${NODE_IMAGE}  # 根据工程替换镜像，默认使用 ${MAVEN_IMAGE}, 列表详情参见 default_iamge_vars 
+#   image: ${NODE_IMAGE}  # 根据工程替换镜像，默认使用 ${MAVEN_IMAGE}, 列表详情参见 default_image_vars
 #   extends:
 #     - .custom_build
 #   script:
 #     - |
-#       export IMG_NAME="${HARBOR_URL##https://}/${CI_PROJECT_NAMESPACE}/portal-ui"  # 将默认的 docker 镜像名称进行替换
+#       export IMG_NAME="${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/portal-ui"  # 将默认的 docker 镜像名称进行替换
 #     - |
 #       cat > run.sh << EOF
 #       set -eo # 表示开启 pipeline 模式，期间发生错误，后续步骤多不进行执行，不建议删除。

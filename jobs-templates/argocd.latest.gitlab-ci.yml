@@ -52,13 +52,10 @@ all_charts_syntax_check:
 .get_sync_sh:
   before_script:
     - |
-      curl -fsSL --header "PRIVATE-TOKEN: ${GITLAB_READ_TOKEN}" ${TEMPLATE_REPO%/devops*}/api/v4/projects/${TEMPLATE_REPO_PROJECT_ID}/repository/files/scripts%2Fsync.${TEMPLATE_CONTEXT}.sh/raw?ref=${TEMPLATE_BRANCH_NAME} -o sync.sh
-      chmod +x ./sync.sh
-    - |
-      set -x
-      if [ ! -e /usr/local/bin/argocd ];then
-        curl -fsSL https://nexus.iquantex.com/repository/static-file/tools/argocd -o /usr/local/bin/argocd
-        chmod +x /usr/local/bin/argocd
+      # Note: argocd CLI is pre-installed in glci-toolbox image
+      if [ ! -e /usr/local/bin/argocd ]; then
+        echo "Error: argocd CLI not found. Please use glci-toolbox image."
+        exit 1
       fi
 
 .argocd_exec: &argocd_exec

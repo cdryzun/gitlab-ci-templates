@@ -1,157 +1,89 @@
-# ci deploy 阶段 密钥组
-.deploy_secrets:
-  extends:
-    - .deploy_gitlab_auth_vars
-    - .argocd_auth_vars
+# Open Source Version - Authentication Variables
+# This file provides placeholder definitions for auth extensions
+# Users should configure these variables in their GitLab CI/CD settings
 
-# https://gitlab.iquantex.com/ci-cd/scripts-exec 脚本执行库，相关依赖。
-.script_exec_vars:
-  extends:
-    - .script_exec_db_vars
-    - .script_exec_k8s
-
-###################### 此分割线以下放置 拆分成段的 secrets 段，按功能 or 模块 进行拆分
-# 变量映射后面带 "#*" 表示开启 Gitlab 密钥遮掩 (且对 _vars 后缀段进行生效)， 相关 issue: https://gitlab.iquantex.com/devops/gitops/-/issues/2
-# 注意: 密钥遮掩，值需要满足如下文档中所述的要求: https://docs.gitlab.com/ee/ci/variables/#mask-a-cicd-variable
-
-.nas_taskfile_deploy_vars:
-  secrets:
-    NAS_SMB_PD_TASKFILE_DEPLOY:
-      vault: infrastructure/nas/TASKFILE_DEPLOY@secrets #*
-      file: false
-
-.script_exec_k8s_vars:
-  secrets:
-    QUANTEX_PAAS_KUBE_CONFIG:
-      vault: infrastructure/k8s/QUANTEX_PAAS@secrets
-      file: false
-
-.script_exec_k8s:
-  secrets:
-    QUANTEX_PAAS_KUBE_CONFIG:
-      vault: infrastructure/k8s/QUANTEX_PAAS@secrets 
-
-.script_exec_db_vars:
-  secrets:
-    MYSQL_JMS_ROOT_PASSWD:
-      vault: infrastructure/mysql/JMS_PASSWD@secrets #*
-      file: false
-
+# Harbor (Docker Registry) authentication
+# Set in GitLab CI/CD variables: REGISTRY_USER, REGISTRY_PASSWORD
 .harbor_auth:
-  secrets:
-    HARBOR_USER:
-      vault: infrastructure/harbor/USER@secrets
-    HARBOR_PASSWD:
-      vault: infrastructure/harbor/PASSWD@secrets #*
-
+  variables:
+    HARBOR_AUTH_PLACEHOLDER: "true"
 .harbor_auth_vars:
-  secrets:
-    HARBOR_USER:
-      vault: infrastructure/harbor/USER@secrets
-      file: false
-    HARBOR_PASSWD:
-      vault: infrastructure/harbor/PASSWD@secrets #*
-      file: false
+  variables:
+    HARBOR_AUTH_PLACEHOLDER: "true"
 
+# SonarQube authentication
+# Set in GitLab CI/CD variables: SONARQUBE_TOKEN
 .sonar_auth:
-  secrets:
-    SONAR_TOKEN:
-      vault: infrastructure/sonar/TOKEN@secrets 
-
+  variables:
+    SONAR_AUTH_PLACEHOLDER: "true"
 .sonar_auth_vars:
-  secrets:
-    SONAR_TOKEN:
-      vault: infrastructure/sonar/TOKEN@secrets #*
-      file: false
+  variables:
+    SONAR_AUTH_PLACEHOLDER: "true"
 
+# GitLab authentication
+# Set in GitLab CI/CD variables: GITLAB_TOKEN
 .gitlab_auth:
-  secrets:
-    GITLAB_READ_TOKEN:
-      vault: infrastructure/gitlab/READ_TOKEN@secrets
-  
+  variables:
+    GITLAB_AUTH_PLACEHOLDER: "true"
 .gitlab_auth_vars:
-  secrets:
-    GITLAB_READ_TOKEN:
-      vault: infrastructure/gitlab/READ_TOKEN@secrets #*
-      file: false
+  variables:
+    GITLAB_AUTH_PLACEHOLDER: "true"
 
+# Nexus authentication (if using private Maven/NPM repository)
+# Set in GitLab CI/CD variables: NEXUS_USER, NEXUS_PASSWORD
 .nexus_auth:
-  secrets:
-    NEXUS_USER:
-      vault: infrastructure/nexus/USER@secrets
-    NEXUS_PASSWD:
-      vault: infrastructure/nexus/PASSWD@secrets
-    NEXUS_NPM_TOKEN:
-      vault: infrastructure/nexus/NPM_TOKEN@secrets
-
+  variables:
+    NEXUS_AUTH_PLACEHOLDER: "true"
 .nexus_auth_vars:
-  secrets:
-    NEXUS_USER:
-      vault: infrastructure/nexus/USER@secrets
-      file: false
-    NEXUS_PASSWD:
-      vault: infrastructure/nexus/PASSWD@secrets #*
-      file: false
-    NEXUS_NPM_TOKEN:
-      vault: infrastructure/nexus/NPM_TOKEN@secrets #*
-      file: false
+  variables:
+    NEXUS_AUTH_PLACEHOLDER: "true"
 
+# ArgoCD authentication
+# Set in GitLab CI/CD variables: ARGOCD_AUTH_TOKEN
 .argocd_auth:
-  secrets:
-    ARGOCD_AUTH_TOKEN:
-      vault: infrastructure/argocd/TOKEN@secrets 
-      file: false
-
+  variables:
+    ARGOCD_AUTH_PLACEHOLDER: "true"
 .argocd_auth_vars:
-  secrets:
-    ARGOCD_AUTH_TOKEN:
-      vault: infrastructure/argocd/TOKEN@secrets #*
-      file: false
+  variables:
+    ARGOCD_AUTH_PLACEHOLDER: "true"
 
-.deploy_gitlab_auth:
-  secrets:
-    GITLAB_REPO_COMMIT_TOKEN:
-      vault: infrastructure/gitlab/COMMIT_TOKEN@secrets
-      file: false
-
-.deploy_gitlab_auth_vars:
-  secrets:
-    GITLAB_REPO_COMMIT_TOKEN:
-      vault: infrastructure/gitlab/COMMIT_TOKEN@secrets #*
-      file: false
-
-.huaweicloud_web_site:
-  secrets:
-    HUB_HARBOR_URL:
-      vault: infrastructure/huaweicloud-web-site/HARBOR_URL@secrets
-      file: false
-    HUB_HARBOR_USER:
-      vault: infrastructure/huaweicloud-web-site/HARBOR_USER@secrets
-      file: false
-    HUB_HARBOR_PASSWD:
-      vault: infrastructure/huaweicloud-web-site/HARBOR_PASSWD@secrets #*
-      file: false
-    HUAWEI_CLOUD_IP:
-      vault: infrastructure/huaweicloud-web-site/HUAWEI_CLOUD_IP@secrets
-      file: false
-    HUAWEI_CLOUD_SSH_USER:
-      vault: infrastructure/huaweicloud-web-site/HUAWEI_CLOUD_SSH_USER@secrets
-      file: false
-    HUAWEI_CLOUD_SSH_PASS:
-      vault: infrastructure/huaweicloud-web-site/HUAWEI_CLOUD_SSH_PASS@secrets #*
-      file: false
-
-
-.gitlab_apitoken_vars:
-  secrets:
-    GITLAB_API_TOKEN:
-      vault: infrastructure/gitlab/API_TOKEN@secrets #*
-      file: false
-
+# GitLab API token
+# Set in GitLab CI/CD variables: GITLAB_TOKEN
 .gitlab_apitoken:
-  secrets:
-    GITLAB_API_TOKEN:
-      vault: infrastructure/gitlab/API_TOKEN@secrets
+  variables:
+    GITLAB_APITOKEN_PLACEHOLDER: "true"
+.gitlab_apitoken_vars:
+  variables:
+    GITLAB_APITOKEN_PLACEHOLDER: "true"
 
+# Deploy GitLab authentication
+# Set in GitLab CI/CD variables: GITLAB_TOKEN
+.deploy_gitlab_auth:
+  variables:
+    DEPLOY_GITLAB_AUTH_PLACEHOLDER: "true"
+.deploy_gitlab_auth_vars:
+  variables:
+    DEPLOY_GITLAB_AUTH_PLACEHOLDER: "true"
 
+# Deploy secrets group
+.deploy_secrets:
+  secrets: {}
 
+# Script execution vars
+.script_exec_vars:
+  variables:
+    SCRIPT_EXEC_PLACEHOLDER: "true"
+.script_exec_k8s_vars:
+  variables:
+    SCRIPT_EXEC_K8S_PLACEHOLDER: "true"
+.script_exec_k8s:
+  variables:
+    SCRIPT_EXEC_K8S_PLACEHOLDER: "true"
+.script_exec_db_vars:
+  variables:
+    SCRIPT_EXEC_DB_PLACEHOLDER: "true"
+
+# Clean auth files utility
+.clean_auth_files:
+  after_script:
+    - rm -f ~/.docker/config.json 2>/dev/null || true

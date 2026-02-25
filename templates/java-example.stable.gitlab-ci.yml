@@ -18,19 +18,19 @@ variables:
   # -------------高级配置(一般无需配置，使用默认配置即可,如需配置请仔细看注释说明按需配置,)----------------------
 
   # 镜像漏洞扫描
-  DOCKER_IMAGE_SCAN_IMAGE: "true"
+  DOCKER_IMAGE_SCAN_IMAGE: "false"
 
   # 如果漏洞等级为中高以上则强制中断CI
   ENFORCE_EXIT: "false"
-  
+
   # sonarqube 扫描的 二级制程序目录，多个用 "," 连接
   SONAR_BINARIES: 'target/classes'
 
   # sonarqube 扫描的 测试二级制程序目录，多个用 "," 连接
   SONAR_TEST_BINARIES: 'target/test-classes'
 
-  # 使用的 sonarqube 地址, 默认无需修改
-  # SONAR_URL: "https://sonarqube.cpinnov.run"
+  # 使用的 sonarqube 地址, 在 GitLab CI/CD 变量中配置 SONAR_URL
+  # SONAR_URL: "https://sonarqube.example.com"
 
   # maven 生成的 jar 包名称，默认 app
   # MAVEN_APP_NAME: "app"
@@ -38,17 +38,17 @@ variables:
   # 分阶段构建时的缓存目录
   CACHE_DIR: "target/"
 
-  # DEV 环境 生成的 docker 镜像的 “前缀”，下面默认将会，生成 dev-xxx 的 tag 镜像。
+  # DEV 环境 生成的 docker 镜像的 "前缀"，下面默认将会，生成 dev-xxx 的 tag 镜像。
   # DEV_DOCKER_TAG_PERFIX: 'dev'
 
   # 指定java 服务构建的 docker 镜像，默认无需修改,。如果当前仓库中 /Dockerfile or /docker/Dockerfile 存在文件时此处将被省略替换。
-  # JAVA_DEFAULT_DOCKERFILE: "${TEMPLATE_REPO}/-/raw/devops/dockerfile/Dockerfile-java.stable"
+  # JAVA_DEFAULT_DOCKERFILE: "${TEMPLATE_REPO}/-/raw/main/dockerfile/Dockerfile-java.stable"
 
   # docker image 制品仓库，默认无需修改
-  # HARBOR_URL: "https://harbor.iquantex.com"
+  # DOCKER_REGISTRY: "docker.io"
 
-  # maven 构建工具，所使用的 仓库地址，默认无需修改
-  # MAVEN_REGISTRY: "https://nexus.iquantex.com/repository/private-public/"
+  # maven 构建工具，所使用的 仓库地址，默认使用 Maven Central
+  # MAVEN_REGISTRY: "https://repo1.maven.org/maven2/"
 
   # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
   DOCKER_BUILD_FLAGS: ''
@@ -62,9 +62,7 @@ variables:
   SONAR_COMMON: "false"
 
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/java.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/java.stable.gitlab-ci.yml'
 
 
   # 自定义后端工程build任务命令

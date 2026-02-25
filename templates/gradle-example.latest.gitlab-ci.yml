@@ -18,7 +18,7 @@ variables:
   # -------------高级配置(一般无需配置，使用默认配置即可,如需配置请仔细看注释说明按需配置,)----------------------
 
   # 镜像漏洞扫描
-  DOCKER_IMAGE_SCAN_IMAGE: "true"
+  DOCKER_IMAGE_SCAN_IMAGE: "false"
 
   # 如果漏洞等级为中高以上则强制中断CI
   ENFORCE_EXIT: "false"
@@ -30,8 +30,8 @@ variables:
   # sonarqube 扫描的测试二进制程序目录，多个用 "," 连接
   SONAR_TEST_BINARIES: 'build/test-classes'
 
-  # 使用的 sonarqube 地址, 默认无需修改
-  # SONAR_URL: "https://sonarqube.cpinnov.run"
+  # 使用的 sonarqube 地址, 在 GitLab CI/CD 变量中配置 SONAR_URL
+  # SONAR_URL: "https://sonarqube.example.com"
 
   # Gradle 生成的 jar 包名称，默认 app
   # MAVEN_APP_NAME: "app"
@@ -44,7 +44,7 @@ variables:
   # DEV_DOCKER_TAG_PERFIX: 'dev'
 
   # docker image 制品仓库，默认无需修改
-  # HARBOR_URL: "https://harbor.iquantex.com"
+  # DOCKER_REGISTRY: "docker.io"
 
   # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
   DOCKER_BUILD_FLAGS: ''
@@ -56,9 +56,7 @@ variables:
   SONAR_COMMON: "true"
 
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/gradle.latest.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/gradle.latest.gitlab-ci.yml'
 
 
   # 自定义后端工程 build 任务命令

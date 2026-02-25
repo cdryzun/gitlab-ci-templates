@@ -236,7 +236,7 @@ cat > Dockerfile << 'EOF'
 # ============================================
 FROM alpine:3.22
 
-LABEL maintainer="DevOps Team <devops@cpinnov.run>"
+LABEL maintainer="DevOps Team <devops@example.com>"
 
 # 自动注入的 Buildx 平台变量
 ARG TARGETPLATFORM
@@ -373,7 +373,7 @@ RUN file /build/${APP_NAME} && \
 # ============================================
 FROM alpine:3.22
 
-LABEL maintainer="DevOps Team <devops@cpinnov.run>"
+LABEL maintainer="DevOps Team <devops@example.com>"
 
 # 构建参数（运行时元数据）
 ARG PORT=2025
@@ -430,9 +430,9 @@ EOF
 generate_golang_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Golang Application Dockerfile
-FROM proxyhub.cpinnov.run/alpine:3.22 as golang
+FROM alpine:3.22 as golang
 
-LABEL maintainer="zun.yang@cpdevice.com"
+LABEL maintainer="DevOps Team <devops@example.com>"
 
 # Build arguments
 ARG PORT=2025

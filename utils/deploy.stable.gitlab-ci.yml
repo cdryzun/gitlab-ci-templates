@@ -1,7 +1,7 @@
 
 
 ###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
-.iamge_deploy_base:
+.image_deploy_base:
   image: "${CD_DEPLOY_IMAGE}"
   stage: deploy
   secrets:
@@ -73,13 +73,14 @@
       fi
 
 # 此阶段依赖 ARGOCD_SERVER & ARGOCD_AUTH_TOKEN 两个环境变量
+# Note: argocd CLI is pre-installed in glci-toolbox image
 .argocd_app_sync:
   script:
     - |
-      set -x
-      if [ ! -e /usr/local/bin/argocd ];then
-        curl -fsSL https://nexus.iquantex.com/repository/static-file/tools/argocd -o /usr/local/bin/argocd
-        chmod +x /usr/local/bin/argocd
+      # 检查 argocd 命令是否存在
+      if [ ! -e /usr/local/bin/argocd ]; then
+        echo "Error: argocd CLI not found. Please use glci-toolbox image."
+        exit 1
       fi
     - |
       # 执行 argocd 应用同步

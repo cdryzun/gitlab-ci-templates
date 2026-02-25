@@ -1,10 +1,8 @@
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/Auto-DevOps.latest.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Auto-DevOps.latest.gitlab-ci.yml'
 
 
-### 功能开关请参照此链接中的定义: https://gitlab.cpinnov.run/devops/ci-templates/-/raw/devops/vars/default-vars.stable.gitlab-ci.yml
+### 功能开关请参照项目中的 vars/default-vars.latest.gitlab-ci.yml 文件
 
 
 ###############################  JAVA 工程示例
@@ -19,7 +17,7 @@ include:
 #     && mv spring-cloud-gateway/target/spring-cloud-gateway.jar ./target/app.jar"
 #   UNIT_TEST_ENABLE: "true"
 
-### JAVA 脚手架工程，不构建镜像，只将制品上传至 nexus
+### JAVA 脚手架工程，不构建镜像，只将制品上传至仓库
 # variables:
 #   BUILD_SHELL: "mvn clean install -Dmaven.test.skip=true \
 #     && mkdir -p ./target \
