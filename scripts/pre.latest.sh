@@ -71,16 +71,11 @@ fi
 # Determine final BUILD_IMAGE based on context:
 # 1. prd branch: use toolbox (needs git for tag creation)
 # 2. BASE_BUILD_IMAGE override: use user-specified image
-# 3. Golang with Docker build: use toolbox (contains Docker CLI, Go compilation in Dockerfile)
-# 4. Default: use project-type-specific builder image
+# 3. Default: use project-type-specific builder image
 if [ "${CI_COMMIT_REF_NAME}" == 'prd' ];then
     dotenv BUILD_IMAGE "${TOOLBOX_IMAGE}"
 elif [ -n "${BASE_BUILD_IMAGE}" ];then
     dotenv BUILD_IMAGE "${BASE_BUILD_IMAGE}"
-elif [ "${PROJECT_TYPE}" == 'golang' ] && [ "${DOCKER_IMAGE_BUILD}" == 'true' ];then
-    # For Go projects that need to build Docker images, use toolbox image (contains Docker CLI)
-    # Go compilation will be done inside the Docker build process using multi-stage builds
-    dotenv BUILD_IMAGE "${TOOLBOX_IMAGE}"
 else
     dotenv BUILD_IMAGE "${_BUILD_IMAGE}"
 fi
