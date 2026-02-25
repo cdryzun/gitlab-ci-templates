@@ -48,10 +48,12 @@
 .check_docker:
   script:
     - |
-      # Check if docker command exists
-      if [ ! -e /usr/local/bin/docker ] && [ ! -e /usr/bin/docker ]; then
-        echo "Error: docker CLI not found. Please use glci-toolbox image."
-        exit 1
+      # Check if docker command exists (only when building Docker images)
+      if [ "${DOCKER_IMAGE_BUILD}" == "true" ]; then
+        if [ ! -e /usr/local/bin/docker ] && [ ! -e /usr/bin/docker ]; then
+          echo "Error: docker CLI not found. Please use glci-toolbox image."
+          exit 1
+        fi
       fi
       # Initialize docker workspace
       mkdir -p ${DOCKER_DAEMON_WORKSPACE}
