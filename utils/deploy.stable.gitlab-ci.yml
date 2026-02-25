@@ -1,6 +1,5 @@
 
-
-###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+###################### Below this line are code snippets split by function or module
 .image_deploy_base:
   image: "${CD_DEPLOY_IMAGE}"
   stage: deploy
@@ -16,16 +15,16 @@
   environment:
     name: "${CI_COMMIT_REF_NAME}"
 
-# 对远端 charts 仓库中的 values.yaml 中的值进行替换更新后，再 push 到远端仓库。
+# Update values in values.yaml in the remote charts repository and push to the remote repository.
 .replacement_tag_push:
   script:
     - |
-      # 打印 部署环境
+      # Print deployment environment
       echo "${REMOTE_BRANCH}"
     - |
       set -eu
       # sleep 1800  # debug
-      # 预制变量，后期方便通用
+      # Predefined variables for easier generalization later
       if [ "${CD_DEPLOY_IMGAGE}" ];then
           export DEPLOY_TAG_NAME="${CD_DEPLOY_IMGAGE}"
       else
@@ -50,7 +49,7 @@
       cd "repo/${_DEPLOY_REPO_PROJ}"
       ls -l
 
-      # 获取当前 yaml 中的值
+      # Get current value from yaml
       oldImage=$(yq e "${DEPLOY_REPO_YAML_TAG}" "${DEPLOY_VALUE_FILE}")
 
       if [ "${oldImage}" ];then
@@ -72,18 +71,18 @@
           echo "no changes, git repository is up to date"
       fi
 
-# 此阶段依赖 ARGOCD_SERVER & ARGOCD_AUTH_TOKEN 两个环境变量
+# This stage depends on ARGOCD_SERVER & ARGOCD_AUTH_TOKEN environment variables
 # Note: argocd CLI is pre-installed in glci-toolbox image
 .argocd_app_sync:
   script:
     - |
-      # 检查 argocd 命令是否存在
+      # Check if argocd command exists
       if [ ! -e /usr/local/bin/argocd ]; then
         echo "Error: argocd CLI not found. Please use glci-toolbox image."
         exit 1
       fi
     - |
-      # 执行 argocd 应用同步
+      # Execute argocd application sync
       set -x
       argocd version
       argocd app sync "${_DEPLOY_REPO_PROJ}-${_DEPLOY_REPO##*/}-${REMOTE_BRANCH}" || true

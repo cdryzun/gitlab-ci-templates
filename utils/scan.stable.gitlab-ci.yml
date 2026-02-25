@@ -24,7 +24,7 @@
     - .nexus_auth
     - .sonar_before_jobs
 
-###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+###################### Below this line are code snippets split by function or module
 .security_scan_docker_image:
   stage: scan
   extends: 
@@ -119,19 +119,19 @@
       set -x
 
 
-# trivy docker 镜像安全扫描
+# trivy docker image security scan
 .container_security_scan:
   image: ${TOOLBOX_IMAGE}
   script:
     - |
-      # 确保已登录 Harbor
-      echo "${Info}验证 Docker 登录状态..."
+      # Ensure Harbor login
+      echo "${Info}Verifying Docker login status..."
       docker info | grep -i "registry" || true
 
-      # 使用 trivy image 命令扫描（支持已认证的私有仓库）
+      # Use trivy image command for scanning (supports authenticated private repositories)
       function scan_image(){
         local image_name="${1}"
-        echo "${Info}扫描镜像: ${image_name}"
+        echo "${Info}Scanning image: ${image_name}"
 
         if [ "${ENFORCE_EXIT}" == "true" ];then
           trivy image --ignore-unfixed \
@@ -142,5 +142,5 @@
         fi
       }
 
-      # 扫描当前构建的镜像
+      # Scan the currently built image
       scan_image "${DOCKER_IMAGE_NAME}"

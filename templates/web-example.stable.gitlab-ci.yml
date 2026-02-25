@@ -1,62 +1,60 @@
 variables:
-  # -------------基本配置----------------------
-  # 用于前端构建时所执行的命令，根据自己的需求更改使用。当存在多条命令时 使用 "&&" 相连接。使用 yarn 构建时，配合着 "PACKAGE_MANAGER" 使用
+  # -------------Basic Configuration----------------------
+  # Command executed during frontend build, When multiple commands exist, use "&&" to connect. Use "PACKAGE_MANAGER" for yarn builds
   BUILD_SHELL: "pnpm run build"
 
-  # 默认预设的 sonarqube 扫描目录
+  # Default preset SonarQube scan directory
   SONAR_DIR: "./app"
 
-  # 是否执行单元测试
+  # Whether to execute unit tests
   NPM_TEST: "false"
 
-  # 如果开启单元测试时所执行的命令，根据自己的需求更改使用。当存在多条命令时 使用 "&&" 相连接
+  # Command executed when unit tests are enabled. When multiple commands exist, use "&&" to connect
   TEST_SHELL: "pnpm install && pnpm run test"
 
-  # 指定要使用的自定义nginx配置，默认为项目下的docker/nginx.conf
+  # Specify custom nginx config to use, default is docker/nginx.conf in project
   CUSTOM_NGINX_CONF: "docker/nginx.conf"
 
-  # -------------高级配置(一般无需配置，使用默认配置即可,如需配置请仔细看注释说明按需配置,)----------------------
+  # -------------Advanced Configuration (Generally no configuration needed, use defaults. Configure carefully if needed)----------------------
 
-  # 是否删除pnpm锁文件,如果在构建时强依赖版本锁定，不要打开此参数，强制使用锁文件中指定的版本
+  # Whether to delete pnpm lock file. If version locking is required during build, do not enable this parameter, force use versions specified in lock file
   PNPM_LOCKFILE_DISABLE: "false"
 
-  # nodejs V8引擎的内存堆配置，一些应用构建时需要配置此参数，非必需不用打开.
+  # Node.js V8 engine memory heap configuration. Some applications need this parameter during build. Not required unless needed.
   # NODE_OPTIONS: "--max-old-space-size=4096"
 
-  # 镜像漏洞扫描
+  # Image vulnerability scanning
   DOCKER_IMAGE_SCAN_IMAGE: "true"
 
-  # 如果漏洞等级为中高以上则强制中断CI
+  # If vulnerability level is medium-high or above, force CI interruption
   ENFORCE_EXIT: "false"
 
-  # 前端打包生成的静态文件夹, 默认 dist 无需设置更改
+  # Frontend packaging generated static folder, Default is dist, no need to change
   STATIC_FILE_NAME: "dist"
 
-  # 是否将包构建完成后，再构建 docker 镜像
+  # Whether to build docker image after package build is complete
   DOCKER_IMAGE_BUILD: "true"
 
-  # 是否关闭 安装依赖时的缓存，区别设置 为 true 时每次会去私服重新拉取依赖。增加构建时长 为不建议开启参数。
+  # Whether to disable dependency installation cache. When set to true, dependencies are re-fetched from private repository each time. Increases build time. Not recommended to enable.
   NODE_CACHE_DISABLE: "false"
 
-  # 前端包管理器选择 (pnpm/yarn)
+  # Frontend package manager selection (pnpm/yarn)
   PACKAGE_MANAGER: "pnpm"
 
-  # 分阶段构建时的缓存目录
+  # Staging build cache directory
   CACHE_DIR: "dist/"
 
-  # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
+  # Additional parameters added during docker build, such as "--no-cache" to build without cache, multiple parameters separated by space
   DOCKER_BUILD_FLAGS: ''
 
 
-
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/web.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/web.stable.gitlab-ci.yml'
 
-# 自定义前端工程build任务命令
+
+# Custom frontend build job command
 # build:
-#   #--继承公共模版内变量和参数---start--
+#   #--Inherit common template variables and parameters---start--
 #   image: "${NODE_IMAGE}"
 #   extends:
 #     - .before_jobs
@@ -64,14 +62,14 @@ include:
 #     - .nexus_auth
 #     - .harbor_auth
 #     - .runner_tag
-#   #--继承公共模版内变量和参数---end--
+#   #--Inherit common template variables and parameters---end--
 #   script:
-#     # 继承模版动作，生成默认配置，不要修改此行.
+#     # Inherit template actions, generate default configuration. Do not modify this line.
 #     - !reference [ .npm-generate-config, script ]
 #     - !reference [ .docker_login, script ]
-#     # 自定义命令1
+#     # Custom command 1
 #     - pnpm install
-#     # 自定义命令2
+#     # Custom command 2
 #     - pnpm run build dist
-#     # 自定义命令n
+#     # Custom command n
 #     - pnpm run build prod

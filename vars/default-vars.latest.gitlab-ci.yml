@@ -1,5 +1,5 @@
 .default_vars:
-    # 默认使用的 runner tag
+    # Default runner tag
     RUNNER: default
 
     # Template repository - GitHub raw URL for open source
@@ -9,7 +9,7 @@
     # ArgoCD server address (configure in your GitLab CI/CD variables)
     # ARGOCD_SERVER: "argocd.example.com:443"
 
-    # 继承父进程环境变量和别名时，所使用的临时暂存文件
+    # Temporary staging file for inheriting parent process environment variables and aliases
     BASH_ENV: "${CI_PROJECT_DIR}/_alias"
     ENV_FILE: "build.env"
     CI_DEBUG_TRACE: "false"
@@ -25,7 +25,7 @@
       - .vault_vars
       - .image_scan
 
-# 是否开启单元测试
+# Whether to enable unit testing
 .test_vars:
   UNIT_TEST_ENABLE: "true"
   PYTHON_UNIT_TEST_SHELL: ""
@@ -35,7 +35,7 @@
   MAVEN_TEST: "false"
   GRADLE_TEST: "false"
 
-  # 进行单元测试时所使用的命令，使用 bash 为其设置 初始值 ${TEST_SHELL:-"xxx"}
+  # Command used for unit testing, use bash to set initial value ${TEST_SHELL:-"xxx"}
   # TEST_SHELL: ""
 
 # SonarQube scan configuration
@@ -50,105 +50,105 @@
   SONAR_TEST_BINARIES: 'target/test-classes'
   MIN_COVERAGE: "80"
 
-# 镜像 & 构建 相关变量
+# Image & build related variables
 .build_vars:
-  # 前端构建使用的包管理器 (pnpm/yarn)
+  # Package manager for frontend build (pnpm/yarn)
   PACKAGE_MANAGER: "pnpm"
-  # 关闭前端缓存
+  # Disable frontend cache
   NODE_CACHE_DISABLE: "false"
-  # NODE 构建使用使用到的 额外参数
+  # Extra parameters used for NODE build
   NODE_OPTIONS: "--max_old_space_size=4096"
-  # 前端打包生成的静态文件夹, 默认 dist 无需设置更改
+  # Frontend packaging generated static folder, default dist, no need to change
   STATIC_FILE_NAME: ""
-  # maven 打包后 生成的 jar 包名称, 可以设置 gitlab-ci 内置变量 ${CI_PROJECT_NAME}, 默认为 app 无需设置
+  # Jar package name generated after maven packaging, can use gitlab-ci built-in variable ${CI_PROJECT_NAME}, default is app, no need to set
   MAVEN_APP_NAME: "app"
-  # 默认构建maven类库
+  # Default build maven library
   BUILD_MAVEN_SNAPSHOT: "false"
-  # 默认构建的镜像名字，此处配置将不会生效, 在 ci pre 阶段进行处理
+  # Default built image name, configuration here will not take effect, processed in ci pre stage
   IMG_NAME: "${HARBOR_URL}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
-  # 程序构建时的 command
+  # Command for program build
   #BUILD_SHELL: "mvn clean package -Dmaven.test.skip=true"
   #BUILD_SHELL: "mvn clean package"
 
-  # 是否要在 pnpm install 时，不去找 pnpm lock file 中的依赖
+  # Whether to ignore pnpm lock file dependencies during pnpm install
   PNPM_LOCKFILE_DISABLE: "false"
-  # DEV 镜像的前缀  dev-xxx
+  # DEV image prefix dev-xxx
   DEV_DOCKER_TAG_PERFIX: "${CI_COMMIT_REF_NAME}"
   # docker daemon build image workspace
   DOCKER_DAEMON_WORKSPACE: './docker-build'
-  # docker 镜像对应的版本号，当为 release 版本时 使用 ${CI_COMMIT_REF_NAME} 变量，否则使用 ${DEV_DOCKER_TAG_PERFIX}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID} 此版本号
+  # Docker image version, use ${CI_COMMIT_REF_NAME} for release version, otherwise use ${DEV_DOCKER_TAG_PERFIX}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}
   DOCKER_IMAGE_TAG: ""
 
-  # 是否构建 release 镜像，默认开关为 false，后续使用正则进行判断
+  # Whether to build release image, default is false, regex will be used for judgment later
   RELEASE_BUILD: "false"
-  # 默认是否构建 docker 镜像
+  # Whether to build docker image by default
   DOCKER_IMAGE_BUILD: "true"
-  # feat | hotfix | bugfix 特性分支是否构建 docker 镜像，默认关闭
+  # feat | hotfix | bugfix feature branches whether to build docker image, disabled by default
   FEAT_DOCKER_IMAGE_BUILD: "false"
-  # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
+  # Extra parameters added during docker build, such as "--no-cache" to build without cache, multiple parameters separated by space
   DOCKER_BUILD_FLAGS: '--no-cache'
-  # 指定要使用的自定义nginx配置，默认为项目下的docker/nginx.conf
+  # Specify custom nginx config to use, default is docker/nginx.conf in project
   CUSTOM_NGINX_CONF: "docker/nginx.conf"
-  # 指定当前项目自定义的 Dockerfile 文件路径，支持相对路径或绝对路径，留空则使用默认模板
+  # Specify custom Dockerfile path for current project, supports relative or absolute path, leave empty to use default template
   CUSTOM_DOCKERFILE_PATH: ""
-  # 是否使用自定义 Dockerfile（由 pre 阶段自动检测设置，通常无需手动配置）
+  # Whether to use custom Dockerfile (auto-detected by pre stage, usually no need to configure manually)
   CUSTOM_DOCKERFILE: ""
-  # Docker 构建工作区前置准备命令，在 DOCKER_DAEMON_WORKSPACE 目录下执行
-  # 用于准备 Dockerfile 构建所需的依赖配置文件（如 nginx.conf, config.json 等）
-  # 示例: "cp ${CI_PROJECT_DIR}/config/nginx.conf . && cp ${CI_PROJECT_DIR}/config/app.conf ."
+  # Docker build workspace preparation command, executed in DOCKER_DAEMON_WORKSPACE directory
+  # Used to prepare dependency config files needed for Dockerfile build (e.g., nginx.conf, config.json, etc.)
+  # Example: "cp ${CI_PROJECT_DIR}/config/nginx.conf . && cp ${CI_PROJECT_DIR}/config/app.conf ."
   DOCKER_WORKSPACE_PREPARE_CMD: ""
-  # 默认 maven 工程，输出结果所使用的 POM file
+  # Default maven project, POM file used for output results
   BUILD_MAVEN_POM_FILE: "pom.xml"
-  # prd ci 中自动创建的 Tag，最大保留数量，默认 20
+  # Maximum number of auto-created Tags retained in prd ci, default 20
   PRD_CD_CREATE_TAG_NUM: "20"
   # RELASE Create notes message
   PRD_CD_CREATE_TAG_MESSAGE: "notes message by gitlab-ci pipeline in change-manifests task"
-  # 是否 在运行 prd 分支的 pipeline 时自动 create  Tag，默认为真
+  # Whether to auto create Tag when running prd branch pipeline, default is true
   PRD_BUILD_CREATE_TAG: "true"
-  # 是否开启脚手架工程构建，此开关且面向 JAVA 工程
+  # Whether to enable scaffold project build, this switch is for JAVA projects
   RELEASE_LIB_BUILD: "false"
-  # 脚手架工程 是否构建 snapshots 版本
+  # Whether to build snapshots version for scaffold project
   SNAPSHOTS_LIB_BUILD: "true"
-  # 开启 Docker buildkit,  内置变量勿动
+  # Enable Docker buildkit, built-in variable, do not modify
   DOCKER_BUILDKIT: 1
 
-# CD 部署环境变量
+# CD deployment environment variables
 .cd_vars:
-  # tag 的 image build 阶段是否关闭 retag，而选择重新构建生成
+  # Whether to disable retag in tag image build stage, choose to rebuild instead
   RELEASE_RETAG_DISABLE: "false"
-  # 自动 commit 中 使用的名字
+  # Name used in auto commit
   GIT_AUTO_COMMIT_NAME: "ci-bot"
-  # 自动 commit 中 使用的邮箱
+  # Email used in auto commit
   GIT_AUTO_COMMIT_EMAIL: "ci-bot@example.com"
-  # CD 部署阶段所使用的镜像名称，设置后将替换 "${DEV_DOCKER_TAG_PERFIX}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}" 这个默认版本
+  # Image name used in CD deployment stage, will replace "${DEV_DOCKER_TAG_PERFIX}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}" default version when set
   CD_DEPLOY_IMGAGE: ""
-  # 默认 commit push 的远端分支
+  # Default commit push remote branch
   REMOTE_BRANCH: "dev"
-  # ci 自动提交到 charts 仓库中的 commit message 信息，可以使用内置 "变量"
+  # ci auto commit message to charts repository, can use built-in "variables"
   DEPLOY_COMMIT_MESSAGE: "helm values updated by gitlab-ci pipeline in change-manifests task. Trigger by ${GITLAB_USER_NAME}"
   ROLLBACK_COMMIT_MESSAGE: "helm values rollback by gitlab-ci pipeline in change-manifests task. Trigger by ${GITLAB_USER_NAME}"
-  # 生成的 tag 将替换到 yaml 中的哪个字段
+  # Which field in yaml will the generated tag replace
   DEPLOY_REPO_YAML_TAG: ".image.tag"
-  # tag 需要指定哪一个文件进行替换
+  # Which file to specify for tag replacement
   DEPLOY_VALUE_FILE: "values.yaml"
-  # cd 部署阶段 当前所关联的 文件夹目录，默认为当前的 CI_PROJECT_NAME
+  # Current associated folder directory in cd deployment stage, default is current CI_PROJECT_NAME
   DEPLOY_REPO_PROJ: ""
-  # cd 回滚时需要的 变量收集文件
+  # Variable collection file needed for cd rollback
   CD_ENV_FILE: "cd.env"
-  # feat 特性分支，CD 自动部署至 对应的 Charts 仓库，依赖变量 DEPLOY_REPO，默认为关
+  # feat feature branch, CD auto deploy to corresponding Charts repository, depends on variable DEPLOY_REPO, default off
   FEAT_CD_AUTO_DEPLOY: "false"
-  # dev、sit、prd 环境，CD 自动部署至 对应的 Charts 仓库，依赖变量 DEPLOY_REPO，默认为开
+  # dev, sit, prd environment, CD auto deploy to corresponding Charts repository, depends on variable DEPLOY_REPO, default on
   DEV_CD_AUTO_DEPLOY: "true"
   SIT_CD_AUTO_DEPLOY: "true"
   PRD_CD_AUTO_DEPLOY: "true"
-  # prd 分支，运行 pipeline 时是否 自动创建分支，默认为 开
+  # prd branch, whether to auto create branch when running pipeline, default on
   PRD_CD_CREATE_TAG: "true"
   DOCKERFILE_BUILD_JDK_VERSION: "jdk17"
 
-# 默认的镜像列表 - Using Docker Hub public images
+# Default image list - Using Docker Hub public images
 .default_iamge_vars:
-  # 流水线构建阶段使用的基础构建镜像，将根据项目类型自动选择对应的镜像
-  # 如需覆盖特定项目类型的构建镜像，请直接设置此变量
+  # Base build image used in pipeline build stage, will auto-select corresponding image based on project type
+  # To override build image for specific project type, set this variable directly
   BASE_BUILD_IMAGE: ""
   MAVEN_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
   GRADLE_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
@@ -160,7 +160,7 @@
   CD_DEPLOY_IMAGE: "${TOOLBOX_IMAGE}"
   TEST_IMAGE: "${TOOLBOX_IMAGE}"
 
-# 工具私服地址变量 - Configure these in your GitLab CI/CD variables for internal use
+# Repository URL variables - Configure these in your GitLab CI/CD variables for internal use
 .repo_list_vars:
   # Docker registry (default: docker.io)
   DOCKER_REGISTRY: "docker.io"
@@ -195,18 +195,18 @@
   GITLAB_REPO_COMMIT_TOKEN: "${GITLAB_TOKEN:-}"
   GITLAB_API_TOKEN: "${GITLAB_TOKEN:-}"
 
-# artifacts 默认配置
+# Artifacts default configuration
 .default_artifacts:
   artifacts:
     expire_in: 14 days
 
-# docker 镜像扫描相关变量
+# Docker image scan related variables
 .image_scan:
-  # 扫描镜像安全漏洞
+  # Scan image security vulnerabilities
   DOCKER_IMAGE_SCAN_IMAGE: "false"
-  # 如果扫描 iamge 漏洞等级为中高以上时 是否强制中断CI
+  # Whether to force CI interruption if image vulnerability level is medium-high or above
   ENFORCE_EXIT: "false"
-  # gitlab 容器扫描变量
+  # GitLab container scan variables
   CS_ANALYZER_IMAGE: "docker.io/aquasec/trivy:latest"
   IMAGE_NAME: "$IMG_NAME"
   CI_REGISTRY_IMAGE: "$IMAGE_NAME"

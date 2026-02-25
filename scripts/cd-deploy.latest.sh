@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 加载 工具类及 模块脚本
+# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
@@ -10,19 +10,19 @@ done
 
 ENV_FILE=${CD_ENV_FILE}
 
-# 默认预设 ${DEPLOY_REPO_PROJ} 为当前 project 的名称
+# Default preset ${DEPLOY_REPO_PROJ} to current project name
 _DEPLOY_REPO_PROJ=${DEPLOY_REPO_PROJ:-$CI_PROJECT_NAME}
 
-# 基础校验
+# Basic validation
 : "${DEPLOY_REPO:?DEPLOY_REPO is required}"
 : "${DEPLOY_REPO_YAML_TAG:?DEPLOY_REPO_YAML_TAG is required}"
 : "${DEPLOY_VALUE_FILE:?DEPLOY_VALUE_FILE is required}"
 command -v yq >/dev/null 2>&1 || { echo "yq not found in PATH"; exit 1; }
 
-# 打印当前的部署环境
+# Print current deployment environment
 echo "Deploy branch: ${REMOTE_BRANCH}"
 
-# 统一对 deploy_repo 做一下处理，防止异常错误（去掉协议前缀与结尾 .git）
+# Uniformly process deploy_repo to prevent errors (remove protocol prefix and trailing .git)
 _DEPLOY_REPO_NOPROTO="${DEPLOY_REPO#*://}"
 export _DEPLOY_REPO="${_DEPLOY_REPO_NOPROTO%.git}"
 if [[ "${DEPLOY_REPO}" == *"://"* ]]; then
@@ -31,7 +31,7 @@ else
   _SCHEME="https"
 fi
 
-# argocd 二进制下载地址
+# argocd binary download URL
 # ARGOCD_FILE_URL='https://nexus.iquantex.com/repository/static-file/tools/argocd'
 
 git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
@@ -40,15 +40,15 @@ git config --global user.name "${GIT_AUTO_COMMIT_NAME}"
 git clone --branch "${REMOTE_BRANCH}" --depth 1 "${_SCHEME}://${GIT_AUTO_COMMIT_NAME}:${GITLAB_REPO_COMMIT_TOKEN}@${_DEPLOY_REPO}.git" repo
 cd "repo/${_DEPLOY_REPO_PROJ}"
 
-# 校验 values 文件存在
+# Validate values file exists
 if [ ! -f "${DEPLOY_VALUE_FILE}" ]; then
   echo "values file not found: ${DEPLOY_VALUE_FILE}"
   exit 1
 fi
 
-# 获取当前 yaml 中的值
+# Get current value from yaml
 _oldImage=$(yq e "${DEPLOY_REPO_YAML_TAG}" "${DEPLOY_VALUE_FILE}")
-oldImage="${_oldImage##*:}" # 修复 tag & image 在一行问题
+oldImage="${_oldImage##*:}" # Fix tag & image on same line issue
 
 if [ -n "${oldImage}" ]; then
   echo "old value: ${CYELLOW}${oldImage}${CEND}"
@@ -97,7 +97,7 @@ EOF
     git push origin "${REMOTE_BRANCH}"
   fi
 else
-  echo "${Tip}检测到未有文件变更，或目标文件已完成更新。"
+  echo "${Tip}No file changes detected, or target file already updated."
 fi
 
 ####
@@ -106,4 +106,4 @@ dotenv DEPLOY_OLD_IMAGE "${oldImage}"
 dotenv DEPLOY_OLD_REPO_PROJ "${_DEPLOY_REPO_PROJ}"
 dotenv DEPLOY_OLD_REPO "${_DEPLOY_REPO}"
 
-# argocd to sync project （如需启用，见 ARGOCD_FILE_URL 注释）
+# argocd to sync project (see ARGOCD_FILE_URL comment to enable)

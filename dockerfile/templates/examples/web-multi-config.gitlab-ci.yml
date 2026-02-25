@@ -1,42 +1,40 @@
-# Web 应用 - 多配置文件准备示例
-# 场景：需要准备多个 Nginx 配置文件和 SSL 证书
+# Web Application - Multi-Config File Preparation Example
+# Scenario: Need to prepare multiple Nginx config files and SSL certificates
 
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/Auto-DevOps.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Auto-DevOps.gitlab-ci.yml'
 
 variables:
-  # 构建命令
+  # Build command
   BUILD_SHELL: "pnpm run build"
 
-  # 禁用单元测试（可选）
+  # Disable unit tests (optional)
   UNIT_TEST_ENABLE: "false"
 
-  # 工作区前置准备命令
-  # 在 DOCKER_DAEMON_WORKSPACE 目录下执行
+  # Workspace preparation command
+  # Executed in DOCKER_DAEMON_WORKSPACE directory
   DOCKER_WORKSPACE_PREPARE_CMD: |
-    echo "准备 Nginx 配置和 SSL 证书..."
+    echo "Preparing Nginx config and SSL certificates..."
 
-    # 复制 Nginx 主配置
+    # Copy Nginx main config
     cp ${CI_PROJECT_DIR}/config/nginx/nginx.conf .
 
-    # 复制应用特定配置
+    # Copy application specific config
     cp ${CI_PROJECT_DIR}/config/nginx/app.conf .
 
-    # 创建 SSL 目录并复制证书
+    # Create SSL directory and copy certificates
     mkdir -p ssl
     cp ${CI_PROJECT_DIR}/config/ssl/server.crt ssl/
     cp ${CI_PROJECT_DIR}/config/ssl/server.key ssl/
     chmod 600 ssl/server.key
 
-    # 复制其他配置文件
+    # Copy other config files
     cp ${CI_PROJECT_DIR}/config/mime.types .
 
-    echo "配置文件准备完成！"
+    echo "Configuration files prepared!"
     ls -lha
 
-# 项目目录结构示例：
+# Project directory structure example:
 # your-project/
 # ├── src/
 # ├── config/

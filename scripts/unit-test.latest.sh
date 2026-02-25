@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-set -eo # 表示开启 pipeline 模式，执行期间发生错误，后续步骤多不进行执行。
+set -eo # Enable pipeline mode, exit on error during execution
 
-# 加载 工具类及 模块脚本
+# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
@@ -23,13 +23,13 @@ declare -A UNIT_TEST_CMD=(
 
 # unit test main function
 function unit_test() {
-  # 对于 java 项目，检测是 Maven 还是 Gradle
+  # For java projects, detect Maven or Gradle
   if [ "${PROJECT_TYPE}" == "java" ]; then
     if [ -f pom.xml ]; then
-      # Maven 项目
+      # Maven project
       shell_exec "${_JAVA_UNIT_TEST_SHELL:-'mvn test'}"
     elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
-      # Gradle 项目
+      # Gradle project
       shell_exec "${_JAVA_UNIT_TEST_SHELL:-'gradle test'}"
     fi
   else
@@ -37,5 +37,5 @@ function unit_test() {
   fi
 }
 
-# 使用 _utils.sh 中 depthProjectExec 执行相关 job 主函数
+# Use depthProjectExec in _utils.sh to execute relevant job main function
 depthProjectExec unit_test

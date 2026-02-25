@@ -14,12 +14,12 @@
   extends:
     - .build_base
 
-###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+###################### Below this line are code snippets split by function or module
 .docker_build_push: &docker_build_push
   - !reference [ .check_docker, script ]
   - !reference [ .docker_login, script ]
   - |
-    # 根据环境变量 是否构建 docker 镜像
+    # Whether to build docker image based on environment variable
     if [ ${DOCKER_IMAGE_BUILD} == "true" ];then
         cd "${DOCKER_DAEMON_WORKSPACE}"
         if [ -e nginx.conf ];then sed -i "/RUN/iADD nginx.conf /etc/nginx/conf.d/nginx.conf" Dockerfile;fi
@@ -33,7 +33,7 @@
     fi
 
 .maven-generate-config:
-  # extends 引用此段需要在上层关联导入的项
+  # extends referencing this section needs to import associated items in the upper layer
   # extends:
   #   - .nexus_auth
   #   - .sonar_auth
@@ -117,7 +117,7 @@
       set -x
 
 .npm-generate-config:
-  # extends 引用此段需要在上层关联导入的项
+  # extends referencing this section needs to import associated items in the upper layer
   # extends:
   #   - .nexus_auth
   script:
@@ -145,7 +145,7 @@
 .maven_build:
   image: "${MAVEN_IMAGE}"
   stage: build
-  # extends 引用此段需要在上层关联导入的项
+  # extends referencing this section needs to import associated items in the upper layer
   # extends:
   #   - .nexus_auth
   #   - .sonar_auth
@@ -155,7 +155,7 @@
   #   - .before_jobs
   script:
     - !reference [ .maven-generate-config, script ]
-    - sed -i '/<finalName>/d' pom.xml # `先做一下删除，防止冲突`
+    - sed -i '/<finalName>/d' pom.xml # First delete to prevent conflicts
     - sed -i "/<build>/a <finalName>${MAVEN_APP_NAME-"app"}<\/finalName>" pom.xml
     - |
       set -x
@@ -185,7 +185,7 @@
 
 .npm_build:
   stage: build
-  # extends 引用此段需要在上层关联导入的项
+  # extends referencing this section needs to import associated items in the upper layer
   # extends:
     # - .before_jobs
     # - .build_after_script
@@ -197,7 +197,7 @@
     - !reference [ .npm-generate-config, script ]
     - |
       set -x 
-      # 检查项目下是否存在docker/nginx.conf
+      # Check if docker/nginx.conf exists in the project
       if [ -e ${CUSTOM_NGINX_CONF} ];then
           mv ${CUSTOM_NGINX_CONF} ${DOCKER_DAEMON_WORKSPACE}/nginx.conf
       fi
@@ -217,7 +217,7 @@
 
 .python_build:
   stage: build
-  # extends 引用此段需要在上层关联导入的项
+  # extends referencing this section needs to import associated items in the upper layer
   # extends:
   #   - .before_jobs
   #   - .build_after_script
@@ -250,7 +250,7 @@
     - !reference [ .docker_login, script ]
     - |
       set -x
-      # 生成 Dockerfile（使用内置模板）
+      # Generate Dockerfile (using built-in template)
       if [ ! -d "${DOCKER_DAEMON_WORKSPACE}" ];then
         mkdir -p "${DOCKER_DAEMON_WORKSPACE}"
       fi
@@ -261,7 +261,7 @@
       cd "${CI_PROJECT_DIR}"
     - |
       set -x
-      # Go 构建（禁用 CGO，Linux/amd64，输出名与项目名一致）
+      # Go build (CGO disabled, Linux/amd64, output name same as project name)
       export CGO_ENABLED="${GO_CGO_ENABLED:-0}"
       export GOOS=linux
       export GOARCH="${GO_ARCH:-amd64}"
@@ -271,7 +271,7 @@
       go build -ldflags "-s -w" -o "${CI_PROJECT_NAME}" ./
     - |
       set -x
-      # 拷贝二进制到 docker 构建目录
+      # Copy binary to docker build directory
       cp -a "${CI_PROJECT_DIR}/${CI_PROJECT_NAME}" "${DOCKER_DAEMON_WORKSPACE}/"
     - *docker_build_push
 

@@ -1,20 +1,20 @@
 #!/bin/bash
-set -eo # 表示开启 pipeline 模式，执行期间发生错误，后续步骤多不进行执行。
+set -eo # Enable pipeline mode, exit on error during execution
 
-# 加载 工具类及 模块脚本
+# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
   source "${sh}"
 done
 
-# sonar scan 扫描主功能函数
+# Sonar scan main function
 function sonar_scan(){
 	local SONAR_DIR=$SONAR_DIR
 	cd "${SCRIPT_PATH}/${project_name}"
 	echo "${SCRIPT_PATH}/${project_name}"
 
-	# 当 sonarqube 扫描 Java 工程时, 进行生成所需依赖二进制目录
+	# When sonarqube scans Java project, generate required dependency binary directory
 	if [ -f pom.xml ] && [ ! -d target/classes ];then
 		if [ "${TEST_SHELL}" ];then
 			if [ `echo ${TEST_SHELL}|grep mvn|wc -l` -ge 1 ];then
@@ -26,11 +26,11 @@ function sonar_scan(){
 			shell_exec ${BUILD_SHELL-'mvn clean package'}
 		fi
 	fi
-	
-	# 检查 gitlab ci 中设置的 SONAR_DIR 是否存在，当不存在的时候，根据实际使用的情况自动设置 
+
+	# Check if SONAR_DIR set in gitlab ci exists, if not, automatically set based on actual usage
 	if [ ! -d "${SONAR_DIR}" ];then
 		local SONAR_DIR='./src'
-		# 当一级目录 找不到时，尝试 到二级目录进行查找
+		# When not found in first level directory, try searching in second level
 		if [ ! -d "${SONAR_DIR}" -a `ls ./*/src|grep src|tr -d ':'|wc -l` -ge  1 ];then
 			for SOURCE_PATH in `ls ./*/src|grep src|tr -d ':'`;do
 				if [ ! "${SONAR_DIR_LIST}" ];then
@@ -41,7 +41,7 @@ function sonar_scan(){
 			done
 			local SONAR_DIR=${SONAR_DIR_LIST}
 		elif [ ! -d "${SONAR_DIR}" ];then
-			# 当上面 假设到 的 src 在 一二级目录多不存在时，则尝试设置为 app
+			# When src not found in first or second level directory, try setting to app
 			local SONAR_DIR='./app'
 			if [ ! -d "${SONAR_DIR}" -a `ls ./*/app|grep app|tr -d ':'|wc -l` -ge  1 ];then
 				for SOURCE_PATH in `ls ./*/src|grep src|tr -d ':'`;do
@@ -53,18 +53,18 @@ function sonar_scan(){
 				done
 				local SONAR_DIR=${SONAR_DIR_LIST}
 			else
-				# 多不满足时 程序执行错误退出
-				echo "${Error}扫描对应源码目录未能找到，设置为默认目录 ${CRED}./${CEND}"
+				# If none of the above are satisfied, program exits with error
+				echo "${Error}Unable to find corresponding source directory, setting to default directory ${CRED}./${CEND}"
 				SONAR_DIR='./'
 			fi
 		fi
 	fi
 
-	# 基于 SONAR_DIR 为其配置 SONAR_BINARIES 变量目录，JAVA 时需要。
+	# Configure SONAR_BINARIES variable directory based on SONAR_DIR, required for JAVA
 	local SONAR_BINARIES=`echo ${SONAR_DIR}|sed 's#/src#/target/classes#g'`
 	local ARGS="-Dsonar.sources=${SONAR_DIR}"
 
-	local SONAR_SCAN_ARGS="${SONAR_SCAN_ARGS} ${ARGS}" # 基于 gitlab ci 中设置的 args 对变量做增加
+	local SONAR_SCAN_ARGS="${SONAR_SCAN_ARGS} ${ARGS}" # Add to args variable set in gitlab ci
 
 	local GLOBAL_PROJECT_ARGS="-Dsonar.projectKey=${1}
 							-Dsonar.projectName=${1} 
@@ -92,7 +92,7 @@ function sonar_scan(){
 
 	set +x
 	if [ $CI_PIPELINE_SOURCE == 'merge_request_event' ];then
-		# 对敏感数据替换，同时输出扫描时所执行的命令，方便后续排错。
+		# Replace sensitive data and output scan command for troubleshooting
 		if [ $SONAR_GATE == "true" ];then
 			echo "sonar-scanner ${GLOBAL_PROJECT_ARGS} ${GLOBAL_SERVER_ARGS} \
 				${SONAR_SCAN_ARGS} ${GLOBAL_MR_ARGS} -Dsonar.qualitygate.wait=true"| sed "s#${SONAR_TOKEN}#******#g" 
@@ -123,5 +123,5 @@ function sonar_scan(){
 	fi
 }
 
-# 使用 _utils.sh 中 depthProjectExec 执行相关 job 主函数
+# Use depthProjectExec from _utils.sh to execute related job main function
 depthProjectExec sonar_scan

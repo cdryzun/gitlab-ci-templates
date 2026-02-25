@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-#------ ENV 环境; 处理变量相关预处理。
-# 对分支名称中的特殊字符做出转换，分支生成 tag 时出现异常
+#------ ENV environment; Process variable-related preprocessing
+# Convert special characters in branch names to prevent errors when generating tags from branches
 dotenv _CI_COMMIT_REF_NAME `echo ${CI_COMMIT_REF_NAME}|tr '/' '-'`
 # _BUILD_ENV=`echo "${CI_COMMIT_REF_NAME}"|awk -F '/' '{print $2}'`
-BUILD_TIME=`date +"%Y%m%d%H%M"` # 容器 Tag 中的时间戳，精确到分
+BUILD_TIME=`date +"%Y%m%d%H%M"` # Timestamp in container Tag, accurate to minute
 
-# docker image 的名称
+# Docker image name
 dotenv IMG_NAME ${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
 
-# 根据 分支名称来确定 docker image tag name
+# Determine docker image tag name based on branch name
 if [ "${RELEASE_BUILD}" == 'true' ];then
-  _CI_COMMIT_REF_NAME=`echo ${_CI_COMMIT_REF_NAME}|sed "s#v##g"` # docker Tag 名称去掉 v
+  _CI_COMMIT_REF_NAME=`echo ${_CI_COMMIT_REF_NAME}|sed "s#v##g"` # Remove v from docker Tag name
   dotenv DOCKER_IMAGE_TAG ${_CI_COMMIT_REF_NAME}
   dotenv BUILD_ENV prd
   dotenv REMOTE_BRANCH prd
@@ -24,7 +24,7 @@ else
     dotenv REMOTE_BRANCH prd
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}"
   elif [[ ${_CI_COMMIT_REF_NAME} =~ ^feat.*$ ]] || [[ ${_CI_COMMIT_REF_NAME} =~ ^feature.*$ ]];then
-    # feat/feature 分支识别，部署目标为 dev 环境
+    # feat/feature branch recognition, deployment target is dev environment
     dotenv BUILD_ENV feat
     dotenv REMOTE_BRANCH dev
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}-${BUILD_TIME}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
@@ -35,30 +35,30 @@ else
   fi
 fi
 
-# 使用 image & tag 拼接成一个完整的 image name
+# Combine image & tag into complete image name
 dotenv DOCKER_IMAGE_NAME "${IMG_NAME}:${DOCKER_IMAGE_TAG}"
 
 if [ "${RELEASE_BUILD}" ];then
   dotenv RELEASE_BUILD "${RELEASE_BUILD}"
 fi
 
-# 如果当前工程未指定类型，则自动匹配当前项目属于是什么代码类型，输出 $PROJECT_TYPE
+# If current project type is not specified, automatically match what code type the current project is, output $PROJECT_TYPE
 if [ -z "${PROJECT_TYPE}" ];then
   depthProjectExec
 elif [ -z "${BUILD_SHELL}" ] && [ "${PROJECT_TYPE}" == 'python' ];then
-  # BUILD_SHELL 未设置的 python 类型，更新项目类型为 model, 后续执行全量 COPY 源代码动作
+  # Python type without BUILD_SHELL set, update project type to model, subsequent execution will copy full source code
   dotenv PROJECT_TYPE 'py_model'
 fi
 
-# 设置 单元测试时 所使用的 基础镜像
+# Set base image used for unit testing
 if [ -z ${UNIT_IMAGE_LIST[$PROJECT_TYPE]} ];then
   dotenv _BUILD_IMAGE "${UNIT_IMAGE_LIST[python]}"
 else
   dotenv _BUILD_IMAGE "${UNIT_IMAGE_LIST[$PROJECT_TYPE]}"
 fi
 
-# 当 prd 分支运行 build stage 时，不需要构建镜像，而是需要 创建分支，使用 git 命令，某些 镜像没有 git
-# 如果设置了 BASE_BUILD_IMAGE 变量，则优先使用该变量定义的镜像
+# When prd branch runs build stage, no need to build image, instead need to create branch, using git command, some images don't have git
+# If BASE_BUILD_IMAGE variable is set, prioritize using the image defined by that variable
 if [ "${CI_COMMIT_REF_NAME}" == 'prd' ];then
     dotenv BUILD_IMAGE "${TOOLBOX_IMAGE}"
 elif [ -n "${BASE_BUILD_IMAGE}" ];then
@@ -67,13 +67,13 @@ else
     dotenv BUILD_IMAGE "${_BUILD_IMAGE}"
 fi
 
-# # 针对 prd 分支运行的 pipeline, 设置在 build 阶段不构建镜像, 而是且创建 Tag
+# # For pipeline running on prd branch, set to not build image in build stage, but create Tag instead
 # if [ "${CI_COMMIT_REF_NAME}" == 'prd' ];then
 #     dotenv DOCKER_IMAGE_BUILD 'false'
 #     dotenv PRD_BUILD_CREATE_TAG 'true'
 # fi
 
-#  判断 feat 特性分支是否构建 Docker 镜像
+#  Determine whether feat feature branch builds Docker image
 if [ "${FEAT_BRANCH}" ];then
   if [ "${FEAT_DOCKER_IMAGE_BUILD}" == 'true' ];then
     dotenv DOCKER_IMAGE_BUILD "${FEAT_DOCKER_IMAGE_BUILD}"
@@ -82,18 +82,18 @@ if [ "${FEAT_BRANCH}" ];then
   fi
 fi
 
-# prd 分支上，才能进行 创建 tag  动作
+# Only prd branch can perform create tag action
 if [ "${PRD_BUILD_CREATE_TAG}" == 'true' -a "${REMOTE_BRANCH}" != 'prd' ];then
     dotenv PRD_BUILD_CREATE_TAG 'false'
 fi
 
 
-# 检测项目根目录是否存在 Dockerfile 文件，有则使用当前仓库下的 Dockerfile 跳过内置的
-# 检查是否存在自定义的 Dockerfile（支持自定义路径或默认根目录）
-# 使用绝对路径确保检测的是项目根目录，而非子项目目录
+# Check if Dockerfile file exists in project root, if so use Dockerfile from current repository, skip built-in
+# Check if custom Dockerfile exists (supports custom path or default root directory)
+# Use absolute path to ensure detection is in project root, not subproject directory
 DOCKERFILE_TO_CHECK=""
 if [ -n "${CUSTOM_DOCKERFILE_PATH}" ];then
-  # 支持绝对路径和相对路径：绝对路径直接使用，相对路径基于项目根目录
+  # Support both absolute and relative paths: absolute path used directly, relative path based on project root
   if [[ "${CUSTOM_DOCKERFILE_PATH}" == /* ]];then
     _dockerfile_path="${CUSTOM_DOCKERFILE_PATH}"
   else
@@ -106,14 +106,14 @@ fi
 
 if [ -n "${DOCKERFILE_TO_CHECK}" ];then
   if [ $(cat "${DOCKERFILE_TO_CHECK}"|egrep -v "^#|^$"|egrep "^(ENTRYPOINT|USER|WORKDIR|HEALTHCHECK|LABEL|MAINTAINER|CMD)"|wc -l) -gt 0 ];then
-      echo "${Error} 检测到 自定义 Dockerfile (${DOCKERFILE_TO_CHECK}) 中存在无效指令"
+      echo "${Error} Invalid instructions detected in custom Dockerfile (${DOCKERFILE_TO_CHECK})"
       exit 1
   else
       dotenv CUSTOM_DOCKERFILE 'true'
   fi
 fi
 
-# # 对 tag 的构建且进行基于 release 分支的 retag，镜像不进行二次构建
+# # For tag builds based on release branch retag, image is not rebuilt
 # if [ ${REMOTE_BRANCH} == 'prd' ];then
 #    RELEASE_IMAGE_NAME=`echo ${DOCKER_IMAGE_NAME}| sed 's#:v#:release-#g'`
 #    dotenv RELEASE_IMAGE_NAME "${RELEASE_IMAGE_NAME}"

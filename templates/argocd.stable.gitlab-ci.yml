@@ -1,18 +1,16 @@
-# 全局公共变量
+# Global public variables
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/argocd.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/argocd.stable.gitlab-ci.yml'
 
 variables:
-  GLOBAL_DOMAIN: "iquantex.com"
-  # 部署项目仓库地址
+  GLOBAL_DOMAIN: "example.com"
+  # Deployment project repository address
   REPO_URL: "${CI_PROJECT_URL}.git"
-  # 部署工具定义的项目名称，需要找运维获取
+  # Project name defined by deployment tool, need to get from operations
   ARGOCD_PROJECT: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
-  # 环境域名
+  # Environment domain
   ENV_URL: "http://${CI_COMMIT_BRANCH}.${CI_PROJECT_NAMESPACE}.${GLOBAL_DOMAIN}"
-  # 生产域名
+  # Production domain
   PROD_DOMAIN: "${CI_PROJECT_NAME}.${CI_PROJECT_NAMESPACE}.${GLOBAL_DOMAIN}"
   KUBE_NAMESPACE: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
   ARGOCD_ENV: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"

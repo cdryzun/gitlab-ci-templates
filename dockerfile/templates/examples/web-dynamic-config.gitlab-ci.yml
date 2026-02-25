@@ -1,36 +1,34 @@
-# Web 应用 - 动态配置生成示例
-# 场景：根据分支/环境动态选择配置文件
+# Web Application - Dynamic Config Generation Example
+# Scenario: Select config files dynamically based on branch/environment
 
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/Auto-DevOps.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Auto-DevOps.gitlab-ci.yml'
 
 variables:
   BUILD_SHELL: "pnpm run build"
   UNIT_TEST_ENABLE: "false"
 
-  # 根据分支动态选择配置
+  # Select config dynamically based on branch
   DOCKER_WORKSPACE_PREPARE_CMD: |
-    echo "当前分支: ${CI_COMMIT_REF_NAME}"
-    echo "构建环境: ${BUILD_ENV}"
+    echo "Current branch: ${CI_COMMIT_REF_NAME}"
+    echo "Build environment: ${BUILD_ENV}"
 
-    # 根据分支选择不同的 Nginx 配置
+    # Select different Nginx config based on branch
     if [ "${CI_COMMIT_REF_NAME}" = "prd" ] || [[ "${CI_COMMIT_REF_NAME}" =~ ^v[0-9] ]]; then
-      echo "使用生产环境配置..."
+      echo "Using production environment config..."
       cp ${CI_PROJECT_DIR}/config/nginx.prod.conf nginx.conf
       cp ${CI_PROJECT_DIR}/config/app.prod.json app.json
     elif [ "${CI_COMMIT_REF_NAME}" = "sit" ]; then
-      echo "使用测试环境配置..."
+      echo "Using test environment config..."
       cp ${CI_PROJECT_DIR}/config/nginx.sit.conf nginx.conf
       cp ${CI_PROJECT_DIR}/config/app.sit.json app.json
     else
-      echo "使用开发环境配置..."
+      echo "Using development environment config..."
       cp ${CI_PROJECT_DIR}/config/nginx.dev.conf nginx.conf
       cp ${CI_PROJECT_DIR}/config/app.dev.json app.json
     fi
 
-    # 生成构建元数据文件
+    # Generate build metadata file
     cat > build-info.json << EOF
     {
       "version": "${CI_COMMIT_SHORT_SHA}",
@@ -41,20 +39,20 @@ variables:
     }
     EOF
 
-    echo "配置文件准备完成："
+    echo "Configuration files prepared:"
     ls -lha
-    echo "应用配置内容："
+    echo "Application config content:"
     cat app.json
 
-# 项目目录结构示例：
+# Project directory structure example:
 # your-project/
 # ├── src/
 # ├── config/
-# │   ├── nginx.dev.conf       # 开发环境 Nginx 配置
-# │   ├── nginx.sit.conf       # 测试环境 Nginx 配置
-# │   ├── nginx.prod.conf      # 生产环境 Nginx 配置
-# │   ├── app.dev.json         # 开发环境应用配置
-# │   ├── app.sit.json         # 测试环境应用配置
-# │   └── app.prod.json        # 生产环境应用配置
+# │   ├── nginx.dev.conf       # Development Nginx config
+# │   ├── nginx.sit.conf       # Test Nginx config
+# │   ├── nginx.prod.conf      # Production Nginx config
+# │   ├── app.dev.json         # Development application config
+# │   ├── app.sit.json         # Test application config
+# │   └── app.prod.json        # Production application config
 # ├── package.json
 # └── .gitlab-ci.yml

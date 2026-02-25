@@ -22,10 +22,10 @@ trivy_scan:
     - |
       script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
     - |
-      # 执行镜像扫描
+      # Execute image scan
       set -eo
       set +x
-      # 加载 工具类及 模块脚本
+      # Load utility classes and module scripts
       for sh in _*.sh;do
         [[ -e "$sh" ]] || break
         source "${sh}"

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-set -eo # 表示开启 pipeline 模式，执行期间发生错误，后续步骤多不进行执行。
+set -eo # Enable pipeline mode, exit on error during execution
 
 # env
 DOCKER_SECRET_ARGS=''
 
-# 加载 工具类及 模块脚本
+# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
@@ -24,7 +24,7 @@ function build_init(){
                 yarn install
                 shell_exec "${BUILD_SHELL:-"yarn run build"}"
             else
-                # 配置 pnpm registry 和本地缓存目录（类似 Maven ~/.m2）
+            # Configure pnpm registry and local cache directory (similar to Maven ~/.m2)
                 cat > ${CI_PROJECT_DIR}/.npmrc << EOF
 registry=${NODE_REGISTRY}
 store-dir=${PNPM_STORE_DIR:-/root/.pnpm-store}
@@ -34,10 +34,10 @@ EOF
             fi
             ;;
         java)
-            # 检测是 Maven 还是 Gradle 项目
+            # Detect Maven or Gradle project
             if [ -f pom.xml ]; then
-                # Maven 项目
-                # release plugin 需要 scm 添加
+                # Maven project
+                # release plugin requires scm to be added
                 if [ $(sed -n -e '/<scm>/,/<\/scm>/p'  pom.xml |wc -l) -eq 0 ];then
                     sed -i '/<description>/a \
     <scm> \
@@ -52,15 +52,15 @@ EOF
                 BUILD_SHELL=${BUILD_SHELL-'mvn clean package'}
                 # release build
                 if [ "${RELEASE_LIB_BUILD}" == 'true' ];then
-                    # 修复文件更改, 导致 release plugin 失败
+                    # Fix file changes that cause release plugin to fail
                     cd ${CI_PROJECT_DIR} && git add . && git commit -m "null" -a
-                    # 下载 release lib 脚本执行
+                    # Download and execute release lib script
                     RELEASE_SHELL="$(curl -fsSL --header "PRIVATE-TOKEN: ${GITLAB_READ_TOKEN}" ${TEMPLATE_REPO%/devops*}/api/v4/projects/${TEMPLATE_REPO_PROJECT_ID}/repository/files/hack%2Frelease-lib.${TEMPLATE_CONTEXT}.sh/raw?ref=${TEMPLATE_BRANCH_NAME})"
                     shell_exec "${RELEASE_SHELL}"
                 fi
 
-                # 更改最终 jar 包名称
-                sed -i '/<finalName>/d' ${BUILD_MAVEN_POM_FILE} # `先做一下删除，防止冲突`
+                # Change final jar package name
+                sed -i '/<finalName>/d' ${BUILD_MAVEN_POM_FILE} # Delete first to prevent conflicts
                 if [ "${RELEASE_BUILD}" == 'true' ];then
                     sed -i "/<build>/a <finalName>${MAVEN_APP_NAME-"app"}-${CI_BUILD_REF_NAME##v}<\/finalName>" ${BUILD_MAVEN_POM_FILE}
                 else
@@ -69,23 +69,23 @@ EOF
 
                 shell_exec "${BUILD_SHELL}"
             elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
-                # Gradle 项目
+                # Gradle project
                 shell_exec "${BUILD_SHELL-'gradle clean build -x test'}"
             else
-                echo "${Error}未找到 Maven 或 Gradle 构建文件"
+                echo "${Error}Maven or Gradle build file not found"
                 exit 1
             fi
             ;;
         python)
-            # 安装生成 whl 包前的 依赖项
+            # Install dependencies before building whl package
             if [ -f ./requestments-build.txt ];then
                 pip install -r ./requestments-build.txt -i "${PYPI}"
             fi
-            # 执行构建命令
+            # Execute build command
             shell_exec "${BUILD_SHELL}"
             ;;
         golang)
-            # Go 构建：禁用 CGO，Linux/amd64；输出名与项目名一致
+            # Go build: disable CGO, Linux/amd64; output name consistent with project name
             export CGO_ENABLED="${GO_CGO_ENABLED:-0}"
             export GOOS=linux
             export GOARCH="${GO_ARCH:-amd64}"
@@ -108,7 +108,7 @@ function image_build_init(){
     case "${PROJECT_TYPE}" in
         web)
             cp -a ./${STATIC_FILE_NAME:-"dist"} ${DOCKER_DAEMON_WORKSPACE}
-            # 如果打包输出的静态目录不是dist,重命名为dist
+            # If build output static directory is not dist, rename to dist
             if [ -n "${STATIC_FILE_NAME}" ] && [ "${STATIC_FILE_NAME}" != "dist" ];then
             cd ${DOCKER_DAEMON_WORKSPACE}
             mv ${STATIC_FILE_NAME} dist
@@ -116,12 +116,12 @@ function image_build_init(){
             fi
             ;;
         java)
-            # 检测是 Maven 还是 Gradle 项目，复制相应的 JAR 文件
+            # Detect Maven or Gradle project, copy corresponding JAR file
             if [ -f pom.xml ]; then
-                # Maven 项目：从 target 目录复制
+                # Maven project: copy from target directory
                 cp -a ./target/${MAVEN_APP_NAME-"app"}*.jar ${DOCKER_DAEMON_WORKSPACE}
             elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
-                # Gradle 项目：从 build/libs 目录复制
+                # Gradle project: copy from build/libs directory
                 for app in $(ls ./build/libs/${MAVEN_APP_NAME-"app"}*.jar|grep -v 'plain'|head -n 1);do
                     cp -a ${app} ${DOCKER_DAEMON_WORKSPACE}/app.jar
                 done
@@ -137,17 +137,17 @@ function image_build_init(){
             rm -rf ${DOCKER_DAEMON_WORKSPACE}/{_*,run.sh} || true
             ;;
         golang)
-            # 仅复制已构建的二进制到 docker 构建目录，统一命名为 app
+            # Only copy built binary to docker build directory, uniformly named app
             cp -a "${CI_PROJECT_DIR}/${CI_PROJECT_NAME}" "${DOCKER_DAEMON_WORKSPACE}/app"
             ;;
         *)
-            echo "${Tip}未找到对应的镜像初始化配置."
+            echo "${Tip}No corresponding image initialization configuration found."
     esac
 }
 
 
 function docker_secret(){
-    # 找出 当前 Dockerfile secret id 并刷入 docker build args 中
+    # Find current Dockerfile secret id and inject into docker build args
     if [[ $(cat Dockerfile 2>/dev/null|head -n 1|grep syntax|wc -l) -eq 1 ]];then
         for SECRET_ID in $(cat Dockerfile|grep 'mount=type=secret'|egrep -o 'id=[_A-Z0-9a-z]+'|awk -F '=' '{print $2}');do
             if [ ! -z "${SECRET_ID}" ];then
@@ -184,21 +184,21 @@ IFS='
 }
 
 function docker_workspace_prepare(){
-    # 执行 Docker 构建工作区前置准备命令
-    # 在 DOCKER_DAEMON_WORKSPACE 目录下执行，用于准备构建所需的依赖配置文件
+    # Execute Docker build workspace pre-preparation command
+    # Execute in DOCKER_DAEMON_WORKSPACE directory, used to prepare dependency configuration files needed for build
     if [ -n "${DOCKER_WORKSPACE_PREPARE_CMD}" ]; then
-        echo "${Info}执行 Docker 工作区前置准备命令..."
-        echo "${Tip}命令内容: ${DOCKER_WORKSPACE_PREPARE_CMD}"
-        echo "${Tip}执行目录: ${DOCKER_DAEMON_WORKSPACE}"
+        echo "${Info}Executing Docker workspace pre-preparation command..."
+        echo "${Tip}Command content: ${DOCKER_WORKSPACE_PREPARE_CMD}"
+        echo "${Tip}Execution directory: ${DOCKER_DAEMON_WORKSPACE}"
 
-        # 执行用户自定义的前置命令
+        # Execute user-defined pre-command
         eval "${DOCKER_WORKSPACE_PREPARE_CMD}"
 
         if [ $? -eq 0 ]; then
-            echo "${Info}工作区准备命令执行成功"
+            echo "${Info}Workspace preparation command executed successfully"
             ls -lha
         else
-            echo "${Error}工作区准备命令执行失败，退出构建"
+            echo "${Error}Workspace preparation command failed, exiting build"
             exit 1
         fi
     fi
@@ -211,24 +211,24 @@ function docker_build_push(){
     cd "${DOCKER_DAEMON_WORKSPACE}"
     ls -lha
 
-    # 执行工作区前置准备命令
+    # Execute workspace pre-preparation command
     docker_workspace_prepare
 
-    # 处理自定义 Dockerfile
+    # Handle custom Dockerfile
     if [ -n "${CUSTOM_DOCKERFILE}" ];then
-        # 支持自定义 Dockerfile 路径，优先使用 CUSTOM_DOCKERFILE_PATH，否则使用根目录的 Dockerfile
+        # Support custom Dockerfile path, prioritize CUSTOM_DOCKERFILE_PATH, otherwise use root directory Dockerfile
         local dockerfile_source="${CUSTOM_DOCKERFILE_PATH:-${CI_PROJECT_DIR}/Dockerfile}"
         rm -rf Dockerfile && cp "${dockerfile_source}" .
-        # Dockerfile 添加 image 元数据信息
+        # Dockerfile add image metadata information
         sed -ie '/^FROM.*base-image.*$/a\ARG CI_COMMIT_SHORT_SHA="develop"     CI_BUILD_DATE=""     APP_NAME="app"     CI_COMMIT_REF_NAME=""     CI_COMMIT_AUTHOR=""     CI_PROJECT_NAME=""\nLABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR}       CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA}       CI_BUILD_DATE=${CI_BUILD_DATE}       CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}       DOCKER_FILE_FORM="https://github.com/cdryzun/gitlab-ci-templates"       CI_PROJECT_NAME=${CI_PROJECT_NAME}\nENV APP=${APP_NAME}' Dockerfile
     fi
 
     if [ -e nginx.conf ] && [ "${PROJECT_TYPE}" == 'web' ];then
         sed -i "/RUN/iADD nginx.conf /etc/nginx/conf.d/nginx.conf" Dockerfile
     fi
-    # 获取当前 dockerifle secret id
+    # Get current Dockerfile secret id
     docker_secret
-    # 拉取最新的 base image #58
+    # Pull latest base image #58
     docker_base_pull_latest
     echo """docker build ${DOCKER_SECRET_ARGS}  \
     -t "${DOCKER_IMAGE_NAME}" . \
@@ -249,7 +249,7 @@ function docker_build_push(){
 
 
 function docker_retag_push(){
-    echo "${Tip}release镜像匹配成功，正基于此镜像进行 ReTag"
+    echo "${Tip}Release image matched successfully, performing ReTag based on this image"
     docker pull "${RETAG_IMGAE_NAME}"
     docker tag "${RETAG_IMGAE_NAME}" "${DOCKER_IMAGE_NAME}"
     docker tag ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
@@ -260,25 +260,25 @@ function docker_retag_push(){
 }
 
 function auto_delete_tag(){
-    echo "${Tip}检测为 ${CI_COMMIT_REF_NAME} 分支，执行清理 Tag 动作，目前设置保留最新 ${PRD_CD_CREATE_TAG_NUM} 个 Tag。"
+    echo "${Tip}Detected ${CI_COMMIT_REF_NAME} branch, executing Tag cleanup action, currently keeping latest ${PRD_CD_CREATE_TAG_NUM} Tags."
     for claen_tag in `glab release list ls|grep "${_CI_COMMIT_REF_NAME}-"|awk '{print $1}'|sort|head -n -${PRD_CD_CREATE_TAG_NUM}`;do
         glab release delete "$claen_tag" -y --with-tag
-        echo "${Tip} 正在进行删除 Docker 镜像: ${CRED}${IMG_NAME}:${claen_tag}${CEND}..."
+        echo "${Tip} Deleting Docker image: ${CRED}${IMG_NAME}:${claen_tag}${CEND}..."
         _PROJECT_NAME=$(echo `glab repo view|head -n 1|sed 's# / #%252F#g;s#name:##g'`)
 
-        # 清理 registry 镜像 (Harbor API 示例)
-        # 用户可以配置 REGISTRY_CLEANUP_API 变量来启用镜像清理
-        # 例如: REGISTRY_CLEANUP_API="https://harbor.example.com/api/v2.0"
+        # Clean up registry images (Harbor API example)
+        # Users can configure REGISTRY_CLEANUP_API variable to enable image cleanup
+        # Example: REGISTRY_CLEANUP_API="https://harbor.example.com/api/v2.0"
         if [ -n "${REGISTRY_CLEANUP_API}" ] && [ -n "${REGISTRY_USER}" ] && [ -n "${REGISTRY_PASSWORD}" ]; then
             if curl -u ${REGISTRY_USER}:${REGISTRY_PASSWORD} -X 'DELETE' \
                 "${REGISTRY_CLEANUP_API}/projects/${CI_PROJECT_NAME}/repositories/${_PROJECT_NAME}/artifacts/${claen_tag}/tags/${claen_tag}" \
                 -H 'accept: application/json' 2>&1 | grep -q "errors"; then
-                echo "${Tip} 镜像删除失败, 请进行检查..."
+                echo "${Tip} Image deletion failed, please check..."
             else
-                echo "${Info} 镜像清理成功..."
+                echo "${Info} Image cleanup successful..."
             fi
         else
-            echo "${Tip} 未配置 REGISTRY_CLEANUP_API，跳过镜像清理..."
+            echo "${Tip} REGISTRY_CLEANUP_API not configured, skipping image cleanup..."
         fi
     done
 }
@@ -293,7 +293,7 @@ function auto_create_tag(){
 EOF
     if [ ${DEPLOY_REPO} ];then
         echo "glab release create ${DOCKER_IMAGE_TAG} -F changelog.md \
-            --ref ${CI_COMMIT_REF_NAME} --assets-links='[{\"name\":\"项目 CD Charts 地址\",\"url\":\"$(echo ${DEPLOY_REPO}| sed 's#\.git##g')/-/tree/${CI_COMMIT_REF_NAME}/${CI_PROJECT_NAME}\",\"link_type\":\"other\"}]'"|bash
+            --ref ${CI_COMMIT_REF_NAME} --assets-links='[{\"name\":\"Project CD Charts URL\",\"url\":\"$(echo ${DEPLOY_REPO}| sed 's#\.git##g')/-/tree/${CI_COMMIT_REF_NAME}/${CI_PROJECT_NAME}\",\"link_type\":\"other\"}]'"|bash
     else
         echo "glab release create ${DOCKER_IMAGE_TAG} -F changelog.md \
             --ref ${CI_COMMIT_REF_NAME}"|bash
@@ -301,13 +301,13 @@ EOF
 }
 
 
-# 如果是 python 工程 且需要 构建成 whl 包，则将构建结果上传至 nexus pip 私服中，而不进行构建 Docker 镜像了。
+# If it is a python project and needs to be built into a whl package, upload the build result to nexus pip private server instead of building Docker image.
 if [ ! -z "${BUILD_SHELL}" -a "${PROJECT_TYPE}" == "python" ];then
-    # 执行构建
+    # Execute build
     build_init
-    echo "${Info}执行 ${PROJECT_TYPE} 打包构建."
+    echo "${Info}Executing ${PROJECT_TYPE} package build."
 
-    # 将结果上传至 nexus 私服中，规范目录为: dist
+    # Upload results to nexus private server, standard directory is: dist
     for package in `ls ${PYPI_TARGET_PATH:-dist}/*.whl`;do
         pip install twine -i "${PYPI}" >/dev/null 2>&1
         twine upload -u ${NEXUS_USER} -p ${NEXUS_PASSWD} \
@@ -317,12 +317,12 @@ if [ ! -z "${BUILD_SHELL}" -a "${PROJECT_TYPE}" == "python" ];then
 else
     if [ "${DOCKER_IMAGE_BUILD}" == "true" ];then
         if [ -n "${RETAG_IMGAE_NAME}" ] && [ "${RELEASE_RETAG_DISABLE}" != 'true' ] ;then
-            # 执行 docker image retag, 不进行二次构建
+            # Execute docker image retag, no second build
             docker_retag_push
         else
-            # 智能选择：单架构或多架构构建
-            # 如果 _multiarch.stable.sh 已加载且 MULTIARCH_BUILD_ENABLE=true，使用多架构
-            # 否则使用原有的单架构构建
+            # Smart selection: single-architecture or multi-architecture build
+            # If _multiarch.stable.sh is loaded and MULTIARCH_BUILD_ENABLE=true, use multi-architecture
+            # Otherwise use original single-architecture build
             if declare -f smart_docker_build_push > /dev/null; then
                 smart_docker_build_push
             else
@@ -330,9 +330,9 @@ else
             fi
         fi
     else
-        echo "${Tip}镜像开关未开启，跳过镜像构建阶段。"
+        echo "${Tip}Image build switch not enabled, skipping image build stage."
         if [ "${PRD_BUILD_CREATE_TAG}" == 'true' ];then
-            echo "${Tip}检测为 ${CI_COMMIT_REF_NAME} 分支，执行创建 Tag 动作。"
+            echo "${Tip}Detected ${CI_COMMIT_REF_NAME} branch, executing create Tag action."
             mkdir -p ~/.config/glab-cli
             CD_GIT_HOSTNAME="$(git remote -v|grep push|awk -F '/' '{print $3}')"
             cat > ~/.config/glab-cli/config.yml << EOF
@@ -346,8 +346,8 @@ hosts:
         api_protocol: https
         api_host: ${CD_GIT_HOSTNAME#*@}
 EOF
-            auto_create_tag  # 自动创建代码仓库 Tag
-            auto_delete_tag # 且保留最新的 n 个 Tag
+            auto_create_tag  # Automatically create repository Tag
+            auto_delete_tag # And keep latest n Tags
         else
             build_init
         fi

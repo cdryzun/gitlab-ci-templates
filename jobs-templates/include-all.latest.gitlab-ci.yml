@@ -2,10 +2,10 @@ include:
   - local: "vars/*.stable.gitlab-ci.yml"
   - local: "utils/*.stable.gitlab-ci.yml"
 
-# 引用所有的 拆分步骤，提供给 project 进行 灵活复用。
+# Reference all split steps, provide flexible reuse for projects.
 
 default:
   image: ${TOOLBOX_IMAGE}
-  
+
 variables:
   extends: .default_vars

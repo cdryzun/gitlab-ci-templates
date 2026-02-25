@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 加载 工具类及 模块脚本
+# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
@@ -10,23 +10,23 @@ done
 
 ENV_FILE=${CD_ENV_FILE}
 
-# 默认预设 ${DEPLOY_REPO_PROJ} 为当前 project 的名称
+# Default preset ${DEPLOY_REPO_PROJ} to current project name
 _DEPLOY_REPO_PROJ=${DEPLOY_REPO_PROJ:-$CI_PROJECT_NAME}
 
 DEPLOY_REPO_PROJ_NUM=$(echo $_DEPLOY_REPO_PROJ| awk -F, '{print NF}')
 DEPLOY_REPO_PROJ_ARR=(${_DEPLOY_REPO_PROJ//,/" "})
 
 
-# 基础校验
+# Basic validation
 : "${DEPLOY_REPO:?DEPLOY_REPO is required}"
 : "${DEPLOY_REPO_YAML_TAG:?DEPLOY_REPO_YAML_TAG is required}"
 : "${DEPLOY_VALUE_FILE:?DEPLOY_VALUE_FILE is required}"
 command -v yq >/dev/null 2>&1 || { echo "yq not found in PATH"; exit 1; }
 
-# 打印当前的部署环境
+# Print current deployment environment
 echo "Deploy branch: ${REMOTE_BRANCH}"
 
-# 统一对 deploy_repo 做一下处理，防止异常错误（去掉协议前缀与结尾 .git）
+# Uniformly process deploy_repo to prevent errors (remove protocol prefix and trailing .git)
 _DEPLOY_REPO_NOPROTO="${DEPLOY_REPO#*://}"
 export _DEPLOY_REPO="${_DEPLOY_REPO_NOPROTO%.git}"
 if [[ "${DEPLOY_REPO}" == *"://"* ]]; then
@@ -35,22 +35,22 @@ else
   _SCHEME="https"
 fi
 
-# argocd 二进制下载地址
+# argocd binary download URL
 # ARGOCD_FILE_URL='https://nexus.iquantex.com/repository/static-file/tools/argocd'
 
 git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
 git config --global user.name "${GIT_AUTO_COMMIT_NAME}"
 git clone --branch "${REMOTE_BRANCH}" --depth 1 "${_SCHEME}://${GIT_AUTO_COMMIT_NAME}:${GITLAB_REPO_COMMIT_TOKEN}@${_DEPLOY_REPO}.git" repo
 
-# 为 project 替换 image tag，同时对老的镜像进行标识存储，提供给 rollback stage 使用
+# Replace image tag for project and mark old image for rollback stage
 if [ ${DEPLOY_REPO_PROJ_NUM} -gt 1 ];then
     DEPLOY_OLD_IMAGE=''
     for PROJ_ID in "${!DEPLOY_REPO_PROJ_ARR[@]}";do
       cd "${CI_PROJECT_DIR}/repo/${DEPLOY_REPO_PROJ_ARR[$PROJ_ID]}"
       ls -l
-      # 获取当前 proj 中 老的 image 进行替换
+      # Get old image from current project for replacement
       _oldImage=$(cat ${DEPLOY_VALUE_FILE}|yq e "${DEPLOY_REPO_YAML_TAG}" -)
-      oldImage="${_oldImage##*:}" # 修复 initContainers tag & image 在一行问题
+      oldImage="${_oldImage##*:}" # Fix initContainers tag & image on same line issue
       if [ "${oldImage}" ];then
         echo "project name: ${CYELLOW}${DEPLOY_REPO_PROJ_ARR[$PROJ_ID]}${CEND}"
         echo "old value: ${CYELLOW}${oldImage}${CEND}"
@@ -72,10 +72,10 @@ if [ ${DEPLOY_REPO_PROJ_NUM} -gt 1 ];then
     dotenv DEPLOY_OLD_IMAGE "${DEPLOY_OLD_IMAGE}"
 else
     cd "${CI_PROJECT_DIR}/repo/${_DEPLOY_REPO_PROJ}"
-    # 校验 values 文件存在
+    # Validate values file exists
     test -f "${DEPLOY_VALUE_FILE}" || { echo "values file not found: ${DEPLOY_VALUE_FILE}"; exit 1; }
     _oldImage=$(yq e "${DEPLOY_REPO_YAML_TAG}" "${DEPLOY_VALUE_FILE}")
-    oldImage="${_oldImage##*:}" # 修复 initContainers tag & image 在一行问题
+    oldImage="${_oldImage##*:}" # Fix initContainers tag & image on same line issue
 
     if [ "${oldImage}" ];then
       echo "old value: ${CYELLOW}${oldImage}${CEND}"
@@ -90,7 +90,7 @@ else
     dotenv DEPLOY_OLD_IMAGE "${_DEPLOY_REPO_PROJ}___+++${oldImage}"
 fi
 
-# 检测当前 文件是否有 变更，变更后 commit push
+# Detect if current file has changes, commit and push after changes
 
 cd "${CI_PROJECT_DIR}"/repo \
   && git add . || true >/dev/null 2>&1
@@ -98,7 +98,7 @@ cd "${CI_PROJECT_DIR}"/repo \
 if ! git diff-index --quiet HEAD --; then
   git status -s
   git commit -m "${DEPLOY_COMMIT_MESSAGE}"
-  if [ "${REMOTE_BRANCH}" == 'prd' ];then  # 如果当前是 prd 环境不之间 commit 而是 发起 MR 进入 prd 分支
+  if [ "${REMOTE_BRANCH}" == 'prd' ];then  # If current environment is prd, don't commit directly, create MR to prd branch instead
     CD_GIT_HOSTNAME="$(echo $_DEPLOY_REPO|awk -F '/' '{print $1}')"
     mkdir -p ~/.config/glab-cli
     cat > ~/.config/glab-cli/config.yml << EOF
@@ -130,7 +130,7 @@ EOF
     git push origin "${REMOTE_BRANCH}"
   fi
 else
-  echo "${Tip}检测到未有文件发生变更，或目标文件以完成更新。"
+  echo "${Tip}No file changes detected, or target file already updated."
 fi
 
 ####

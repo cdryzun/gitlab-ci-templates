@@ -2,30 +2,30 @@ include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Auto-DevOps.latest.gitlab-ci.yml'
 
 
-### 功能开关请参照项目中的 vars/default-vars.latest.gitlab-ci.yml 文件
+### Feature switches please refer to vars/default-vars.latest.gitlab-ci.yml file in the project
 
 
-###############################  JAVA 工程示例
+###############################  JAVA Project Example
 # variables:
 #   BUILD_SHELL: "mvn clean package -Dmaven.test.skip=true"
 #   UNIT_TEST_ENABLE: "true"
 
-### JAVA 工程实例，jar 包生成不在第一级目录下
+### JAVA Project Example, jar package generated not in the first level directory
 # variables:
 #   BUILD_SHELL: "mvn clean install -Dmaven.test.skip=true \
 #     && mkdir -p ./target \
 #     && mv spring-cloud-gateway/target/spring-cloud-gateway.jar ./target/app.jar"
 #   UNIT_TEST_ENABLE: "true"
 
-### JAVA 脚手架工程，不构建镜像，只将制品上传至仓库
+### JAVA Scaffold Project, do not build image, only upload artifacts to repository
 # variables:
 #   BUILD_SHELL: "mvn clean install -Dmaven.test.skip=true \
 #     && mkdir -p ./target \
 #     && mv spring-cloud-gateway/target/spring-cloud-gateway.jar ./target/app.jar"
 #   UNIT_TEST_ENABLE: "true"
-#   DOCKER_IMAGE_BUILD: "false" # 不构建镜像
+#   DOCKER_IMAGE_BUILD: "false" # Do not build image
 
-### 针对 默认 pom.xml 工程构建文件不在最顶层的
+### For default pom.xml project build file not in the top level
 # variables:
 #   BUILD_MAVEN_POM_FILE: "spring-cloud-gateway/pom.xml"
 #   BUILD_SHELL: "mvn clean install -Dmaven.test.skip=true \
@@ -36,17 +36,17 @@ include:
 
 #-----------------------------------------------------
 
-###############################   WEB 工程示例
+###############################   WEB Project Example
 # variables:
 #   BUILD_SHELL: "pnpm run dist"
 #   UNIT_TEST_ENABLE: "false"
 
-### WEB 工程实例，按照不同环境进行打包, 环境变量取 ${BUILD_ENV}
+### WEB Project Example, package according to different environments, environment variable takes ${BUILD_ENV}
 # variables:
 #   BUILD_SHELL: "pnpm run ${BUILD_ENV}"
 #   UNIT_TEST_ENABLE: "false"
 
-### WEB 工程实例，输出结果 不为默认的 dist 的, 使用 mv 进行重命名
+### WEB Project Example, output result is not default dist, use mv to rename
 # variables:
 #   BUILD_SHELL: "pnpm run dist && mv docs dist"
 #   UNIT_TEST_ENABLE: "false"

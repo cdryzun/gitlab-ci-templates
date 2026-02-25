@@ -1,5 +1,5 @@
 
-###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+###################### Below this line are code snippets split by function or module
 .build_after_script:
   after_script:
     - |
@@ -8,9 +8,9 @@
       rm -rf ~/.ash_history || true
       rm -rf ~/.bash_history || true
     - |
-      # 清理docker login 锁文件
+      # Clean up docker login lock files
       rm -rf ~/.docker-lock/${CI_PIPELINE_ID}-${CI_JOB_NAME}.lock || true
-      # 当锁文件都被正常释放后, 才做退出操作
+      # Only logout when all lock files are released
       if [ `ls ~/.docker-lock/*.lock|wc -l` -eq 0 ];then
           docker logout ${HARBOR_URL##https://}
           rm -rf ~/.config/glab-cli/config.yml || true

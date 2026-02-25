@@ -1,7 +1,7 @@
 include:
   - local: "vars/*.latest.gitlab-ci.yml"
   - local: "utils/*.latest.gitlab-ci.yml"
-  - local: "jobs-templates/SonarQube.gitlab-ci.yml" # sonarqube 代码扫描
+  - local: "jobs-templates/SonarQube.gitlab-ci.yml" # SonarQube code scan
 
 variables:
   extends: .default_vars

@@ -1,10 +1,10 @@
-# 导入公共模板
+# Import public templates
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/custom.latest.gitlab-ci.yml'
 
-# 载入默认变量 ，变量值可以被上层替换
-# 变量优先级  script(bash) > gitlab web >  gitlab template > os system default;
-# 其中 gitlab web 又存在有优先级问题：
+# Load default variables, variable values can be overridden by upper levels
+# Variable priority: script(bash) > gitlab web > gitlab template > os system default;
+# Among them, gitlab web also has priority issues:
 # gitlab project > gitlab group > gitlab platform default
 variables:
   extends: .default_vars
@@ -16,8 +16,8 @@ variables:
 #     - !reference [ .maven-generate-config, script ]
 #     - |
 #       cat > run.sh << EOF
-#       set -eo # 表示开启 pipeline 模式，期间发生错误，后续步骤多不进行执行，不建议删除。
-#       # ====================》 此段后面编写你需要自定义的脚本
+#       set -eo # Enable pipeline mode, if an error occurs during execution, subsequent steps will not be executed, not recommended to delete.
+#       # ====================》 Write your custom scripts after this section
 #       EOF
 #       chmod a+x ./run.sh \
 #       && shell_exec ./run.sh
@@ -34,24 +34,24 @@ build:
   script:
     - |
       cat > run.sh << EOF
-      set -eo # 表示开启 pipeline 模式，执行期间发生错误，后续步骤多不进行执行。
+      set -eo # Enable pipeline mode, if an error occurs during execution, subsequent steps will not be executed.
       pnpm install
       pnpm run build
       EOF
       chmod a+x ./run.sh \
       && shell_exec ./run.sh
 
-# build1:  名称不要与 上面的 build 重复
-#   image: ${NODE_IMAGE}  # 根据工程替换镜像，默认使用 ${MAVEN_IMAGE}, 列表详情参见 default_image_vars
+# build1:  Name should not duplicate with build above
+#   image: ${NODE_IMAGE}  # Replace image according to project, default uses ${MAVEN_IMAGE}, see default_image_vars for list details
 #   extends:
 #     - .custom_build
 #   script:
 #     - |
-#       export IMG_NAME="${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/portal-ui"  # 将默认的 docker 镜像名称进行替换
+#       export IMG_NAME="${DOCKER_REGISTRY}/${CI_PROJECT_NAMESPACE}/portal-ui"  # Replace default docker image name
 #     - |
 #       cat > run.sh << EOF
-#       set -eo # 表示开启 pipeline 模式，期间发生错误，后续步骤多不进行执行，不建议删除。
-#       # ====================》 此段后面编写你需要自定义的脚本
+#       set -eo # Enable pipeline mode, if an error occurs during execution, subsequent steps will not be executed, not recommended to delete.
+#       # ====================》 Write your custom scripts after this section
 #       EOF
 #       chmod a+x ./run.sh \
 #       && shell_exec ./run.sh

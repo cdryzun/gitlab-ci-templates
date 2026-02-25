@@ -1,65 +1,65 @@
 variables:
-  # -------------基本配置----------------------
-  # 用于 Gradle 构建时所执行的命令，根据自己的需求更改使用。当存在多条命令时 使用 "&&" 相连接
+  # -------------Basic Configuration----------------------
+  # Command executed during Gradle build, change according to your needs. Use "&&" to connect multiple commands
   BUILD_SHELL: "gradle clean build -x test"
 
-  # 是否执行单元测试
+  # Whether to execute unit tests
   GRADLE_TEST: "false"
 
-  # Gradle 测试命令
+  # Gradle test command
   TEST_SHELL: ""
 
-  # 默认预设的 sonarqube 扫描目录
+  # Default sonarqube scan directory
   SONAR_DIR: "./src"
 
-  # 是否将包构建完成后，再构建 docker 镜像
+  # Whether to build docker image after package build completes
   DOCKER_IMAGE_BUILD: "true"
 
-  # -------------高级配置(一般无需配置，使用默认配置即可,如需配置请仔细看注释说明按需配置,)----------------------
+  # -------------Advanced Configuration (Generally no need to configure, use defaults, if needed please read comments carefully)----------------------
 
-  # 镜像漏洞扫描
+  # Image vulnerability scanning
   DOCKER_IMAGE_SCAN_IMAGE: "false"
 
-  # 如果漏洞等级为中高以上则强制中断CI
+  # Force interrupt CI if vulnerability level is medium-high or above
   ENFORCE_EXIT: "false"
 
-  # sonarqube 扫描的二进制程序目录，多个用 "," 连接
-  # Gradle 默认输出目录与 Maven 不同
+  # Sonarqube scan binary directory, multiple separated by ","
+  # Gradle default output directory is different from Maven
   SONAR_BINARIES: 'build/classes'
 
-  # sonarqube 扫描的测试二进制程序目录，多个用 "," 连接
+  # Sonarqube scan test binary directory, multiple separated by ","
   SONAR_TEST_BINARIES: 'build/test-classes'
 
-  # 使用的 sonarqube 地址, 在 GitLab CI/CD 变量中配置 SONAR_URL
+  # Sonarqube address to use, configure SONAR_URL in GitLab CI/CD variables
   # SONAR_URL: "https://sonarqube.example.com"
 
-  # Gradle 生成的 jar 包名称，默认 app
+  # Gradle generated jar package name, default app
   # MAVEN_APP_NAME: "app"
 
-  # 分阶段构建时的缓存目录
-  # Gradle 的缓存目录包含 build 目录和 .gradle 目录
+  # Cache directory for staged builds
+  # Gradle cache directory includes build directory and .gradle directory
   CACHE_DIR: "build/"
 
-  # DEV 环境 生成的 docker 镜像的 "前缀"，下面默认将会，生成 dev-xxx 的 tag 镜像。
+  # "Prefix" of docker image generated for DEV environment, below will generate dev-xxx tag image by default.
   # DEV_DOCKER_TAG_PERFIX: 'dev'
 
-  # docker image 制品仓库，默认无需修改
+  # Docker image artifact repository, no need to modify by default
   # DOCKER_REGISTRY: "docker.io"
 
-  # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
+  # Additional parameters added during docker build, such as "--no-cache" to not add cache during build, multiple parameters separated by space
   DOCKER_BUILD_FLAGS: ''
 
-  # Gradle 工程使用通用 sonar 扫描
+  # Gradle project uses generic sonar scan
   SONAR_MAVEN: "false"
 
-  # 非 java 通用 sonar 扫描，使用 sonar-scanner-cli 命令行进行集成扫描
+  # Non-java generic sonar scan, use sonar-scanner-cli command line for integrated scan
   SONAR_COMMON: "true"
 
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/gradle.stable.gitlab-ci.yml'
 
 
-  # 自定义后端工程 build 任务命令
+  # Custom backend project build task command
 # build:
 #   image: "${GRADLE_IMAGE:-${MAVEN_IMAGE}}"
 #   extends:
@@ -69,7 +69,7 @@ include:
 #     - .build_after_script
 #   script:
 #     - !reference [ .docker_login, script ]
-#     # 自定义命令1
+#     # Custom command 1
 #     - shell_exec "gradle clean"
-#     # 自定义命令2
+#     # Custom command 2
 #     - shell_exec "gradle build"

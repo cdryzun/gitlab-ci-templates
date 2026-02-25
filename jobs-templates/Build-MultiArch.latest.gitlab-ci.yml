@@ -1,32 +1,31 @@
 # ============================================
 # Multi-Architecture Build Job Template
-# 多架构构建任务模板
 # ============================================
 
 include:
   - local: 'vars/multiarch-vars.latest.gitlab-ci.yml'
 
 # ============================================
-# Buildx 前置准备任务
+# Buildx Pre-job Preparation Task
 # ============================================
 
 .buildx_before_script:
   before_script:
-    # 1. Harbor 认证（继承原有逻辑）
+    # 1. Harbor authentication (inherit existing logic)
     - echo "${HARBOR_PASSWD}" | docker login ${HARBOR_URL} -u ${HARBOR_USER} --password-stdin
 
-    # 2. 检查 Docker 版本
+    # 2. Check Docker version
     - docker version
     - docker buildx version
 
-    # 3. 启用 QEMU（支持跨架构模拟）
+    # 3. Enable QEMU (support cross-architecture emulation)
     - |
       if [ "${MULTIARCH_BUILD_ENABLE}" == "true" ]; then
         echo "[INFO] Setting up QEMU for cross-platform emulation..."
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       fi
 
-    # 4. 显示系统信息
+    # 4. Display system information
     - |
       if [ "${CI_DEBUG_TRACE}" == "true" ]; then
         echo "=== System Info ==="
@@ -36,7 +35,7 @@ include:
       fi
 
 # ============================================
-# 多架构构建任务
+# Multi-Architecture Build Task
 # ============================================
 
 build-multiarch:
@@ -45,32 +44,32 @@ build-multiarch:
     - .runner_tag
     - .nexus_auth
     - .harbor_auth
-    - .buildx_before_script  # 使用 Buildx 前置脚本
+    - .buildx_before_script  # Use Buildx pre-job script
   variables:
-    # 启用多架构构建（可在项目中覆盖）
+    # Enable multi-architecture build (can be overridden in project)
     MULTIARCH_BUILD_ENABLE: "true"
 
   script:
-    # 1. 下载脚本
+    # 1. Download scripts
     - script_download _utils.${TEMPLATE_CONTEXT}.sh
     - script_download build-multiarch.${TEMPLATE_CONTEXT}.sh
 
-    # 2. 创建 Docker 工作区
+    # 2. Create Docker workspace
     - mkdir -p ${DOCKER_DAEMON_WORKSPACE}
 
-    # 3. 处理 Dockerfile
+    # 3. Process Dockerfile
     - |
       if [ -n "${CUSTOM_DOCKERFILE_PATH}" ]; then
         echo "[INFO] Using custom Dockerfile: ${CUSTOM_DOCKERFILE_PATH}"
         cp -rf ${CUSTOM_DOCKERFILE_PATH} ${DOCKER_DAEMON_WORKSPACE}/Dockerfile
       else
         echo "[INFO] Generating Dockerfile for project type: ${PROJECT_TYPE}"
-        # 下载并执行 Dockerfile 生成脚本
+        # Download and execute Dockerfile generation script
         script_download Dockerfile.${TEMPLATE_CONTEXT}.sh
         bash Dockerfile.${TEMPLATE_CONTEXT}.sh "${PROJECT_TYPE}" "multiarch"
       fi
 
-    # 4. 执行多架构构建
+    # 4. Execute multi-architecture build
     - bash build-multiarch.${TEMPLATE_CONTEXT}.sh
 
   artifacts:
@@ -81,17 +80,17 @@ build-multiarch:
     expire_in: 14 days
 
   rules:
-    # 仅在变量存在时启用多架构构建
+    # Only enable multi-architecture build when variable exists
     - if: '$MULTIARCH_BUILD_ENABLE == "true" && $DOCKER_IMAGE_BUILD == "true"'
       when: on_success
     - when: never
 
   tags:
     - docker
-    - multiarch  # 可能需要专门的 Runner
+    - multiarch  # May require dedicated Runner
 
 # ============================================
-# 兼容模式：自动选择单架构或多架构
+# Compatibility Mode: Auto select single or multi architecture
 # ============================================
 
 build-smart:
@@ -101,15 +100,15 @@ build-smart:
     - .nexus_auth
     - .harbor_auth
   script:
-    # 自动检测是否需要多架构构建
+    # Auto-detect if multi-architecture build is needed
     - |
       if [ "${MULTIARCH_BUILD_ENABLE}" == "true" ]; then
         echo "[INFO] Multi-arch build enabled, using Buildx pipeline"
-        # 触发多架构构建
+        # Trigger multi-architecture build
         !reference [build-multiarch, script]
       else
         echo "[INFO] Single-arch build, using traditional pipeline"
-        # 触发传统构建
+        # Trigger traditional build
         script_download build.${TEMPLATE_CONTEXT}.sh
         bash build.${TEMPLATE_CONTEXT}.sh
       fi

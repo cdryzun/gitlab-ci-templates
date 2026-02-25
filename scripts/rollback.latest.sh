@@ -4,7 +4,7 @@ set -eu
 
 # printenv
 
-# 加载 工具类及 模块脚本
+# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
@@ -21,16 +21,16 @@ DEPLOY_OLD_REPO_PROJ_NUM=$(echo ${DEPLOY_OLD_IMAGE}| awk -F, '{print NF}')
 DEPLOY_OLD_REPO_PROJ_ARR=(${DEPLOY_OLD_IMAGE//,/" "})
 
 if [ ${DEPLOY_OLD_REPO_PROJ_NUM} -gt 1 ];then
-    # 当获取 DEPLOY_OLD_IMAGE 存在多个，切割后再进行替换
+    # When DEPLOY_OLD_IMAGE contains multiple items, split before replacing
     for PROJ_ID in "${!DEPLOY_OLD_REPO_PROJ_ARR[@]}";do
         PROJ_NAME_TAG="${DEPLOY_OLD_REPO_PROJ_ARR[$PROJ_ID]}"
         _PROJECT_NAME=`echo ${PROJ_NAME_TAG%___+++*}`
         _PROJECT_TAG=`echo ${PROJ_NAME_TAG#*___+++}`
         cd "${CI_PROJECT_DIR}/repo/${_PROJECT_NAME}"
         ls -l
-        # 获取当前 yaml 中的值
+        # Get current value from yaml
         _targetImageTag=`cat ${DEPLOY_VALUE_FILE}|yq e "${DEPLOY_REPO_YAML_TAG}" -`
-        targetImageTag="${_targetImageTag##*:}" # 修复 tag & image 在一行问题
+        targetImageTag="${_targetImageTag##*:}" # Fix tag & image on same line issue
 
         if [ "${targetImageTag}" ];then
           echo "project name: ${CYELLOW}${_PROJECT_NAME}${CEND}"
@@ -47,9 +47,9 @@ else
 
       cd "${CI_PROJECT_DIR}/repo/${_PROJECT_NAME}"
       ls -l
-      # 获取当前 yaml 中的值
+      # Get current value from yaml
       _targetImageTag=`cat ${DEPLOY_VALUE_FILE}|yq e "${DEPLOY_REPO_YAML_TAG}" -`
-      targetImageTag="${_targetImageTag##*:}" # 修复 tag & image 在一行问题
+      targetImageTag="${_targetImageTag##*:}" # Fix tag & image on same line issue
       
       if [ "${targetImageTag}" ];then
         sed -i "s#${targetImageTag}#${_PROJECT_TAG}#g" ${DEPLOY_VALUE_FILE}
@@ -60,7 +60,7 @@ else
       fi
 fi
 
-# 检测当前 文件是否有 变更，变更后 commit push
+# Detect if current file has changes, commit and push after changes
 
 cd "${CI_PROJECT_DIR}"/repo \
   && git add . || true >/dev/null 2>&1
@@ -68,7 +68,7 @@ cd "${CI_PROJECT_DIR}"/repo \
 if ! git diff-index --quiet HEAD --; then
   git status
   git commit -m "${ROLLBACK_COMMIT_MESSAGE}"
-  if [ "${REMOTE_BRANCH}" == 'prd' ];then  # 如果当前是 prd 环境不之间 commit 而是 发起 MR 进入 prd 分支
+  if [ "${REMOTE_BRANCH}" == 'prd' ];then  # If current environment is prd, don't commit directly, create MR to prd branch instead
     CD_GIT_HOSTNAME="$(echo $_DEPLOY_REPO|awk -F '/' '{print $1}')"
     mkdir -p ~/.config/glab-cli
     cat > ~/.config/glab-cli/config.yml << EOF
@@ -100,5 +100,5 @@ EOF
     git push origin "${REMOTE_BRANCH}"
   fi
 else
-  echo "${Tip}检测到未有文件发生变更，或目标文件以完成更新。"
+  echo "${Tip}No file changes detected, or target file already updated."
 fi

@@ -8,26 +8,26 @@ stages:
   - deploy
   - clean
 
-# 默认操作命令镜像,如需单独使用其他镜像，请在stage内单独配置.
+# Default operation command image, if you need to use another image separately, please configure it separately in the stage.
 default:
   image: ${TOOLBOX_IMAGE}
 
-# 全局公共变量
+# Global common variables
 variables:
   GLOBAL_DOMAIN: "iquantex.com"
-  # 部署项目仓库地址
+  # Deployment project repository URL
   REPO_URL: "${CI_PROJECT_URL}.git"
-  # 部署工具定义的项目名称，需要找运维获取
+  # Project name defined by deployment tool, need to get from operations
   ARGOCD_PROJECT: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
-  # 环境域名
+  # Environment domain
   ENV_URL: "http://${CI_COMMIT_BRANCH}.${CI_PROJECT_NAMESPACE}.${GLOBAL_DOMAIN}"
-  # 生产域名
+  # Production domain
   PROD_DOMAIN: "${CI_PROJECT_NAME}.${CI_PROJECT_NAMESPACE}.${GLOBAL_DOMAIN}"
   KUBE_NAMESPACE: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
   ARGOCD_ENV: "${CI_PROJECT_NAME}-${CI_COMMIT_BRANCH}"
   extends: .default_vars
   TEMPLATE_CONTEXT: 'latest'
-# 合并前检查charts语法  
+# Check charts syntax before merge
 all_charts_syntax_check:
   stage: test
   script:
@@ -61,25 +61,25 @@ all_charts_syntax_check:
 .argocd_exec: &argocd_exec
   script:
     - | 
-      # 匹配动作
+      # Match action
       case ${ACTION} in
         "create_all")
-          # 执行创建所有部署.
+          # Execute create all deployments
           bash ./sync.sh create ${REPO_URL} ${KUBE_NAMESPACE} ${ARGOCD_PROJECT} ${ARGOCD_ENV}
           ;;
         "sync_all")
-          # 执行强制同步所有部署
+          # Execute force sync all deployments
           bash ./sync.sh sync ${REPO_URL} ${KUBE_NAMESPACE} ${ARGOCD_PROJECT} ${ARGOCD_ENV}
           ;;
         "delete_all")
-          # 执行删除所有部署环境
+          # Execute delete all deployment environments
           bash ./sync.sh delete ${REPO_URL} ${KUBE_NAMESPACE} ${ARGOCD_PROJECT} ${ARGOCD_ENV}
           ;;
           *)
           echo "nothing to do, goto next"
           ;;
       esac
-      # 如果设定命令变量和应用名称则只更新单个应用
+      # If command variable and application name are set, only update single application
       if [ ${CMD} ] && [ ${APP_NAME} ];then
         bash ./sync.sh ${CMD} ${REPO_URL} ${KUBE_NAMESPACE} ${ARGOCD_PROJECT} ${ARGOCD_ENV} ${APP_NAME}
       fi
@@ -101,11 +101,11 @@ all_charts_syntax_check:
     - .argocd_exec
     - .clean_config
 
-# 创建所有应用部署
+# Create all application deployments
 Create_Apps_To_Cluster:
   extends: .deploy_to_cluster
 
-# 强制同步环境所有应用部署
+# Force sync all application deployments in environment
 Sync_Apps_To_Cluster:
   extends: .deploy_to_cluster
   rules:
@@ -116,7 +116,7 @@ Sync_Apps_To_Cluster:
         ACTION: "sync_all"
       when: manual
 
-# 删除环境所有应用部署,只有手工运行流水线才可操作，并且需要手动操作,防止误操作.
+# Delete all application deployments in environment, only operable when manually running pipeline, and requires manual operation to prevent accidental operation.
 Delete_Apps_From_Cluster:
   extends: .deploy_to_cluster
   rules:
@@ -124,11 +124,11 @@ Delete_Apps_From_Cluster:
       variables:
         ACTION: "delete_all"
       when: manual
-      # 如果不是手工执行流水线，则不允许操作
+      # If not manually executing pipeline, operation is not allowed
     - if: $CI_PIPELINE_SOURCE != "web"
       when: never
 
-# 强制同步开发环境指定应用部署,根据触发参数执行对应动作，如创建、同步、删除应用等操作.
+# Force sync specified application deployment in development environment, execute corresponding action based on trigger parameters, such as create, sync, delete application operations.
 Sync_One_Apps_To_Cluster:
   extends: .deploy_to_cluster
   rules:

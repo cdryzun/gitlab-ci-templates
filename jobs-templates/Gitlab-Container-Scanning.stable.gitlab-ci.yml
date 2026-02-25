@@ -16,7 +16,7 @@ gitlab_container_scan:
     paths: [gl-container-scanning-report.json, gl-dependency-scanning-report.json]
   # dependencies: []
   script:
-    # 由于容器启动用户非root,需要添加可读权限.
+    # Because container startup user is not root, need to add readable permission.
     - sudo chmod 666 /var/run/docker.sock
     - gtcs scan
   rules:

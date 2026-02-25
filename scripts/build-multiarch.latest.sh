@@ -2,11 +2,11 @@
 set -eo
 
 # ============================================
-# 多架构构建脚本扩展
-# 在原有 build.latest.sh 基础上增加多架构支持
+# Multi-architecture build script extension
+# Adds multi-architecture support on top of original build.latest.sh
 # ============================================
 
-# 加载工具类及模块脚本
+# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
@@ -14,20 +14,20 @@ do
 done
 
 # ============================================
-# 多架构构建函数
+# Multi-architecture build functions
 # ============================================
 
-# 初始化 Docker Buildx
+# Initialize Docker Buildx
 function init_buildx() {
     echo "[INFO] Initializing Docker Buildx..."
 
-    # 检查 Buildx 是否可用
+    # Check if Buildx is available
     if ! docker buildx version &> /dev/null; then
         echo "[ERROR] Docker Buildx is not available. Please upgrade Docker to 19.03+."
         exit 1
     fi
 
-    # 创建或使用多架构 builder
+    # Create or use multi-architecture builder
     local builder_name="${BUILDX_BUILDER_NAME:-multiarch-builder}"
 
     if ! docker buildx inspect "${builder_name}" &> /dev/null; then
@@ -41,21 +41,21 @@ function init_buildx() {
         docker buildx use "${builder_name}"
     fi
 
-    # 启动 builder（如果未运行）
+    # Start builder (if not running)
     docker buildx inspect --bootstrap
 
     echo "[SUCCESS] Buildx initialized successfully."
 }
 
-# 构建多架构镜像
+# Build multi-architecture image
 function docker_buildx_push() {
-    # 解析目标平台
+    # Parse target platforms
     local platforms="${DOCKER_BUILD_PLATFORMS:-linux/amd64,linux/arm64}"
 
     echo "[INFO] Building multi-arch image for platforms: ${platforms}"
     echo "[INFO] Image name: ${DOCKER_IMAGE_NAME}"
 
-    # 准备构建参数
+    # Prepare build arguments
     local build_args=(
         --platform "${platforms}"
         --tag "${DOCKER_IMAGE_NAME}"
@@ -69,7 +69,7 @@ function docker_buildx_push() {
         --build-arg "PORT=${APP_PORT:-2025}"
     )
 
-    # 添加自定义构建参数
+    # Add custom build arguments
     if [ -n "${GO_VERSION}" ]; then
         build_args+=(--build-arg "GO_VERSION=${GO_VERSION}")
     fi
@@ -78,12 +78,12 @@ function docker_buildx_push() {
         build_args+=(--build-arg "CGO_ENABLED=${GO_CGO_ENABLED}")
     fi
 
-    # 添加额外的构建标志
+    # Add extra build flags
     if [ -n "${DOCKER_BUILD_FLAGS}" ]; then
         build_args+=(${DOCKER_BUILD_FLAGS})
     fi
 
-    # 缓存配置（可选）
+    # Cache configuration (optional)
     if [ "${BUILDX_CACHE_ENABLE}" == "true" ]; then
         build_args+=(
             --cache-from "type=registry,ref=${DOCKER_IMAGE_NAME}-cache"
@@ -91,7 +91,7 @@ function docker_buildx_push() {
         )
     fi
 
-    # 执行构建并推送
+    # Execute build and push
     if [ "${DOCKER_IMAGE_PUSH}" == "true" ]; then
         build_args+=(--push)
         echo "[INFO] Building and pushing multi-arch image..."
@@ -100,20 +100,20 @@ function docker_buildx_push() {
         echo "[INFO] Building multi-arch image (local only)..."
     fi
 
-    # 显示完整命令（调试用）
+    # Display full command (for debugging)
     if [ "${CI_DEBUG_TRACE}" == "true" ]; then
         echo "[DEBUG] Build command:"
         echo "docker buildx build ${build_args[@]} ${DOCKER_DAEMON_WORKSPACE}"
     fi
 
-    # 执行构建
+    # Execute build
     cd "${DOCKER_DAEMON_WORKSPACE}"
     docker buildx build "${build_args[@]}" .
 
     if [ $? -eq 0 ]; then
         echo "[SUCCESS] Multi-arch image built successfully!"
 
-        # 显示镜像信息
+        # Display image information
         if [ "${DOCKER_IMAGE_PUSH}" == "true" ]; then
             echo "[INFO] Inspecting pushed manifest:"
             docker buildx imagetools inspect "${DOCKER_IMAGE_NAME}"
@@ -125,35 +125,35 @@ function docker_buildx_push() {
 }
 
 # ============================================
-# Golang 多架构构建初始化
+# Golang multi-architecture build initialization
 # ============================================
 
 function golang_multiarch_build_init() {
     echo "[INFO] Initializing Golang multi-arch build..."
 
-    # 方案选择：
-    # 1. 如果使用多架构 Dockerfile（推荐），跳过本地编译
-    # 2. 如果使用预编译方案，在这里编译多个架构的二进制
+    # Option selection:
+    # 1. If using multi-architecture Dockerfile (recommended), skip local compilation
+    # 2. If using pre-compilation approach, compile binaries for multiple architectures here
 
     if [ "${GOLANG_MULTIARCH_MODE}" == "dockerfile" ]; then
         echo "[INFO] Using Dockerfile-based multi-arch build (recommended)"
         echo "[INFO] Skipping local compilation, will compile in Docker build stage"
 
-        # 仅复制源代码到工作区（Dockerfile 会处理编译）
+        # Only copy source code to workspace (Dockerfile will handle compilation)
         mkdir -p ${DOCKER_DAEMON_WORKSPACE}
 
-        # 复制必要文件
+        # Copy necessary files
         cp -r ${CI_PROJECT_DIR}/* ${DOCKER_DAEMON_WORKSPACE}/ || true
         cp -r ${CI_PROJECT_DIR}/.* ${DOCKER_DAEMON_WORKSPACE}/ 2>/dev/null || true
 
-        # 清理不必要的文件
+        # Clean up unnecessary files
         rm -rf ${DOCKER_DAEMON_WORKSPACE}/.git
         rm -rf ${DOCKER_DAEMON_WORKSPACE}/test
 
     elif [ "${GOLANG_MULTIARCH_MODE}" == "precompile" ]; then
         echo "[INFO] Using pre-compilation mode"
 
-        # 预编译多个架构的二进制
+        # Pre-compile binaries for multiple architectures
         local architectures="${DOCKER_BUILD_PLATFORMS:-linux/amd64,linux/arm64}"
         IFS=',' read -ra PLATFORMS <<< "$architectures"
 
@@ -166,22 +166,22 @@ function golang_multiarch_build_init() {
 
             echo "[INFO] Compiling for ${platform}..."
 
-            # 设置编译环境变量
+            # Set compilation environment variables
             export GOOS=${os}
             export GOARCH=${arch}
             export CGO_ENABLED="${GO_CGO_ENABLED:-0}"
 
-            # 处理 ARM 变体
+            # Handle ARM variants
             if [ -n "${variant}" ]; then
                 export GOARM="${variant//v/}"  # v7 -> 7
             fi
 
-            # 编译
+            # Compile
             local binary_name="${CI_PROJECT_NAME}-${os}-${arch}${variant:+-${variant}}"
 
             if [ -n "${BUILD_SHELL}" ]; then
                 sh -c "${BUILD_SHELL}"
-                # 假设用户脚本输出到正确位置
+                # Assume user script outputs to correct location
             else
                 go build \
                     -ldflags "-s -w" \
@@ -199,7 +199,7 @@ function golang_multiarch_build_init() {
 }
 
 # ============================================
-# 主流程函数（覆盖原有函数）
+# Main workflow functions (override original functions)
 # ============================================
 
 function build_init() {
@@ -208,7 +208,7 @@ function build_init() {
             if [ "${MULTIARCH_BUILD_ENABLE}" == "true" ]; then
                 golang_multiarch_build_init
             else
-                # 回退到原有的单架构构建
+                # Fallback to original single-architecture build
                 export CGO_ENABLED="${GO_CGO_ENABLED:-0}"
                 export GOOS=linux
                 export GOARCH="${GO_ARCH:-amd64}"
@@ -223,13 +223,13 @@ function build_init() {
                     go build -ldflags "-s -w" -o "${CI_PROJECT_NAME}" ./
                 fi
 
-                # 复制二进制到 Docker 工作区
+                # Copy binary to Docker workspace
                 mkdir -p ${DOCKER_DAEMON_WORKSPACE}
                 cp -a "${CI_PROJECT_DIR}/${CI_PROJECT_NAME}" "${DOCKER_DAEMON_WORKSPACE}/app"
             fi
             ;;
         web|java|python)
-            # 调用原有的 build_init 逻辑（保持向后兼容）
+            # Call original build_init logic (maintain backward compatibility)
             source build.latest.sh
             build_init
             ;;
@@ -240,7 +240,7 @@ function build_init() {
 }
 
 function image_build_init() {
-    # 对于 Golang 多架构 Dockerfile 模式，跳过此步骤
+    # Skip this step for Golang multi-architecture Dockerfile mode
     if [ "${PROJECT_TYPE}" == "golang" ] && \
        [ "${MULTIARCH_BUILD_ENABLE}" == "true" ] && \
        [ "${GOLANG_MULTIARCH_MODE}" == "dockerfile" ]; then
@@ -248,13 +248,13 @@ function image_build_init() {
         return 0
     fi
 
-    # 其他项目类型调用原有逻辑
+    # Call original logic for other project types
     source build.latest.sh
     image_build_init
 }
 
 # ============================================
-# 主执行流程
+# Main execution flow
 # ============================================
 
 function main() {
@@ -266,13 +266,13 @@ function main() {
     echo "Platforms: ${DOCKER_BUILD_PLATFORMS:-linux/amd64,linux/arm64}"
     echo "=========================================="
 
-    # 1. 项目编译初始化
+    # 1. Project compilation initialization
     build_init
 
-    # 2. 镜像构建初始化
+    # 2. Image build initialization
     image_build_init
 
-    # 3. Docker 工作区准备
+    # 3. Docker workspace preparation
     if [ -n "${DOCKER_WORKSPACE_PREPARE_CMD}" ]; then
         echo "[INFO] Executing workspace prepare command..."
         cd ${DOCKER_DAEMON_WORKSPACE}
@@ -280,14 +280,14 @@ function main() {
         cd -
     fi
 
-    # 4. 执行镜像构建
+    # 4. Execute image build
     if [ "${DOCKER_IMAGE_BUILD}" == "true" ]; then
         if [ "${MULTIARCH_BUILD_ENABLE}" == "true" ]; then
-            # 多架构构建流程
+            # Multi-architecture build process
             init_buildx
             docker_buildx_push
         else
-            # 单架构构建流程（原有逻辑）
+            # Single-architecture build process (original logic)
             source build.latest.sh
             docker_build_push
         fi
@@ -298,5 +298,5 @@ function main() {
     echo "[SUCCESS] Build pipeline completed!"
 }
 
-# 执行主流程
+# Execute main flow
 main

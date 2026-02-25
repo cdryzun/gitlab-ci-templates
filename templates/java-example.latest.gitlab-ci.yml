@@ -1,73 +1,73 @@
 variables:
-  # -------------基本配置----------------------
-  # 用于 maven  构建时所执行的命令，根据自己的需求更改使用。当存在多条命令时 使用 "&&" 相连接
+  # -------------Basic Configuration----------------------
+  # Command executed during maven build, change according to your needs. Use "&&" to connect multiple commands
   BUILD_SHELL: "mvn clean package -Dmaven.test.skip=true"
 
-  # 是否执行单元测试
+  # Whether to execute unit tests
   MAVEN_TEST: "false"
 
-  # java测试命令
+  # Java test command
   TEST_SHELL: ""
 
-  # 默认预设的 sonarqube 扫描目录
+  # Default sonarqube scan directory
   SONAR_DIR: "./src"
 
-  # 是否将包构建完成后，再构建 docker 镜像
+  # Whether to build docker image after package build completes
   DOCKER_IMAGE_BUILD: "true"
 
-  # -------------高级配置(一般无需配置，使用默认配置即可,如需配置请仔细看注释说明按需配置,)----------------------
+  # -------------Advanced Configuration (Generally no need to configure, use defaults, if needed please read comments carefully)----------------------
 
-  # 镜像漏洞扫描
+  # Image vulnerability scanning
   DOCKER_IMAGE_SCAN_IMAGE: "false"
 
-  # 如果漏洞等级为中高以上则强制中断CI
+  # Force interrupt CI if vulnerability level is medium-high or above
   ENFORCE_EXIT: "false"
 
-  # sonarqube 扫描的 二级制程序目录，多个用 "," 连接
+  # Sonarqube scan binary directory, multiple separated by ","
   SONAR_BINARIES: 'target/classes'
 
-  # sonarqube 扫描的 测试二级制程序目录，多个用 "," 连接
+  # Sonarqube scan test binary directory, multiple separated by ","
   SONAR_TEST_BINARIES: 'target/test-classes'
 
-  # 使用的 sonarqube 地址, 在 GitLab CI/CD 变量中配置 SONAR_URL
+  # Sonarqube address to use, configure SONAR_URL in GitLab CI/CD variables
   # SONAR_URL: "https://sonarqube.example.com"
 
-  # maven 生成的 jar 包名称，默认 app
+  # Maven generated jar package name, default app
   # MAVEN_APP_NAME: "app"
 
-  # 分阶段构建时的缓存目录
+  # Cache directory for staged builds
   CACHE_DIR: "target/"
 
-  # DEV 环境 生成的 docker 镜像的 "前缀"，下面默认将会，生成 dev-xxx 的 tag 镜像。
+  # "Prefix" of docker image generated for DEV environment, below will generate dev-xxx tag image by default.
   # DEV_DOCKER_TAG_PERFIX: 'dev'
 
-  # 指定java 服务构建的 docker 镜像，默认无需修改,。如果当前仓库中 /Dockerfile or /docker/Dockerfile 存在文件时此处将被省略替换。
+  # Docker image for java service build, no need to modify by default. If /Dockerfile or /docker/Dockerfile exists in current repository, this will be omitted and replaced.
   # JAVA_DEFAULT_DOCKERFILE: "${TEMPLATE_REPO}/-/raw/main/dockerfile/Dockerfile-java.stable"
 
-  # docker image 制品仓库，默认无需修改
+  # Docker image artifact repository, no need to modify by default
   # DOCKER_REGISTRY: "docker.io"
 
-  # maven 构建工具，所使用的 仓库地址，默认使用 Maven Central
+  # Maven build tool, repository address to use, default uses Maven Central
   # MAVEN_REGISTRY: "https://repo1.maven.org/maven2/"
 
-  # docker build 时 添加的额外参数，如 "--no-cache" 构建时不添加缓存，多个参数使用 空格符号区分
+  # Additional parameters added during docker build, such as "--no-cache" to not add cache during build, multiple parameters separated by space
   DOCKER_BUILD_FLAGS: ''
 
 
 
-  # java工程使用 maven 集成sonar扫描，与下面的 SONAR_COMMON 二选一
+  # Java project uses maven integrated sonar scan, choose one with SONAR_COMMON below
   SONAR_MAVEN: "true"
 
-  # 非java通用sonar扫描，使用 sonar-scanner-cli 命令行进行集成扫描
+  # Non-java generic sonar scan, use sonar-scanner-cli command line for integrated scan
   SONAR_COMMON: "false"
 
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/java.latest.gitlab-ci.yml'
 
 
-  # 自定义后端工程build任务命令
+  # Custom backend project build task command
 # build:
-#   #--继承公共模版内变量和参数---start--
+#   #--Inherit variables and parameters from public template---start--
 #   image: "${MAVEN_IMAGE}"
 #   extends:
 #     - .before_jobs
@@ -75,15 +75,15 @@ include:
 #     - .harbor_auth
 #     - .runner_tag
 #     - .build_after_script
-#   #--继承公共模版内变量和参数---end--
+#   #--Inherit variables and parameters from public template---end--
 #   script:
-#     # 继承模版动作，生成默认配置，不要修改此行.
+#     # Inherit template actions, generate default configuration, do not modify this line.
 #     - !reference [ .maven-generate-config, script ]
 #     - !reference [ .docker_login, script ]
-      # 因 mvn 执行时使用别名来指定特点的 setting.xml 文件，需要使用 shell_exec 函数进行包裹来执行，示例如下:
-#     # 自定义命令1
+#       # Because mvn uses alias to specify specific setting.xml when executing, need to wrap with shell_exec function to execute, example below:
+#     # Custom command 1
 #     - shell_exec "mvn build"
-#     # 自定义命令2
+#     # Custom command 2
 #     - shell_exec "mvn package"
-#     # 自定义命令
+#     # Custom command
 #     - shell_exec "mvn clean"

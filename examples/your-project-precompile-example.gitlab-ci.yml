@@ -1,15 +1,15 @@
 # ============================================
-# 你的项目：多架构预编译模式配置示例
-# 使用你的 build-ci.sh 脚本预编译多个架构的二进制
+# Your Project: Multi-architecture Precompile Mode Configuration Example
+# Use your build-ci.sh script to precompile binaries for multiple architectures
 # ============================================
 
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Auto-DevOps.latest.gitlab-ci.yml'
 
 variables:
-  # ========== 现有配置（保持不变）==========
+  # ========== Existing Configuration (Keep Unchanged) ==========
   CGO_ENABLED: "0"
-  BUILD_SHELL: "bash build-ci.sh"  # 保持你的构建脚本
+  BUILD_SHELL: "bash build-ci.sh"  # Keep your build script
   UNIT_TEST_ENABLE: "false"
   DOCKER_IMAGE_SCAN_IMAGE: "false"
   DEV_CD_AUTO_DEPLOY: "true"
@@ -19,15 +19,15 @@ variables:
   FEAT_CD_AUTO_DEPLOY: "true"
   BASE_BUILD_IMAGE: "docker.io/cdryzun/glci-builder-golang:1.23"
 
-  # ========== 多架构预编译配置（新增 3 行）==========
+  # ========== Multi-architecture Precompile Configuration (Add 3 lines) ==========
   MULTIARCH_BUILD_ENABLE: "true"
   DOCKER_BUILD_PLATFORMS: "linux/amd64,linux/arm64"
-  GOLANG_MULTIARCH_MODE: "precompile"  # 使用预编译模式
+  GOLANG_MULTIARCH_MODE: "precompile"  # Use precompile mode
 
 # ============================================
-# 工作原理说明
+# How It Works
 # ============================================
-# 1. 构建阶段执行你的 build-ci.sh，编译各架构二进制
-# 2. Dockerfile 使用已编译的二进制进行打包
-# 3. 最终生成多架构镜像并推送到 Docker Hub
+# 1. Build stage executes your build-ci.sh to compile binaries for each architecture
+# 2. Dockerfile packages using the precompiled binaries
+# 3. Final multi-architecture image is generated and pushed to Docker Hub
 # ============================================

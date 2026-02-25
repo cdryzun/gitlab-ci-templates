@@ -1,33 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Dockerfile 生成脚本 (stable 版本)
-# 支持两种模式：
-# 1. 使用 templates 目录下的静态模板（推荐）
-# 2. 动态生成 Dockerfile（向后兼容）
+# Dockerfile generation script (stable version)
+# Supports two modes:
+# 1. Use static templates from templates directory (recommended)
+# 2. Dynamically generate Dockerfile (backward compatible)
 
-# 颜色输出
+# Color output
 readonly CSI="\033["
 readonly CEND="${CSI}0m"
 readonly CGREEN="${CSI}1;32m"
 readonly CYELLOW="${CSI}1;33m"
 readonly CRED="${CSI}1;31m"
-readonly Info="${CGREEN}[信息]: ${CEND}"
-readonly Warn="${CYELLOW}[警告]: ${CEND}"
-readonly Error="${CRED}[错误]: ${CEND}"
+readonly Info="${CGREEN}[Info]: ${CEND}"
+readonly Warn="${CYELLOW}[Warning]: ${CEND}"
+readonly Error="${CRED}[Error]: ${CEND}"
 
-# 获取脚本所在目录
+# Get script directory
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly TEMPLATES_DIR="${SCRIPT_DIR}/templates"
 
-# 初始化多架构构建相关变量（提供默认值以支持单架构构建）
-# 这些变量通常由 CI 环境或 _multiarch.sh 模块设置
-# 在单架构构建场景下，使用默认值 "false" 以避免 "unbound variable" 错误
+# Initialize multi-architecture build related variables (provide default values to support single-architecture builds)
+# These variables are usually set by CI environment or _multiarch.sh module
+# In single-architecture build scenarios, use default value "false" to avoid "unbound variable" error
 MULTIARCH_BUILD_ENABLE="${MULTIARCH_BUILD_ENABLE:-false}"
 GOLANG_MULTIARCH_MODE="${GOLANG_MULTIARCH_MODE:-dockerfile}"
 
-# 标准化 JDK 版本标签，确保包含 -alpine 后缀
-# 例如: jdk21 -> jdk21-alpine, 8 -> 8-alpine, jdk17-alpine -> jdk17-alpine (不变)
+# Normalize JDK version tag to ensure -alpine suffix is included
+# Example: jdk21 -> jdk21-alpine, 8 -> 8-alpine, jdk17-alpine -> jdk17-alpine (unchanged)
 normalize_jdk_version() {
 local version="${1}"
 if [[ -n "${version}" && ! "${version}" =~ -alpine$ ]]; then
@@ -37,9 +37,9 @@ echo "${version}"
 fi
 }
 
-# 生成 .dockerignore 文件
+# Generate .dockerignore file
 generate_dockerignore() {
-echo -e "${Info}生成 .dockerignore 文件"
+echo -e "${Info}Generating .dockerignore file"
 cat > .dockerignore << 'EOF'
 *.md
 !README.md
@@ -57,53 +57,53 @@ node_modules/
 EOF
 }
 
-# 使用静态模板
+# Use static template
 use_static_template() {
 local project_type="${1}"
 
-# 根据多架构构建开关和模式选择模板
+# Select template based on multi-architecture build switch and mode
 if [[ "${MULTIARCH_BUILD_ENABLE}" == "true" && "${project_type}" == "golang" ]]; then
-# 根据 GOLANG_MULTIARCH_MODE 选择对应的多架构模板
+# Select corresponding multi-architecture template based on GOLANG_MULTIARCH_MODE
 local multiarch_mode="${GOLANG_MULTIARCH_MODE:-dockerfile}"
 
 if [[ "${multiarch_mode}" == "precompile" ]]; then
-# 预编译模式：使用预编译二进制的模板
+# Precompile mode: use precompiled binary template
 local template_file="${TEMPLATES_DIR}/${project_type}-multiarch-precompile.Dockerfile"
 if [[ -f "${template_file}" ]]; then
-echo -e "${Info}使用预编译多架构 Dockerfile 模板: ${project_type}-multiarch-precompile.Dockerfile"
+echo -e "${Info}Using precompiled multi-architecture Dockerfile template: ${project_type}-multiarch-precompile.Dockerfile"
 cp "${template_file}" Dockerfile
 return 0
 else
-echo -e "${Warn}预编译多架构模板不存在: ${template_file}"
-echo -e "${Warn}回退到标准多架构模板"
+echo -e "${Warn}Precompiled multi-architecture template not found: ${template_file}"
+echo -e "${Warn}Falling back to standard multi-architecture template"
 multiarch_mode="dockerfile"
 fi
 fi
 
 if [[ "${multiarch_mode}" == "dockerfile" ]]; then
-# Dockerfile 模式：使用多阶段构建模板
+# Dockerfile mode: use multi-stage build template
 local template_file="${TEMPLATES_DIR}/${project_type}-multiarch.Dockerfile"
 if [[ -f "${template_file}" ]]; then
-echo -e "${Info}使用多阶段构建多架构 Dockerfile 模板: ${project_type}-multiarch.Dockerfile"
+echo -e "${Info}Using multi-stage build multi-architecture Dockerfile template: ${project_type}-multiarch.Dockerfile"
 cp "${template_file}" Dockerfile
 return 0
 else
-echo -e "${Warn}多架构模板不存在，回退到标准单架构模板"
+echo -e "${Warn}Multi-architecture template not found, falling back to standard single-architecture template"
 fi
 fi
 fi
 
-# 使用标准单架构模板
+# Use standard single-architecture template
 local template_file="${TEMPLATES_DIR}/${project_type}.Dockerfile"
 if [[ -f "${template_file}" ]]; then
-echo -e "${Info}使用静态 Dockerfile 模板: ${project_type}.Dockerfile"
+echo -e "${Info}Using static Dockerfile template: ${project_type}.Dockerfile"
 cp "${template_file}" Dockerfile
 
-# Java 项目：根据 DOCKERFILE_BUILD_JDK_VERSION 替换基础镜像版本
+# Java project: replace base image version based on DOCKERFILE_BUILD_JDK_VERSION
 if [[ "${project_type}" == "java" && -n "${DOCKERFILE_BUILD_JDK_VERSION:-}" ]]; then
 local _jdk_ver
 _jdk_ver=$(normalize_jdk_version "${DOCKERFILE_BUILD_JDK_VERSION}")
-echo -e "${Info}根据 DOCKERFILE_BUILD_JDK_VERSION=${DOCKERFILE_BUILD_JDK_VERSION} 切换 Java 基础镜像 (标签: ${_jdk_ver})"
+echo -e "${Info}Switching Java base image based on DOCKERFILE_BUILD_JDK_VERSION=${DOCKERFILE_BUILD_JDK_VERSION} (tag: ${_jdk_ver})"
 sed -i "s|^ARG OPENJDK_VERSION=.*|ARG OPENJDK_VERSION=${_jdk_ver}|" Dockerfile
 fi
 
@@ -113,7 +113,7 @@ return 1
 fi
 }
 
-# 生成 Web 项目 Dockerfile
+# Generate Web project Dockerfile
 generate_web_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Web Application Dockerfile (Nginx)
@@ -153,11 +153,11 @@ EXPOSE 80
 EOF
 }
 
-# 生成 Java 项目 Dockerfile
+# Generate Java project Dockerfile
 generate_java_dockerfile() {
 local jdk_version
 jdk_version=$(normalize_jdk_version "${DOCKERFILE_BUILD_JDK_VERSION:-jdk17-alpine}")
-echo -e "${Info}生成 Java Dockerfile，JDK 版本: ${jdk_version}"
+echo -e "${Info}Generating Java Dockerfile, JDK version: ${jdk_version}"
 cat > Dockerfile << EOF
 # Java Application Dockerfile
 ARG OPENJDK_VERSION=${jdk_version}
@@ -197,7 +197,7 @@ CMD java -jar -XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MinRAMP
 EOF
 }
 
-# 生成 Python 项目 Dockerfile
+# Generate Python project Dockerfile
 generate_python_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Python Application Dockerfile
@@ -237,27 +237,27 @@ CMD ["python", "main.py"]
 EOF
 }
 
-# 生成 Golang 项目 Dockerfile（多架构预编译模式）
+# Generate Golang project Dockerfile (multi-architecture precompile mode)
 generate_golang_multiarch_precompile_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Golang Multi-Architecture Dockerfile Template (Precompile Mode)
-# 使用预编译的多架构二进制文件
-# 适用于 GOLANG_MULTIARCH_MODE=precompile 模式
+# Uses precompiled multi-architecture binary files
+# Applicable to GOLANG_MULTIARCH_MODE=precompile mode
 
 # ============================================
-# Runtime Stage: 运行时阶段（多架构）
+# Runtime Stage: Runtime stage (multi-architecture)
 # ============================================
 FROM alpine:3.22
 
 LABEL maintainer="DevOps Team <devops@example.com>"
 
-# 自动注入的 Buildx 平台变量
+# Auto-injected Buildx platform variables
 ARG TARGETPLATFORM
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-# 构建参数（运行时元数据）
+# Build arguments (runtime metadata)
 ARG PORT=2025
 ARG APP_NAME="app"
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -266,12 +266,12 @@ ARG CI_COMMIT_REF_NAME=""
 ARG CI_COMMIT_AUTHOR=""
 ARG CI_PROJECT_NAME=""
 
-# 环境变量
+# Environment variables
 ENV PORT=${PORT} \
     APP_NAME=${APP_NAME} \
     TZ="Asia/Shanghai"
 
-# 元数据标签
+# Metadata labels
 LABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR} \
     CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} \
     CI_BUILD_DATE=${CI_BUILD_DATE} \
@@ -280,13 +280,13 @@ LABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR} \
     app.name=${APP_NAME} \
     build.platform=${TARGETPLATFORM}
 
-# 打印构建信息（调试用）
+# Print build information (for debugging)
 RUN echo "Target platform: ${TARGETPLATFORM}" && \
     echo "  OS: ${TARGETOS}" && \
     echo "  ARCH: ${TARGETARCH}" && \
     echo "  VARIANT: ${TARGETVARIANT}"
 
-# 安装运行时依赖（精简版）
+# Install runtime dependencies (minimal)
 RUN apk update && \
     apk add --no-cache \
     tzdata \
@@ -298,74 +298,74 @@ RUN apk update && \
     mkdir -p /app/logs && \
     rm -rf /var/cache/apk/*
 
-# 设置工作目录
+# Set working directory
 WORKDIR /app
 
-# 复制预编译的二进制文件（根据目标架构选择）
-# 文件命名格式: ${CI_PROJECT_NAME}-${TARGETOS}-${TARGETARCH}${TARGETVARIANT}
-# 例如: hysteria-linux-amd64, hysteria-linux-arm64, hysteria-linux-arm-v7
+# Copy precompiled binary files (selected by target architecture)
+# File naming format: ${CI_PROJECT_NAME}-${TARGETOS}-${TARGETARCH}${TARGETVARIANT}
+# Examples: hysteria-linux-amd64, hysteria-linux-arm64, hysteria-linux-arm-v7
 COPY binaries/${CI_PROJECT_NAME}-${TARGETOS}-${TARGETARCH}${TARGETVARIANT} /app/${APP_NAME}
 
-# 确保可执行权限
+# Ensure executable permission
 RUN chmod +x /app/${APP_NAME} && \
     echo "Binary info:" && \
     ls -lh /app/${APP_NAME}
 
 
-# 暴露端口
+# Expose port
 EXPOSE ${PORT}
 
-# 启动命令
+# Startup command
 CMD ["/bin/sh", "-c", "exec /app/${APP_NAME}"]
 EOF
 }
 
-# 生成 Golang 项目 Dockerfile（多架构多阶段构建模式）
+# Generate Golang project Dockerfile (multi-architecture multi-stage build mode)
 generate_golang_multiarch_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Golang Multi-Architecture Dockerfile Template
-# 支持 linux/amd64, linux/arm64, linux/arm/v7 等多架构构建
-# 使用 Docker Buildx 进行跨平台编译和镜像构建
+# Supports linux/amd64, linux/arm64, linux/arm/v7 and other multi-architecture builds
+# Use Docker Buildx for cross-platform compilation and image building
 
 # ============================================
-# Build Stage: 编译阶段（多架构）
+# Build Stage: Compile stage (multi-architecture)
 # ============================================
 ARG GO_VERSION=1.23
 FROM golang:${GO_VERSION}-alpine AS builder
 
-# 自动注入的 Buildx 平台变量
+# Auto-injected Buildx platform variables
 ARG TARGETPLATFORM
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-# 构建参数
+# Build arguments
 ARG CGO_ENABLED=0
 ARG APP_NAME="app"
 ARG BUILD_LDFLAGS="-s -w"
 
-# 打印构建信息（调试用）
+# Print build information (for debugging)
 RUN echo "Building for platform: ${TARGETPLATFORM}" && \
     echo "  OS: ${TARGETOS}" && \
     echo "  ARCH: ${TARGETARCH}" && \
     echo "  VARIANT: ${TARGETVARIANT}"
 
-# 安装必要的构建工具
+# Install necessary build tools
 RUN apk add --no-cache git make
 
-# 设置工作目录
+# Set working directory
 WORKDIR /build
 
-# 复制 go.mod 和 go.sum（利用 Docker 缓存层）
+# Copy go.mod and go.sum (leverage Docker cache layers)
 COPY go.mod go.sum* ./
 
-# 下载依赖（单独层，加速后续构建）
+# Download dependencies (separate layer, accelerates subsequent builds)
 RUN go mod download
 
-# 复制源代码
+# Copy source code
 COPY . .
 
-# 交叉编译（根据 TARGETOS 和 TARGETARCH 自动编译）
+# Cross-compile (automatically compile based on TARGETOS and TARGETARCH)
 RUN GOOS=${TARGETOS} \
     GOARCH=${TARGETARCH} \
     CGO_ENABLED=${CGO_ENABLED} \
@@ -374,18 +374,18 @@ RUN GOOS=${TARGETOS} \
     -o /build/${APP_NAME} \
     ./
 
-# 验证二进制文件（可选，调试用）
+# Verify binary file (optional, for debugging)
 RUN file /build/${APP_NAME} && \
     ls -lh /build/${APP_NAME}
 
 # ============================================
-# Runtime Stage: 运行时阶段（多架构）
+# Runtime Stage: Runtime stage (multi-architecture)
 # ============================================
 FROM alpine:3.22
 
 LABEL maintainer="DevOps Team <devops@example.com>"
 
-# 构建参数（运行时元数据）
+# Build arguments (runtime metadata)
 ARG PORT=2025
 ARG APP_NAME="app"
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -394,12 +394,12 @@ ARG CI_COMMIT_REF_NAME=""
 ARG CI_COMMIT_AUTHOR=""
 ARG CI_PROJECT_NAME=""
 
-# 环境变量
+# Environment variables
 ENV PORT=${PORT} \
     APP_NAME=${APP_NAME} \
     TZ="Asia/Shanghai"
 
-# 元数据标签
+# Metadata labels
 LABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR} \
     CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} \
     CI_BUILD_DATE=${CI_BUILD_DATE} \
@@ -407,7 +407,7 @@ LABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR} \
     CI_PROJECT_NAME=${CI_PROJECT_NAME} \
     app.name=${APP_NAME}
 
-# 安装运行时依赖（精简版）
+# Install runtime dependencies (minimal)
 RUN apk update && \
     apk add --no-cache \
     tzdata \
@@ -419,24 +419,24 @@ RUN apk update && \
     mkdir -p /app/logs && \
     rm -rf /var/cache/apk/*
 
-# 设置工作目录
+# Set working directory
 WORKDIR /app
 
-# 从构建阶段复制二进制文件
+# Copy binary from build stage
 COPY --from=builder /build/${APP_NAME} /app/${APP_NAME}
 
-# 确保可执行权限
+# Ensure executable permission
 RUN chmod +x /app/${APP_NAME}
 
-# 暴露端口
+# Expose port
 EXPOSE ${PORT}
 
-# 启动命令
+# Startup command
 CMD ["/bin/sh", "-c", "exec /app/${APP_NAME}"]
 EOF
 }
 
-# 生成 Golang 项目 Dockerfile（单架构模式）
+# Generate Golang project Dockerfile (single-architecture mode)
 generate_golang_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Golang Application Dockerfile
@@ -485,7 +485,7 @@ CMD ["/bin/sh", "-c", "exec /app/${CI_PROJECT_NAME}"]
 EOF
 }
 
-# 生成 Python Model 项目 Dockerfile
+# Generate Python Model project Dockerfile
 generate_py_model_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Python Model Dockerfile (InitContainer)
@@ -515,11 +515,11 @@ COPY . .
 EOF
 }
 
-# 动态生成 Dockerfile
+# Dynamically generate Dockerfile
 generate_dynamic_dockerfile() {
 local project_type="${1}"
 
-echo -e "${Warn}静态模板未找到，动态生成 Dockerfile: ${project_type}"
+echo -e "${Warn}Static template not found, dynamically generating Dockerfile: ${project_type}"
 
 case "${project_type}" in
 web)
@@ -532,22 +532,22 @@ python)
 generate_python_dockerfile
 ;;
 golang)
-# 根据多架构模式选择对应的生成函数
+# Select corresponding generation function based on multi-architecture mode
 if [[ "${MULTIARCH_BUILD_ENABLE}" == "true" ]]; then
 local multiarch_mode="${GOLANG_MULTIARCH_MODE:-dockerfile}"
 
 if [[ "${multiarch_mode}" == "precompile" ]]; then
-echo -e "${Info}动态生成多架构预编译模式 Dockerfile"
+echo -e "${Info}Dynamically generating multi-architecture precompile mode Dockerfile"
 generate_golang_multiarch_precompile_dockerfile
 elif [[ "${multiarch_mode}" == "dockerfile" ]]; then
-echo -e "${Info}动态生成多架构多阶段构建模式 Dockerfile"
+echo -e "${Info}Dynamically generating multi-architecture multi-stage build mode Dockerfile"
 generate_golang_multiarch_dockerfile
 else
-echo -e "${Warn}未知的 GOLANG_MULTIARCH_MODE: ${multiarch_mode}，使用单架构模式"
+echo -e "${Warn}Unknown GOLANG_MULTIARCH_MODE: ${multiarch_mode}, using single-architecture mode"
 generate_golang_dockerfile
 fi
 else
-# 单架构模式
+# Single-architecture mode
 generate_golang_dockerfile
 fi
 ;;
@@ -555,46 +555,46 @@ py_model)
 generate_py_model_dockerfile
 ;;
 *)
-echo -e "${Error}不支持的项目类型: ${project_type}"
+echo -e "${Error}Unsupported project type: ${project_type}"
 exit 1
 ;;
 esac
 }
 
-# 主函数
+# Main function
 main() {
-# 参数验证
+# Parameter validation
 if [[ $# -eq 0 ]]; then
-echo -e "${Error}缺少项目类型参数"
-echo "用法: $0 <project_type>"
-echo "支持的类型: web, java, python, golang, py_model"
+echo -e "${Error}Missing project type argument"
+echo "Usage: $0 <project_type>"
+echo "Supported types: web, java, python, golang, py_model"
 exit 1
 fi
 
 local project_type="${1}"
 
-# 验证项目类型
+# Validate project type
 case "${project_type}" in
 web|java|python|golang|py_model)
-# 有效的项目类型
+# Valid project type
 ;;
 *)
-echo -e "${Error}无效的项目类型: ${project_type}"
-echo "支持的类型: web, java, python, golang, py_model"
+echo -e "${Error}Invalid project type: ${project_type}"
+echo "Supported types: web, java, python, golang, py_model"
 exit 1
 ;;
 esac
 
-# 优先使用静态模板，失败则动态生成
+# Prefer static templates, fall back to dynamic generation
 if ! use_static_template "${project_type}"; then
 generate_dynamic_dockerfile "${project_type}"
 fi
 
-# 生成 .dockerignore 文件
+# Generate .dockerignore file
 generate_dockerignore
 
-echo -e "${Info}Dockerfile 生成完成"
+echo -e "${Info}Dockerfile generation completed"
 }
 
-# 执行主函数
+# Execute main function
 main "$@"

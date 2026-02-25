@@ -8,7 +8,7 @@
     - .build_after_script
 
 
-###################### 此分割线以下放置 拆分成段的 代码段；按功能 or 模块 进行拆分
+###################### Below this line are code snippets split by function or module
 .code_maven_test: &code_maven_test
   - |
     set -x
@@ -55,7 +55,7 @@
     reports:
       cobertura: coverage/clover.xml
 
-# Junit 单元测试
+# Junit unit test
 .junit_test:
   stage: test
   script:
@@ -92,7 +92,7 @@
       else
         pip3 install pytest pytest-cov -i ${PYPI}
       fi
-    # 如果小于上面定义的最小覆盖率则中断CI，并输出当前覆盖率结果.
+    # If below the defined minimum coverage, interrupt CI and output current coverage result.
     - python3 -m pytest | awk -F'[% ]+' -vm=$MIN_COVERAGE '/TOTAL/{if($(NF-1)>=m){print $0;exit 0}else{print $0;exit 1}}'
 
 .go_test:

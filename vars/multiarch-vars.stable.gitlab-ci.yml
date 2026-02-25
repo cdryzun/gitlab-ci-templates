@@ -1,108 +1,108 @@
 # ============================================
 # Multi-Architecture Build Variables
-# 多架构构建配置变量
+# Multi-architecture build configuration variables
 # ============================================
 
 .multiarch_vars:
   variables:
     # ========================================
-    # 多架构构建总开关
+    # Multi-architecture build master switch
     # ========================================
-    # 是否启用多架构构建
-    # true: 启用 Docker Buildx 多架构构建
-    # false: 使用传统单架构构建（默认）
+    # Whether to enable multi-architecture build
+    # true: Enable Docker Buildx multi-architecture build
+    # false: Use traditional single-architecture build (default)
     MULTIARCH_BUILD_ENABLE: "false"
 
     # ========================================
-    # 目标平台配置
+    # Target platform configuration
     # ========================================
-    # 构建的目标平台列表（逗号分隔）
-    # 常用平台：
-    #   - linux/amd64       (x86_64, Intel/AMD 处理器)
-    #   - linux/arm64       (aarch64, ARM 64位, 如 AWS Graviton, 阿里云倚天)
-    #   - linux/arm/v7      (armv7, ARM 32位)
-    #   - linux/arm/v6      (armv6, Raspberry Pi 等)
-    #   - linux/386         (x86 32位)
-    #   - linux/ppc64le     (PowerPC 64位)
-    #   - linux/s390x       (IBM Z 大型机)
+    # List of target platforms for build (comma-separated)
+    # Common platforms:
+    #   - linux/amd64       (x86_64, Intel/AMD processors)
+    #   - linux/arm64       (aarch64, ARM 64-bit, e.g., AWS Graviton, Alibaba Cloud)
+    #   - linux/arm/v7      (armv7, ARM 32-bit)
+    #   - linux/arm/v6      (armv6, Raspberry Pi, etc.)
+    #   - linux/386         (x86 32-bit)
+    #   - linux/ppc64le     (PowerPC 64-bit)
+    #   - linux/s390x       (IBM Z mainframe)
     DOCKER_BUILD_PLATFORMS: "linux/amd64,linux/arm64"
 
     # ========================================
-    # Buildx Builder 配置
+    # Buildx Builder configuration
     # ========================================
-    # Builder 实例名称
+    # Builder instance name
     BUILDX_BUILDER_NAME: "multiarch-builder"
 
-    # Builder 驱动类型
-    # 可选值：
-    #   - docker-container (推荐，支持全部平台)
-    #   - kubernetes (K8s 环境)
-    #   - docker (本地 Docker，功能有限)
+    # Builder driver type
+    # Options:
+    #   - docker-container (Recommended, supports all platforms)
+    #   - kubernetes (K8s environment)
+    #   - docker (Local Docker, limited functionality)
     BUILDX_DRIVER: "docker-container"
 
     # ========================================
-    # Golang 多架构构建模式
+    # Golang multi-architecture build mode
     # ========================================
-    # 多架构构建模式
-    # 可选值：
-    #   - dockerfile   (推荐) 在 Dockerfile 中编译多架构二进制
-    #   - precompile   提前编译多个架构的二进制，再构建镜像
+    # Multi-architecture build mode
+    # Options:
+    #   - dockerfile   (Recommended) Compile multi-architecture binaries in Dockerfile
+    #   - precompile    Pre-compile binaries for multiple architectures, then build image
     GOLANG_MULTIARCH_MODE: "dockerfile"
 
     # ========================================
-    # 构建缓存配置
+    # Build cache configuration
     # ========================================
-    # 是否启用构建缓存（加速后续构建）
-    # true: 使用 Registry 缓存
-    # false: 不使用缓存
+    # Whether to enable build cache (speed up subsequent builds)
+    # true: Use Registry cache
+    # false: No cache
     BUILDX_CACHE_ENABLE: "false"
 
     # ========================================
-    # 镜像推送配置
+    # Image push configuration
     # ========================================
-    # 是否推送镜像到 Registry
-    # true: 构建完成后自动推送
-    # false: 仅本地构建（用于测试）
+    # Whether to push image to Registry
+    # true: Auto push after build completes
+    # false: Local build only (for testing)
     DOCKER_IMAGE_PUSH: "true"
 
     # ========================================
-    # Golang 编译配置（多架构）
+    # Golang compilation configuration (multi-architecture)
     # ========================================
-    # Go 版本（用于 Dockerfile 构建）
+    # Go version (for Dockerfile build)
     GO_VERSION: "1.23"
 
-    # CGO 是否启用
-    # 0: 禁用 CGO（推荐，纯静态编译）
-    # 1: 启用 CGO（需要交叉编译工具链）
+    # Whether to enable CGO
+    # 0: Disable CGO (Recommended, pure static compilation)
+    # 1: Enable CGO (requires cross-compilation toolchain)
     GO_CGO_ENABLED: "0"
 
-    # Go 编译的链接器标志
-    # -s: 去除符号表
-    # -w: 去除 DWARF 调试信息
-    # 作用：减小二进制文件体积
+    # Go compiler linker flags
+    # -s: Strip symbol table
+    # -w: Strip DWARF debug info
+    # Purpose: Reduce binary file size
     GO_BUILD_LDFLAGS: "-s -w"
 
     # ========================================
-    # 应用运行时配置
+    # Application runtime configuration
     # ========================================
-    # 应用监听端口
+    # Application listening port
     APP_PORT: "2025"
 
-    # 应用名称（默认使用项目名）
+    # Application name (defaults to project name)
     APP_NAME: "${CI_PROJECT_NAME}"
 
 # ============================================
-# 预设配置模板（快速启用）
+# Preset configuration templates (quick enable)
 # ============================================
 
-# 预设 1: 仅 AMD64（默认，向后兼容）
+# Preset 1: AMD64 only (default, backward compatible)
 .multiarch_amd64_only:
   extends: .multiarch_vars
   variables:
     MULTIARCH_BUILD_ENABLE: "false"
     DOCKER_BUILD_PLATFORMS: "linux/amd64"
 
-# 预设 2: AMD64 + ARM64（推荐，覆盖 90% 场景）
+# Preset 2: AMD64 + ARM64 (Recommended, covers 90% scenarios)
 .multiarch_common:
   extends: .multiarch_vars
   variables:
@@ -110,7 +110,7 @@
     DOCKER_BUILD_PLATFORMS: "linux/amd64,linux/arm64"
     GOLANG_MULTIARCH_MODE: "dockerfile"
 
-# 预设 3: 全平台支持（包含 ARM v7）
+# Preset 3: Full platform support (includes ARM v7)
 .multiarch_full:
   extends: .multiarch_vars
   variables:
@@ -118,7 +118,7 @@
     DOCKER_BUILD_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
     GOLANG_MULTIARCH_MODE: "dockerfile"
 
-# 预设 4: 仅 ARM64（云原生 ARM 服务器）
+# Preset 4: ARM64 only (cloud-native ARM servers)
 .multiarch_arm64_only:
   extends: .multiarch_vars
   variables:
@@ -126,7 +126,7 @@
     DOCKER_BUILD_PLATFORMS: "linux/arm64"
     GOLANG_MULTIARCH_MODE: "dockerfile"
 
-# 预设 5: 高性能模式（预编译 + 缓存）
+# Preset 5: High performance mode (precompile + cache)
 .multiarch_performance:
   extends: .multiarch_vars
   variables:
