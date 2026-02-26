@@ -5,8 +5,8 @@
 ARG GO_VERSION=1.23
 ARG NODE_VERSION=20
 
-# Stage 1: Node.js builder for frontend
-FROM node:${NODE_VERSION}-bookworm-slim AS node-builder
+# Stage 1: Node.js stage to copy binaries
+FROM node:${NODE_VERSION}-bookworm-slim AS node-stage
 
 # Stage 2: Go builder with Node.js
 FROM golang:${GO_VERSION}-bookworm
@@ -29,23 +29,25 @@ ENV GO_VERSION=${GO_VERSION} \
     GOOS=linux \
     DEBIAN_FRONTEND=noninteractive
 
-# Install Node.js from Node.js official repository
+# Install dependencies and copy Node.js from official image
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    gnupg \
     git \
     make \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION}.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends nodejs \
-    && corepack enable \
-    && corepack prepare pnpm@latest --activate \
-    && npm install -g yarn \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Copy Node.js from the official node image
+COPY --from=node-stage /usr/local/bin/node /usr/local/bin/node
+COPY --from=node-stage /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+# Create symlinks for npm, npx, corepack
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+    && ln -s /usr/local/lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack
+
+# Enable corepack and install package managers
+RUN corepack enable \
+    && corepack prepare pnpm@latest --activate \
+    && npm install -g yarn
 
 # Install common Go tools
 RUN go install github.com/swaggo/swag/cmd/swag@latest \
