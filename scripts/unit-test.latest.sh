@@ -18,7 +18,7 @@ declare -A UNIT_TEST_CMD=(
 	["java"]=${_JAVA_UNIT_TEST_SHELL:-'mvn test'}
 	["web"]=${_NODE_UNIT_TEST_SHELL:-'pnpm test'}
 	["python"]=${_PYTHON_UNIT_TEST_SHELL:-'python -m unittest'}
-	["golang"]=${_JAVA_UNIT_TEST_SHELL:-'go test'}
+	["golang"]=${_GO_UNIT_TEST_SHELL:-'go test ./... -count=1'}
 )
 
 # unit test main function

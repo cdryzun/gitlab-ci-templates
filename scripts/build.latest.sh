@@ -54,6 +54,15 @@ EOF
             export CGO_ENABLED="${GO_CGO_ENABLED:-0}"
             export GOOS=linux
             export GOARCH="${GO_ARCH:-amd64}"
+            # Apply GOPROXY if configured (supports private/mirror registries)
+            if [ -n "${GO_GOPROXY}" ]; then
+                export GOPROXY="${GO_GOPROXY}"
+            fi
+            # Apply GOPRIVATE if configured (bypass proxy/sumdb for private modules)
+            if [ -n "${GO_GOPRIVATE}" ]; then
+                export GOPRIVATE="${GO_GOPRIVATE}"
+                export GONOSUMDB="${GO_GOPRIVATE}"
+            fi
             if [ -f go.mod ]; then
                 echo "module found, start to download dependencies..."
             fi

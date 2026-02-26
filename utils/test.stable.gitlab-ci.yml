@@ -98,12 +98,32 @@
 .go_test:
   stage: test
   image: ${GO_IMAGE}
+  coverage: '/^coverage:\s+(\d+(?:\.\d+)?%)/'
   rules:
     - if: $GO_TEST == "true"
+  artifacts:
+    expire_in: 14 days
+    when: always
+    reports:
+      junit: ${GO_JUNIT_REPORT_PATH:-coverage/report.xml}
   script:
     - |
       set -x
       if [ -f go.mod ]; then
           echo "module found, start to download dependencies..."
       fi
-      ${TEST_SHELL:-"go test ./..."}
+      # Apply GOPROXY/GOPRIVATE if configured
+      if [ -n "${GO_GOPROXY}" ]; then export GOPROXY="${GO_GOPROXY}"; fi
+      if [ -n "${GO_GOPRIVATE}" ]; then
+        export GOPRIVATE="${GO_GOPRIVATE}"
+        export GONOSUMDB="${GO_GOPRIVATE}"
+      fi
+      # GO_TEST_FLAGS supports custom flags (e.g. "-run TestFoo")
+      # Default: -v for output, -race for data race detection, -count=1 to disable test cache
+      _GO_TEST_FLAGS="${GO_TEST_FLAGS:--v -race -count=1}"
+      if [ -n "${TEST_SHELL}" ]; then
+        sh -c "${TEST_SHELL}"
+      else
+        go test ${_GO_TEST_FLAGS} -coverprofile=coverage.out ./...
+        go tool cover -func=coverage.out | tail -1
+      fi

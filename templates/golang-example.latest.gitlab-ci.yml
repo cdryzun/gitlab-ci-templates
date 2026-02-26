@@ -3,7 +3,8 @@
 
 variables:
   BUILD_SHELL: "go build -ldflags '-s -w' -o $CI_PROJECT_NAME ./"
-  UNIT_TEST_ENABLE: "false" # Whether to disable unit tests (to enable, set GO_TEST: "true")
+  GO_TEST: "false"          # Set to "true" to enable unit tests (go test -v -race -count=1 ./...)
+  GO_TEST_FLAGS: ""         # Optional: override default test flags, e.g. "-v -count=1 -run TestFoo"
   DOCKER_IMAGE_SCAN_IMAGE: "false" # Whether to enable image scanning
   DEV_CD_AUTO_DEPLOY: "true" # DEV CD auto deploy
   SIT_CD_AUTO_DEPLOY: "true" # SIT CD auto deploy
@@ -14,6 +15,9 @@ variables:
   # Golang build parameters (optional)
   GO_CGO_ENABLED: "0"
   GO_ARCH: "amd64"
+  # Go module proxy (optional, configure for private/air-gapped environments)
+  # GO_GOPROXY: "https://goproxy.cn,direct"
+  # GO_GOPRIVATE: "gitlab.example.com"
 
 include:
   - project: 'devops/ci-templates'

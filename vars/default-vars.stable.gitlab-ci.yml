@@ -36,6 +36,10 @@
   JAVA_UNIT_TEST_SHELL: ""
   MAVEN_TEST: "false"
   GRADLE_TEST: "false"
+  # Go test configuration
+  GO_TEST: "false"
+  GO_TEST_FLAGS: ""
+  GO_JUNIT_REPORT_PATH: "coverage/report.xml"
 
 # SonarQube scan configuration
 # Configure SONAR_URL and SONAR_TOKEN in your GitLab CI/CD variables
@@ -59,6 +63,11 @@
   STATIC_FILE_NAME: ""
   MAVEN_APP_NAME: "app"
   BUILD_MAVEN_SNAPSHOT: "false"
+  # Golang build configuration
+  GO_CGO_ENABLED: "0"
+  GO_ARCH: "amd64"
+  GO_GOPROXY: ""
+  GO_GOPRIVATE: ""
   # Docker Hub configuration
   # For Docker Hub (docker.io), DOCKER_HUB_ORGANIZATION specifies your organization/username
   # Default is set to cdryzun for open source use, override as needed

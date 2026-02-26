@@ -5,15 +5,9 @@ include:
 
 variables:
   extends: .default_vars
-  # CACHE_DIR will be dynamically set in pre stage for golang projects
-  # GOPATH will be set to ${CI_PROJECT_DIR}/.go for cache compatibility
 
 default:
   image: ${GO_IMAGE}
-
-cache:
-  paths:
-    - ${CACHE_DIR}
 
 stages:
   !reference [ .general_stage, stages ]
