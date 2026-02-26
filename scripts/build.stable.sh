@@ -169,7 +169,7 @@ IFS='
         export ${ARG}
     done
 
-    # pull dockerfile from images
+    # pull dockerfile from images (silent mode)
     for FROM in $(cat Dockerfile |grep ^FROM);do
         if [[ "${FROM}" =~ '--platform' ]];then
             IMAGE_NAME=$(echo ${FROM}|awk '{print $3}')
@@ -178,7 +178,7 @@ IFS='
         fi
 
         if [ "${IMAGE_NAME}" != 'scratch' ];then
-            echo "docker pull ${IMAGE_NAME}"|bash
+            docker pull "${IMAGE_NAME}" >/dev/null 2>&1 || echo "${Tip}Failed to pull ${IMAGE_NAME}, using cached image"
         fi
     done
 }
@@ -209,7 +209,8 @@ function docker_build_push(){
     build_init
     image_build_init
     cd "${DOCKER_DAEMON_WORKSPACE}"
-    ls -lha
+    echo "${Info}Build workspace contents:"
+    ls -lh | grep -v "^total"
 
     # Execute workspace pre-preparation command
     docker_workspace_prepare
@@ -231,33 +232,38 @@ function docker_build_push(){
     # Pull latest base image #58
     docker_base_pull_latest
     # Disable BuildKit for single-architecture builds (requires buildx plugin)
-    echo """DOCKER_BUILDKIT=0 docker build ${DOCKER_SECRET_ARGS}  \
+    echo "${Info}Building Docker image: ${DOCKER_IMAGE_NAME}"
+    DOCKER_BUILDKIT=0 docker build ${DOCKER_SECRET_ARGS}  \
     -t "${DOCKER_IMAGE_NAME}" . \
     "${DOCKER_BUILD_FLAGS}" \
     --build-arg CI_COMMIT_SHORT_SHA="$CI_COMMIT_SHORT_SHA" \
     --build-arg CI_BUILD_DATE="$(date +%Y-%m-%d/%H:%M)" \
     --build-arg CI_PROJECT_NAME="${CI_PROJECT_NAME}" \
     --build-arg CI_COMMIT_AUTHOR="$(echo $CI_COMMIT_AUTHOR|awk -F '[ <>]' '{print $3}')" \
-    --build-arg CI_COMMIT_REF_NAME="${CI_COMMIT_REF_NAME}"
-    """|bash
+    --build-arg CI_COMMIT_REF_NAME="${CI_COMMIT_REF_NAME}" 2>&1 | grep -v "^Running in\|^Removing intermediate\|^ --->" || true
 
     docker tag ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
 
-    docker push ${DOCKER_IMAGE_NAME} \
-      && docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" \
-      && docker rmi -f ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
+    echo "${Info}Pushing Docker images..."
+    # Push with clean output - filter repetitive "Waiting" messages
+    docker push ${DOCKER_IMAGE_NAME} 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker rmi -f ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>/dev/null || true
+    echo "${Info}Docker images pushed successfully"
 }
 
 
 function docker_retag_push(){
     echo "${Tip}Release image matched successfully, performing ReTag based on this image"
-    docker pull "${RETAG_IMGAE_NAME}"
+    docker pull "${RETAG_IMGAE_NAME}" 2>&1 | grep -E "digest:|Downloaded|Layer already exists|Error" || true
     docker tag "${RETAG_IMGAE_NAME}" "${DOCKER_IMAGE_NAME}"
     docker tag ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
 
-    docker push ${DOCKER_IMAGE_NAME} \
-      && docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" \
-      && docker rmi -f ${DOCKER_IMAGE_NAME} "${RETAG_IMGAE_NAME}" "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
+    echo "${Info}Pushing Docker images..."
+    docker push ${DOCKER_IMAGE_NAME} 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker rmi -f ${DOCKER_IMAGE_NAME} "${RETAG_IMGAE_NAME}" "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>/dev/null || true
+    echo "${Info}Docker images pushed successfully"
 }
 
 function auto_delete_tag(){

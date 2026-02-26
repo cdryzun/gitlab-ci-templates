@@ -131,7 +131,8 @@ function docker_build_push(){
     build_init
     image_build_init
     cd "${DOCKER_DAEMON_WORKSPACE}"
-    ls -lha
+    echo "${Info}Build workspace contents:"
+    ls -lh | grep -v "^total"
 
     # Execute workspace pre-preparation command
     docker_workspace_prepare
@@ -149,6 +150,7 @@ function docker_build_push(){
     fi
 
     # Disable BuildKit for single-architecture builds (requires buildx plugin)
+    echo "${Info}Building Docker image: ${DOCKER_IMAGE_NAME}"
     DOCKER_BUILDKIT=0 docker image build \
     -t "${DOCKER_IMAGE_NAME}" . \
     "${DOCKER_BUILD_FLAGS}" \
@@ -156,27 +158,32 @@ function docker_build_push(){
     --build-arg CI_BUILD_DATE="$(date +%Y-%m-%d/%H:%M)" \
     --build-arg CI_PROJECT_NAME="${CI_PROJECT_NAME}" \
     --build-arg CI_COMMIT_AUTHOR="${CI_COMMIT_AUTHOR}" \
-    --build-arg CI_COMMIT_REF_NAME="${CI_COMMIT_REF_NAME}"
+    --build-arg CI_COMMIT_REF_NAME="${CI_COMMIT_REF_NAME}" 2>&1 | grep -v "^Running in\|^Removing intermediate\|^ --->" || true
 
     # Add extra branch type tag (like latest, stable, main)
     docker tag ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
 
-    docker push ${DOCKER_IMAGE_NAME} \
-      && docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" \
-      && docker rmi -f ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
+    echo "${Info}Pushing Docker images..."
+    # Push with clean output - filter repetitive "Waiting" messages
+    docker push ${DOCKER_IMAGE_NAME} 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker rmi -f ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>/dev/null || true
+    echo "${Info}Docker images pushed successfully"
 }
 
 
 function docker_retag_push(){
     echo "${Tip}Release image matched successfully, performing ReTag based on this image"
-    docker pull "${RETAG_IMGAE_NAME}"
+    docker pull "${RETAG_IMGAE_NAME}" 2>&1 | grep -E "digest:|Downloaded|Layer already exists|Error" || true
     docker tag "${RETAG_IMGAE_NAME}" "${DOCKER_IMAGE_NAME}"
     # Add extra branch type tag (like latest, stable, main)
     docker tag ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
 
-    docker push ${DOCKER_IMAGE_NAME} \
-      && docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" \
-      && docker rmi -f ${DOCKER_IMAGE_NAME} "${RETAG_IMGAE_NAME}" "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
+    echo "${Info}Pushing Docker images..."
+    docker push ${DOCKER_IMAGE_NAME} 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker rmi -f ${DOCKER_IMAGE_NAME} "${RETAG_IMGAE_NAME}" "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>/dev/null || true
+    echo "${Info}Docker images pushed successfully"
 }
 
 function auto_delete_tag(){

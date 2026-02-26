@@ -110,17 +110,16 @@
 .docker_login:
   script:
     - |
-      set +x
+      # Docker login with password-stdin to avoid CLI security warning
       if [ -n "${REGISTRY_USER}" ] && [ -n "${REGISTRY_PASSWORD}" ]; then
-        docker login -u "${REGISTRY_USER}" -p "${REGISTRY_PASSWORD}" "${DOCKER_REGISTRY}"
+        echo "${REGISTRY_PASSWORD}" | docker login --username "${REGISTRY_USER}" --password-stdin "${DOCKER_REGISTRY}" 2>/dev/null
       elif [ -n "${HARBOR_USER}" ] && [ -n "${HARBOR_PASSWD}" ]; then
         # Backward compatibility
-        docker login -u "${HARBOR_USER}" -p "${HARBOR_PASSWD}" "${DOCKER_REGISTRY}"
+        echo "${HARBOR_PASSWD}" | docker login --username "${HARBOR_USER}" --password-stdin "${DOCKER_REGISTRY}" 2>/dev/null
       fi
       # Create docker login lock file
       mkdir -p ~/.docker-lock
       touch ~/.docker-lock/${CI_PIPELINE_ID}-${CI_JOB_NAME}.lock
-      set -x
 
 .sonar_check:
   script:

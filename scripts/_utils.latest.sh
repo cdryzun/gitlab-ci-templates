@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-if [ ${CI_DEBUG_TRACE} == 'true' ];then
+# Debug mode - only enable when explicitly requested
+if [ "${CI_DEBUG_TRACE}" == 'true' ];then
   LOG_LEVEL=debug
-fi
-
-if [ "${LOG_LEVEL}" == 'debug' ];then
-    set -x
+  set -x
 fi
 
 # Store initial built-in variables and utility functions during script execution
