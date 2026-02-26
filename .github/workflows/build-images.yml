@@ -187,12 +187,34 @@ jobs:
     strategy:
       matrix:
         include:
+          # LTS combinations
           - go: '1.22'
             node: '20'
+          - go: '1.22'
+            node: '22'
           - go: '1.23'
             node: '20'
           - go: '1.23'
             node: '22'
+          - go: '1.24'
+            node: '20'
+          - go: '1.24'
+            node: '22'
+          - go: '1.24'
+            node: '24'
+          - go: '1.25'
+            node: '22'
+          - go: '1.25'
+            node: '24'
+          - go: '1.25'
+            node: '25'
+          # Latest combinations
+          - go: '1.26'
+            node: '22'
+          - go: '1.26'
+            node: '24'
+          - go: '1.26'
+            node: '25'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
