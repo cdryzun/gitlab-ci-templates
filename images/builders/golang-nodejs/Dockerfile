@@ -46,8 +46,7 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
 
 # Enable corepack and install package managers
 RUN corepack enable \
-    && corepack prepare pnpm@latest --activate \
-    && npm install -g yarn
+    && corepack prepare pnpm@latest --activate
 
 # Install common Go tools
 RUN go install github.com/swaggo/swag/cmd/swag@latest \
