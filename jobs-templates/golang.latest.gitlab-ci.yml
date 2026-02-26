@@ -5,17 +5,15 @@ include:
 
 variables:
   extends: .default_vars
-  # Override CACHE_DIR for golang projects
-  # Golang uses GOPATH for module caching, not project-level .cache directory
-  CACHE_DIR: ""
+  # CACHE_DIR will be dynamically set in pre stage for golang projects
+  # GOPATH will be set to ${CI_PROJECT_DIR}/.go for cache compatibility
 
 default:
   image: ${GO_IMAGE}
 
 cache:
   paths:
-    # Cache Go modules to speed up dependency downloads
-    - /go/pkg/mod
+    - ${CACHE_DIR}
 
 stages:
   !reference [ .general_stage, stages ]

@@ -87,6 +87,17 @@ elif [ -z "${BUILD_SHELL}" ] && [ "${PROJECT_TYPE}" == 'python' ];then
   dotenv PROJECT_TYPE 'py_model'
 fi
 
+# Set project-specific cache directory based on PROJECT_TYPE
+# For golang projects, set GOPATH to project directory and use it for caching
+if [ "${PROJECT_TYPE}" == "golang" ]; then
+  # Set GOPATH to project directory for GitLab CI cache compatibility
+  export GOPATH="${CI_PROJECT_DIR}/.go"
+  # Update CACHE_DIR to point to Go modules cache
+  dotenv CACHE_DIR "${GOPATH}/pkg/mod"
+  # Export GOPATH for subsequent jobs
+  dotenv GOPATH "${GOPATH}"
+fi
+
 # When DOCKERFILE_BUILD_JDK_VERSION jdk version is set, automatically set corresponding image version
 # Only apply to Java projects (or when PROJECT_TYPE is not yet detected) to avoid setting unnecessary variables for other project types
 if [[ -z "${PROJECT_TYPE}" ]] || [[ "${PROJECT_TYPE}" == "java" ]]; then
