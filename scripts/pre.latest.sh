@@ -71,10 +71,11 @@ fi
 
 # Set project-specific cache directory based on PROJECT_TYPE
 # This ensures GitLab CI caches the correct dependency directories
+# NOTE: GitLab Runner uses volume mounts for caching, use those paths instead of project-local paths
 case "${PROJECT_TYPE}" in
   golang)
-    # Set GOPATH to project directory for GitLab CI cache compatibility
-    export GOPATH="${CI_PROJECT_DIR}/.go"
+    # Use Runner-mounted Go modules cache: /go/pkg/mod (mounted from host /root/go/pkg/mod)
+    export GOPATH="/go"
     mkdir -p "${GOPATH}/pkg/mod"
     dotenv CACHE_DIR "${GOPATH}/pkg/mod"
     dotenv GOPATH "${GOPATH}"
@@ -82,14 +83,14 @@ case "${PROJECT_TYPE}" in
   web)
     # Web projects: cache pnpm store or yarn cache
     if [ "${PACKAGE_MANAGER}" == 'yarn' ]; then
-      # Yarn global cache (offline mirror)
-      export YARN_CACHE_FOLDER="${CI_PROJECT_DIR}/.yarn-cache"
+      # Yarn global cache (use npm cache directory as fallback)
+      export YARN_CACHE_FOLDER="/root/.npm/yarn-cache"
       mkdir -p "${YARN_CACHE_FOLDER}"
       dotenv CACHE_DIR "${YARN_CACHE_FOLDER}"
       dotenv YARN_CACHE_FOLDER "${YARN_CACHE_FOLDER}"
     else
-      # pnpm store directory (default /root/.pnpm-store moved to project for caching)
-      export PNPM_STORE_DIR="${CI_PROJECT_DIR}/.pnpm-store"
+      # pnpm store directory (mounted from host /root/.pnpm-store)
+      export PNPM_STORE_DIR="/root/.pnpm-store"
       mkdir -p "${PNPM_STORE_DIR}"
       dotenv CACHE_DIR "${PNPM_STORE_DIR}"
       dotenv PNPM_STORE_DIR "${PNPM_STORE_DIR}"
@@ -98,14 +99,14 @@ case "${PROJECT_TYPE}" in
   java)
     # Java projects: cache Maven or Gradle dependencies
     if [ -f build.gradle ] || [ -f build.gradle.kts ]; then
-      # Gradle: cache gradle user home (wrapper, caches, distributions)
-      export GRADLE_USER_HOME="${CI_PROJECT_DIR}/.gradle"
+      # Gradle: use Runner-mounted cache (mounted from host /root/.gradle)
+      export GRADLE_USER_HOME="/root/.gradle"
       mkdir -p "${GRADLE_USER_HOME}/caches"
-      dotenv CACHE_DIR "${GRADLE_USER_HOME}"
+      dotenv CACHE_DIR "${GRADLE_USER_HOME}/caches"
       dotenv GRADLE_USER_HOME "${GRADLE_USER_HOME}"
     else
-      # Maven: cache local repository in project directory
-      export MAVEN_REPO_LOCAL="${CI_PROJECT_DIR}/.m2/repository"
+      # Maven: use Runner-mounted cache (mounted from host /root/.m2)
+      export MAVEN_REPO_LOCAL="/root/.m2/repository"
       export MAVEN_OPTS="-Dmaven.repo.local=${MAVEN_REPO_LOCAL}"
       mkdir -p "${MAVEN_REPO_LOCAL}"
       dotenv CACHE_DIR "${MAVEN_REPO_LOCAL}"
