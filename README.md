@@ -91,6 +91,35 @@ variables:
   BUILD_SHELL: "go build -o app ./..."
 ```
 
+### Golang + Node.js Project (Frontend Embedded in Go Binary)
+
+For projects that embed frontend static files into Go binaries (e.g., using `go:embed`):
+
+```yaml
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  # Use the multi-language builder image
+  BASE_BUILD_IMAGE: "docker.io/cdryzun/glci-builder-golang-nodejs:go1.23-node20"
+
+  # Build frontend first, then compile Go binary with embedded assets
+  BUILD_SHELL: |
+    cd web && pnpm install && pnpm build && cd .. \
+    && go mod tidy && go build -o app ./...
+
+  # Optional: customize frontend output directory
+  # STATIC_FILE_NAME: "web/dist"
+```
+
+**Available Golang+Node.js Images:**
+
+| Image | Go Version | Node.js Version |
+|-------|------------|-----------------|
+| `glci-builder-golang-nodejs:go1.22-node20` | 1.22 | 20 |
+| `glci-builder-golang-nodejs:go1.23-node20` | 1.23 | 20 |
+| `glci-builder-golang-nodejs:go1.23-node22` | 1.23 | 22 |
+
 ## Available Images
 
 All CI builder images are available on Docker Hub:
@@ -101,6 +130,7 @@ All CI builder images are available on Docker Hub:
 | `cdryzun/glci-builder-nodejs` | `18`, `20`, `24` | Node.js build with pnpm, yarn, npm |
 | `cdryzun/glci-builder-python` | `3.10`, `3.11`, `3.12` | Python build with pip, poetry |
 | `cdryzun/glci-builder-golang` | `1.21`, `1.22`, `1.23` | Go build environment |
+| `cdryzun/glci-builder-golang-nodejs` | `go1.22-node20`, `go1.23-node20`, `go1.23-node22` | Multi-language builder for Go + Node.js projects |
 | `cdryzun/glci-toolbox` | `latest` | Utility image with common tools |
 
 ## Directory Structure
