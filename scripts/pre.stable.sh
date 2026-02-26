@@ -88,15 +88,58 @@ elif [ -z "${BUILD_SHELL}" ] && [ "${PROJECT_TYPE}" == 'python' ];then
 fi
 
 # Set project-specific cache directory based on PROJECT_TYPE
-# For golang projects, set GOPATH to project directory and use it for caching
-if [ "${PROJECT_TYPE}" == "golang" ]; then
-  # Set GOPATH to project directory for GitLab CI cache compatibility
-  export GOPATH="${CI_PROJECT_DIR}/.go"
-  # Update CACHE_DIR to point to Go modules cache
-  dotenv CACHE_DIR "${GOPATH}/pkg/mod"
-  # Export GOPATH for subsequent jobs
-  dotenv GOPATH "${GOPATH}"
-fi
+# This ensures GitLab CI caches the correct dependency directories
+case "${PROJECT_TYPE}" in
+  golang)
+    # Set GOPATH to project directory for GitLab CI cache compatibility
+    export GOPATH="${CI_PROJECT_DIR}/.go"
+    mkdir -p "${GOPATH}/pkg/mod"
+    dotenv CACHE_DIR "${GOPATH}/pkg/mod"
+    dotenv GOPATH "${GOPATH}"
+    ;;
+  web)
+    # Web projects: cache pnpm store or yarn cache
+    if [ "${PACKAGE_MANAGER}" == 'yarn' ]; then
+      # Yarn global cache (offline mirror)
+      export YARN_CACHE_FOLDER="${CI_PROJECT_DIR}/.yarn-cache"
+      mkdir -p "${YARN_CACHE_FOLDER}"
+      dotenv CACHE_DIR "${YARN_CACHE_FOLDER}"
+      dotenv YARN_CACHE_FOLDER "${YARN_CACHE_FOLDER}"
+    else
+      # pnpm store directory (default /root/.pnpm-store moved to project for caching)
+      export PNPM_STORE_DIR="${CI_PROJECT_DIR}/.pnpm-store"
+      mkdir -p "${PNPM_STORE_DIR}"
+      dotenv CACHE_DIR "${PNPM_STORE_DIR}"
+      dotenv PNPM_STORE_DIR "${PNPM_STORE_DIR}"
+    fi
+    ;;
+  java)
+    # Java projects: cache Maven or Gradle dependencies
+    if [ -f build.gradle ] || [ -f build.gradle.kts ]; then
+      # Gradle: cache gradle user home (wrapper, caches, distributions)
+      export GRADLE_USER_HOME="${CI_PROJECT_DIR}/.gradle"
+      mkdir -p "${GRADLE_USER_HOME}/caches"
+      dotenv CACHE_DIR "${GRADLE_USER_HOME}"
+      dotenv GRADLE_USER_HOME "${GRADLE_USER_HOME}"
+    else
+      # Maven: cache local repository in project directory
+      export MAVEN_REPO_LOCAL="${CI_PROJECT_DIR}/.m2/repository"
+      export MAVEN_OPTS="-Dmaven.repo.local=${MAVEN_REPO_LOCAL}"
+      mkdir -p "${MAVEN_REPO_LOCAL}"
+      dotenv CACHE_DIR "${MAVEN_REPO_LOCAL}"
+      dotenv MAVEN_OPTS "${MAVEN_OPTS}"
+    fi
+    ;;
+  python|py_model)
+    # Python projects: disable cache by default (dependencies usually small)
+    # Users can override CACHE_DIR if needed for pip cache
+    dotenv CACHE_DIR ""
+    ;;
+  *)
+    # Default: use .cache directory (may not exist)
+    dotenv CACHE_DIR "${CI_PROJECT_DIR}/.cache"
+    ;;
+esac
 
 # When DOCKERFILE_BUILD_JDK_VERSION jdk version is set, automatically set corresponding image version
 # Only apply to Java projects (or when PROJECT_TYPE is not yet detected) to avoid setting unnecessary variables for other project types
