@@ -97,13 +97,12 @@ if [[ ! ${DOCKERFILE_BUILD_JDK_VERSION} =~ '8' ]];then
 fi
 
 # Unit test image list - maps PROJECT_TYPE to corresponding builder image
-# Project types: java, web, python, golang, golang_nodejs, py_model
+# Project types: java, web, python, golang, py_model
 declare -A UNIT_IMAGE_LIST=(
 	["java"]="${MAVEN_IMAGE}"
 	["web"]="${NODE_IMAGE}"
 	["python"]="${PYTHON_IMAGE}"
 	["golang"]="${GO_IMAGE}"
-	["golang_nodejs"]="${GOLANG_NODEJS_IMAGE}"
 	["py_model"]="${PYTHON_IMAGE}"
 )
 

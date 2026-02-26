@@ -121,7 +121,6 @@
   TOOLBOX_IMAGE: "docker.io/cdryzun/glci-toolbox:latest"
   PYTHON_IMAGE: "docker.io/cdryzun/glci-builder-python:3.11"
   GO_IMAGE: "docker.io/cdryzun/glci-builder-golang:1.23"
-  GOLANG_NODEJS_IMAGE: "docker.io/cdryzun/glci-builder-golang-nodejs:go1.23-node20"
   CD_DEPLOY_IMAGE: "${TOOLBOX_IMAGE}"
   TEST_IMAGE: "${TOOLBOX_IMAGE}"
 
