@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Actions](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/build-images.yml/badge.svg)](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/build-images.yml)
-[![Docker Pulls](https://img.shields.io/docker/pulls/cdryzun/glci-toolbox.svg)](https://hub.docker.com/u/cdryzun)
+[![GitHub Container Registry](https://img.shields.io/badge/ghcr.io-cdryzun-blue)](https://github.com/cdryzun?tab=packages)
 
 A collection of reusable GitLab CI/CD templates for streamlined, consistent, and maintainable delivery pipelines. Supports **Java**, **Node.js**, **Python**, and **Golang** projects with minimal configuration.
 
@@ -35,7 +35,7 @@ If you want to customize the registry or other settings:
 
 ```yaml
 variables:
-  # Docker registry (default: docker.io)
+  # Docker registry (default: docker.io for application images)
   DOCKER_REGISTRY: "docker.io"
 
   # SonarQube (optional)
@@ -101,7 +101,7 @@ include:
 
 variables:
   # Use the multi-language builder image
-  BASE_BUILD_IMAGE: "docker.io/cdryzun/glci-builder-golang-nodejs:go1.23-node20"
+  BASE_BUILD_IMAGE: "ghcr.io/cdryzun/glci-builder-golang-nodejs:go1.23-node20"
 
   # Build frontend first, then compile Go binary with embedded assets
   BUILD_SHELL: |
@@ -132,16 +132,16 @@ variables:
 
 ## Available Images
 
-All CI builder images are available on Docker Hub:
+All CI builder images are available on GitHub Container Registry:
 
 | Image | Tags | Description |
 |-------|------|-------------|
-| `cdryzun/glci-builder-java` | `jdk8`, `jdk11`, `jdk17` | Java build with Maven, Gradle, SonarScanner |
-| `cdryzun/glci-builder-nodejs` | `18`, `20`, `24` | Node.js build with pnpm, yarn, npm |
-| `cdryzun/glci-builder-python` | `3.10`, `3.11`, `3.12` | Python build with pip, poetry |
-| `cdryzun/glci-builder-golang` | `1.21`, `1.22`, `1.23` | Go build environment |
-| `cdryzun/glci-builder-golang-nodejs` | `go1.22-node20`, `go1.22-node22`, `go1.23-node20`, `go1.23-node22`, `go1.24-node20`, `go1.24-node22`, `go1.24-node24`, `go1.25-node22`, `go1.25-node24`, `go1.25-node25`, `go1.26-node22`, `go1.26-node24`, `go1.26-node25` | Multi-language builder for Go + Node.js projects |
-| `cdryzun/glci-toolbox` | `latest` | Utility image with common tools |
+| `ghcr.io/cdryzun/glci-builder-java` | `jdk8`, `jdk11`, `jdk17` | Java build with Maven, Gradle, SonarScanner |
+| `ghcr.io/cdryzun/glci-builder-nodejs` | `18`, `20`, `24` | Node.js build with pnpm, yarn, npm |
+| `ghcr.io/cdryzun/glci-builder-python` | `3.10`, `3.11`, `3.12` | Python build with pip, poetry |
+| `ghcr.io/cdryzun/glci-builder-golang` | `1.21`, `1.22`, `1.23` | Go build environment |
+| `ghcr.io/cdryzun/glci-builder-golang-nodejs` | `go1.22-node20`, `go1.22-node22`, `go1.23-node20`, `go1.23-node22`, `go1.24-node20`, `go1.24-node22`, `go1.24-node24`, `go1.25-node22`, `go1.25-node24`, `go1.25-node25`, `go1.26-node22`, `go1.26-node24`, `go1.26-node25` | Multi-language builder for Go + Node.js projects |
+| `ghcr.io/cdryzun/glci-toolbox` | `latest` | Utility image with common tools |
 
 ## Directory Structure
 

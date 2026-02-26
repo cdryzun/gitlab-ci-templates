@@ -17,7 +17,7 @@ variables:
   PRD_BUILD_CREATE_TAG: "true"
   FEAT_DOCKER_IMAGE_BUILD: "true"
   FEAT_CD_AUTO_DEPLOY: "true"
-  BASE_BUILD_IMAGE: "docker.io/cdryzun/glci-builder-golang:1.23"
+  BASE_BUILD_IMAGE: "ghcr.io/cdryzun/glci-builder-golang:1.23"
 
   # ========== Multi-architecture Precompile Configuration (Add 3 lines) ==========
   MULTIARCH_BUILD_ENABLE: "true"

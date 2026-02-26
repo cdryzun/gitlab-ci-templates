@@ -4,10 +4,10 @@ This directory contains the source code for all Docker images used by gitlab-ci-
 
 ## Image Registry
 
-All images are published to Docker Hub:
+All images are published to GitHub Container Registry:
 
 ```
-docker.io/cdryzun/glci-<type>:<tag>
+ghcr.io/cdryzun/glci-<type>:<tag>
 ```
 
 ## Available Images
@@ -20,6 +20,7 @@ docker.io/cdryzun/glci-<type>:<tag>
 | `glci-builder-nodejs` | `18`, `20`, `24` | Node.js build with pnpm/yarn/npm |
 | `glci-builder-python` | `3.10`, `3.11`, `3.12` | Python build with pip/poetry |
 | `glci-builder-golang` | `1.21`, `1.22`, `1.23` | Go build environment |
+| `glci-builder-golang-nodejs` | `go1.22-node20`, `go1.23-node20`, etc. | Multi-language builder for Go + Node.js |
 | `glci-toolbox` | `latest` | Utility image with common tools |
 
 ### Runtime Images (Application Runtime)
@@ -36,24 +37,24 @@ docker.io/cdryzun/glci-<type>:<tag>
 
 ```yaml
 variables:
-  MAVEN_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
-  NODE_IMAGE: "docker.io/cdryzun/glci-builder-nodejs:24"
-  PYTHON_IMAGE: "docker.io/cdryzun/glci-builder-python:3.11"
-  GO_IMAGE: "docker.io/cdryzun/glci-builder-golang:1.23"
-  TOOLBOX_IMAGE: "docker.io/cdryzun/glci-toolbox:latest"
+  MAVEN_IMAGE: "ghcr.io/cdryzun/glci-builder-java:jdk17"
+  NODE_IMAGE: "ghcr.io/cdryzun/glci-builder-nodejs:24"
+  PYTHON_IMAGE: "ghcr.io/cdryzun/glci-builder-python:3.11"
+  GO_IMAGE: "ghcr.io/cdryzun/glci-builder-golang:1.23"
+  TOOLBOX_IMAGE: "ghcr.io/cdryzun/glci-toolbox:latest"
 ```
 
 ### Pull Images
 
 ```bash
 # Java builder
-docker pull cdryzun/glci-builder-java:jdk17
+docker pull ghcr.io/cdryzun/glci-builder-java:jdk17
 
 # Node.js builder
-docker pull cdryzun/glci-builder-nodejs:24
+docker pull ghcr.io/cdryzun/glci-builder-nodejs:24
 
 # Toolbox
-docker pull cdryzun/glci-toolbox:latest
+docker pull ghcr.io/cdryzun/glci-toolbox:latest
 ```
 
 ## Building Images Locally

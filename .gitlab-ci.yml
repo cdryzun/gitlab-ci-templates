@@ -29,7 +29,7 @@
 #     TF_PLUGIN_CACHE_DIR: "/root/.terraform.d/plugin-cache"
 #     VAULT_ADDR: "https://vault.example.com"
 #     extends: .default_vars
-#   image: docker.io/cdryzun/glci-toolbox:latest
+#   image: ghcr.io/cdryzun/glci-toolbox:latest
 #   script:
 #     - |
 #       sh scripts/secretsToFile.stable.sh

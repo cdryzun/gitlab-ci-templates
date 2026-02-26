@@ -1,5 +1,5 @@
 # Open Source Version - Default Variables
-# All images are hosted on Docker Hub: docker.io/cdryzun/glci-*
+# All images are hosted on GitHub Container Registry: ghcr.io/cdryzun/glci-*
 
 .default_vars:
     # Runner tag
@@ -99,16 +99,16 @@
   PRD_CD_CREATE_TAG: "true"
   DOCKERFILE_BUILD_JDK_VERSION: "17-alpine"
 
-# Default images - Using Docker Hub public images
+# Default images - Using GitHub Container Registry public images
 .default_image_vars:
   BASE_BUILD_IMAGE: ""
-  MAVEN_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
-  GRADLE_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
-  NODE_IMAGE: "docker.io/cdryzun/glci-builder-nodejs:20"
-  SONAR_IMAGE: "docker.io/cdryzun/glci-builder-java:jdk17"
-  TOOLBOX_IMAGE: "docker.io/cdryzun/glci-toolbox:latest"
-  PYTHON_IMAGE: "docker.io/cdryzun/glci-builder-python:3.11"
-  GO_IMAGE: "docker.io/cdryzun/glci-builder-golang:1.23"
+  MAVEN_IMAGE: "ghcr.io/cdryzun/glci-builder-java:jdk17"
+  GRADLE_IMAGE: "ghcr.io/cdryzun/glci-builder-java:jdk17"
+  NODE_IMAGE: "ghcr.io/cdryzun/glci-builder-nodejs:20"
+  SONAR_IMAGE: "ghcr.io/cdryzun/glci-builder-java:jdk17"
+  TOOLBOX_IMAGE: "ghcr.io/cdryzun/glci-toolbox:latest"
+  PYTHON_IMAGE: "ghcr.io/cdryzun/glci-builder-python:3.11"
+  GO_IMAGE: "ghcr.io/cdryzun/glci-builder-golang:1.23"
   CD_DEPLOY_IMAGE: "${TOOLBOX_IMAGE}"
   TEST_IMAGE: "${TOOLBOX_IMAGE}"
 
