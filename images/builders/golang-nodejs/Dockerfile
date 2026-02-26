@@ -50,9 +50,9 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
         npm install -g pnpm yarn; \
     fi
 
-# Install common Go tools
+# Install common Go tools (use compatible versions for Go 1.22+)
 RUN go install github.com/swaggo/swag/cmd/swag@latest \
-    && go install github.com/go-delve/delve/cmd/dlv@latest \
+    && go install github.com/go-delve/delve/cmd/dlv@v1.23.1 \
     && go install golang.org/x/lint/golint@latest \
     && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
