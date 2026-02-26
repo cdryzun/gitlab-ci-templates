@@ -1,6 +1,7 @@
 pre:
   stage: .pre
   image: ${TOOLBOX_IMAGE}
+  cache: []  # Pre job doesn't need cache - it only sets environment variables
   extends:
     - .runner_tag
     - .load_artifacts_env
