@@ -70,12 +70,15 @@ elif [ -z "${BUILD_SHELL}" ] && [ "${PROJECT_TYPE}" == 'python' ];then
 fi
 
 # When DOCKERFILE_BUILD_JDK_VERSION jdk version is set, automatically set corresponding image version
-if [[ ! ${DOCKERFILE_BUILD_JDK_VERSION} =~ '8' ]];then
-    _jdk_version=$(echo ${DOCKERFILE_BUILD_JDK_VERSION}|awk -F '-' '{print $1}')
-    _MAVEN_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
-    _SONAR_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
-    dotenv MAVEN_IMAGE ${_MAVEN_IMAGE}
-    dotenv SONAR_IMAGE ${_SONAR_IMAGE}
+# Only apply to Java projects (or when PROJECT_TYPE is not yet detected) to avoid setting unnecessary variables for other project types
+if [[ -z "${PROJECT_TYPE}" ]] || [[ "${PROJECT_TYPE}" == "java" ]]; then
+  if [[ -n "${DOCKERFILE_BUILD_JDK_VERSION}" ]] && [[ ! ${DOCKERFILE_BUILD_JDK_VERSION} =~ '8' ]];then
+      _jdk_version=$(echo ${DOCKERFILE_BUILD_JDK_VERSION}|awk -F '-' '{print $1}')
+      _MAVEN_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
+      _SONAR_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
+      dotenv MAVEN_IMAGE ${_MAVEN_IMAGE}
+      dotenv SONAR_IMAGE ${_SONAR_IMAGE}
+  fi
 fi
 
 # Unit test image list - maps PROJECT_TYPE to corresponding builder image
