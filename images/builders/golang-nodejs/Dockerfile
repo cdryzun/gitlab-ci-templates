@@ -29,7 +29,7 @@ ENV GO_VERSION=${GO_VERSION} \
     GOOS=linux \
     DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies and copy Node.js from official image
+# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     make \
@@ -39,14 +39,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=node-stage /usr/local/bin/node /usr/local/bin/node
 COPY --from=node-stage /usr/local/lib/node_modules /usr/local/lib/node_modules
 
-# Create symlinks for npm, npx, corepack
+# Create symlinks for npm, npx, corepack (if available)
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
-    && ln -s /usr/local/lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack
-
-# Enable corepack and install package managers
-RUN corepack enable \
-    && corepack prepare pnpm@latest --activate
+    && if [ -f /usr/local/lib/node_modules/corepack/dist/corepack.js ]; then \
+        ln -s /usr/local/lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack \
+        && corepack enable \
+        && corepack prepare pnpm@latest --activate; \
+    else \
+        npm install -g pnpm yarn; \
+    fi
 
 # Install common Go tools
 RUN go install github.com/swaggo/swag/cmd/swag@latest \
