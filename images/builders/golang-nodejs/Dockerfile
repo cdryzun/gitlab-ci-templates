@@ -50,11 +50,16 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
         npm install -g pnpm yarn; \
     fi
 
-# Install common Go tools (use compatible versions for Go 1.22+)
+# Install common Go tools
+# golangci-lint v1.64+ requires Go 1.23+, use v1.55.2 for Go 1.22
 RUN go install github.com/swaggo/swag/cmd/swag@latest \
     && go install github.com/go-delve/delve/cmd/dlv@v1.23.1 \
     && go install golang.org/x/lint/golint@latest \
-    && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    && if [ "${GO_VERSION}" = "1.22" ]; then \
+        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2; \
+    else \
+        go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; \
+    fi
 
 # Set working directory
 WORKDIR /workspace
