@@ -35,12 +35,23 @@ if [ "${RELEASE_BUILD}" == 'true' ];then
   dotenv BUILD_ENV prd
   dotenv REMOTE_BRANCH prd
 else
-  if [ ${_CI_COMMIT_REF_NAME} == 'sit' -o ${_CI_COMMIT_REF_NAME} == 'prd' ];then
-    dotenv BUILD_ENV ${_CI_COMMIT_REF_NAME}
-    dotenv REMOTE_BRANCH ${_CI_COMMIT_REF_NAME}
+  if [ "${_CI_COMMIT_REF_NAME}" == 'sit' -o "${_CI_COMMIT_REF_NAME}" == 'prd' ];then
+    if [[ -n "${CUSTOME_REMOTE_SIT_BRANCH}" ]];then
+      dotenv BUILD_ENV ${CUSTOME_REMOTE_SIT_BRANCH}
+      dotenv REMOTE_BRANCH ${CUSTOME_REMOTE_SIT_BRANCH}
+    else
+      dotenv BUILD_ENV ${_CI_COMMIT_REF_NAME}
+      dotenv REMOTE_BRANCH ${_CI_COMMIT_REF_NAME}
+    fi
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}-${BUILD_TIME}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
   elif [[ ${_CI_COMMIT_REF_NAME} =~ ^prd-.*+$ ]];then
-    dotenv REMOTE_BRANCH prd
+    if [[ -n "${CUSTOME_REMOTE_PRD_BRANCH}" ]];then
+      dotenv BUILD_ENV ${CUSTOME_REMOTE_PRD_BRANCH}
+      dotenv REMOTE_BRANCH ${CUSTOME_REMOTE_PRD_BRANCH}
+    else
+      dotenv BUILD_ENV prd
+      dotenv REMOTE_BRANCH prd
+    fi
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}"
   elif [[ ${_CI_COMMIT_REF_NAME} =~ ^feat.*$ ]] || [[ ${_CI_COMMIT_REF_NAME} =~ ^feature.*$ ]];then
     # feat/feature branch recognition, deployment target is dev environment

@@ -42,7 +42,7 @@ if [ "${RELEASE_BUILD}" == 'true' ];then
   dotenv BUILD_ENV prd
   dotenv REMOTE_BRANCH prd
 else
-  if [ ${_CI_COMMIT_REF_NAME} == 'sit' -o ${_CI_COMMIT_REF_NAME} == 'prd' ];then
+  if [ "${_CI_COMMIT_REF_NAME}" == 'sit' -o "${_CI_COMMIT_REF_NAME}" == 'prd' ];then
     if [[ -n "${CUSTOME_REMOTE_SIT_BRANCH}" ]];then
       dotenv BUILD_ENV ${CUSTOME_REMOTE_SIT_BRANCH}
       dotenv REMOTE_BRANCH ${CUSTOME_REMOTE_SIT_BRANCH}
@@ -242,4 +242,3 @@ fi
 #       dotenv RETAG_IMGAE_NAME ''
 #    fi
 # fi
-
