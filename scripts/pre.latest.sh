@@ -46,6 +46,7 @@ else
     # feat/feature branch recognition, deployment target is dev environment
     dotenv BUILD_ENV feat
     dotenv REMOTE_BRANCH dev
+    dotenv FEAT_BRANCH "true"
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}-${BUILD_TIME}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
   else
     dotenv BUILD_ENV dev
@@ -129,8 +130,8 @@ esac
 if [[ -z "${PROJECT_TYPE}" ]] || [[ "${PROJECT_TYPE}" == "java" ]]; then
   if [[ -n "${DOCKERFILE_BUILD_JDK_VERSION}" ]] && [[ ! ${DOCKERFILE_BUILD_JDK_VERSION} =~ '8' ]];then
       _jdk_version=$(echo ${DOCKERFILE_BUILD_JDK_VERSION}|awk -F '-' '{print $1}')
-      _MAVEN_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
-      _SONAR_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
+      _MAVEN_IMAGE="ghcr.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
+      _SONAR_IMAGE="ghcr.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
       dotenv MAVEN_IMAGE ${_MAVEN_IMAGE}
       dotenv SONAR_IMAGE ${_SONAR_IMAGE}
   fi
