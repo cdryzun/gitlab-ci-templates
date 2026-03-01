@@ -42,7 +42,7 @@ fi
 _CUSTOM_REMOTE_SIT_BRANCH="${CUSTOM_REMOTE_SIT_BRANCH:-${CUSTOME_REMOTE_SIT_BRANCH}}"
 _CUSTOM_REMOTE_PRD_BRANCH="${CUSTOM_REMOTE_PRD_BRANCH:-${CUSTOME_REMOTE_PRD_BRANCH}}"
 if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
-  _CI_COMMIT_REF_NAME=$(echo "${_CI_COMMIT_REF_NAME}" | sed "s#v##g") # Remove v from docker Tag name
+  _CI_COMMIT_REF_NAME="${_CI_COMMIT_REF_NAME#v}" # Remove leading v from docker Tag name
   dotenv DOCKER_IMAGE_TAG ${_CI_COMMIT_REF_NAME}
   dotenv BUILD_ENV prd
   dotenv REMOTE_BRANCH prd
@@ -199,7 +199,7 @@ fi
 #  Determine whether feat feature branch builds Docker image
 if [[ "${FEAT_BRANCH,,}" == 'true' ]];then
   if [[ "${FEAT_DOCKER_IMAGE_BUILD,,}" == 'true' ]];then
-    dotenv DOCKER_IMAGE_BUILD "${FEAT_DOCKER_IMAGE_BUILD}"
+    dotenv DOCKER_IMAGE_BUILD "true"
   else
     dotenv DOCKER_IMAGE_BUILD 'false'
   fi
@@ -228,12 +228,13 @@ elif [ -f "${CI_PROJECT_DIR}/Dockerfile" ];then
 fi
 
 if [ -n "${DOCKERFILE_TO_CHECK}" ];then
-  # if [ $(cat ${DOCKERFILE_TO_CHECK}|egrep -v "^#|^$"|egrep "^(ENTRYPOINT|USER|WORKDIR|HEALTHCHECK|LABEL|MAINTAINER|CMD)"|wc -l) -gt 0 ];then
-  #     echo "${Error} Invalid instructions detected in custom Dockerfile (${DOCKERFILE_TO_CHECK})"
-  #     exit 1
-  # else
+  if [[ "${CUSTOM_DOCKERFILE_STRICT_CHECK,,}" == 'true' ]];then
+    if [ $(cat "${DOCKERFILE_TO_CHECK}"|egrep -v "^#|^$"|egrep "^(ENTRYPOINT|USER|WORKDIR|HEALTHCHECK|LABEL|MAINTAINER|CMD)"|wc -l) -gt 0 ];then
+        echo "${Error} Invalid instructions detected in custom Dockerfile (${DOCKERFILE_TO_CHECK})"
+        exit 1
+    fi
+  fi
   dotenv CUSTOM_DOCKERFILE 'true'
-  # fi
 fi
 
 # # For tag builds based on release branch retag, image is not rebuilt
