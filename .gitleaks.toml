@@ -1,0 +1,66 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks#configuration
+
+title = "Gitleaks Secret Scan Configuration"
+
+[extend]
+# Use the default gitleaks configuration as base
+useDefault = true
+
+# Custom rules for this project
+[[rules]]
+id = "terraform-aws-credentials"
+description = "Terraform AWS/MinIO Credentials"
+regex = '''(?i)(access_key|secret_key)\s*=\s*["'][a-zA-Z0-9]{16,}["']'''
+tags = ["terraform", "aws", "minio"]
+[rules.allowlist]
+regexes = [
+    '''var\.(access_key|secret_key)''',
+    '''AWS_ACCESS_KEY_ID''',
+    '''AWS_SECRET_ACCESS_KEY''',
+]
+
+[[rules]]
+id = "gitlab-token"
+description = "GitLab Personal Access Token"
+regex = '''glpat-[a-zA-Z0-9]{20,}'''
+tags = ["gitlab", "token"]
+
+[[rules]]
+id = "docker-registry-password"
+description = "Docker Registry Password"
+regex = '''(?i)(docker_password|registry_password)\s*[:=]\s*["'][^"']{8,}["']'''
+tags = ["docker", "registry"]
+[rules.allowlist]
+regexes = [
+    '''\$\{.*PASSWORD\}''',
+    '''var\.registry_password''',
+]
+
+# Allowlist - files/patterns to ignore
+[allowlist]
+description = "Global allowlist"
+paths = [
+    '''^\.git/''',
+    '''^\.gitleaks\.toml$''',
+    '''terraform\.tfvars\.example$''',
+    '''docs/.*\.md$''',
+]
+
+regexes = [
+    # Environment variable references
+    '''\$\{[A-Z_]+\}''',
+    '''var\.[a-z_]+''',
+
+    # Example/placeholder values
+    '''your-(password|token|key)-here''',
+    '''example-(password|token)''',
+    '''xxx+''',
+
+    # Public keys (safe to commit)
+    '''ssh-rsa''',
+    '''ssh-ed25519''',
+
+    # Base64 encoded empty strings or simple patterns
+    '''^[A-Za-z0-9+/]{0,10}={0,2}$''',
+]

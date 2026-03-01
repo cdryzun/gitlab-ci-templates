@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, open ]
+  pull_request:
+    branches: [ main, open ]
+
+jobs:
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        # Fetch full history so gitleaks can scan all commits, not just HEAD
+        fetch-depth: 0
+
+    - name: Run gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # Only required for organizations
+      with:
+        config-path: .gitleaks.toml
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [secret-scan]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run tests
+      run: |
+        echo "Running tests..."
+        # Add your test commands here
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: [secret-scan]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Lint YAML files
+      run: |
+        pip install yamllint
+        yamllint -d "{extends: relaxed, rules: {line-length: {max: 120}}}" templates/*.yml jobs-templates/*.yml || true
+
+    - name: Lint Shell scripts
+      run: |
+        pip install shellcheck-py
+        shellcheck scripts/*.sh || true
