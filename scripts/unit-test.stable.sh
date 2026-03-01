@@ -34,6 +34,13 @@ function unit_test() {
       # Gradle project
       shell_exec "${_JAVA_UNIT_TEST_SHELL:-'gradle test'}"
     fi
+  elif [ "${PROJECT_TYPE}" == "python" ] || [ "${PROJECT_TYPE}" == "py_model" ]; then
+    # Python projects: install dependencies first, then run tests
+    if [ -f requirements.txt ]; then
+      echo "${Info}Installing Python dependencies from requirements.txt..."
+      pip3 install -r requirements.txt -i ${PYPI}
+    fi
+    shell_exec "${UNIT_TEST_CMD[${PROJECT_TYPE}]}"
   else
     shell_exec "${UNIT_TEST_CMD[${PROJECT_TYPE}]}"
   fi
