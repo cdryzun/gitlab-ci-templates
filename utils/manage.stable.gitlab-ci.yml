@@ -1,6 +1,7 @@
 .general_stage:
   stages:
     - sonar
+    - test
     - build
     - scan
     - deploy
