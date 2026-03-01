@@ -136,6 +136,70 @@ check_dockerfile_strict_false() {
   assert_env_equals "$env_file" "CUSTOM_DOCKERFILE" "true"
 }
 
+# --- New test cases ---
+
+# Branch name with slashes should be converted to dashes
+setup_branch_slash_convert() {
+  local dir="$1"
+  export CI_COMMIT_REF_NAME='feature/user/login'
+}
+
+check_branch_slash_convert() {
+  local env_file="$1"
+  assert_env_equals "$env_file" "_CI_COMMIT_REF_NAME" "feature-user-login"
+}
+
+# prd-* branch with no custom override falls back to prd
+setup_prd_hotfix_no_custom() {
+  local dir="$1"
+  export CI_COMMIT_REF_NAME='prd-hotfix'
+}
+
+check_prd_hotfix_no_custom() {
+  local env_file="$1"
+  assert_env_equals "$env_file" "BUILD_ENV" "prd"
+  assert_env_equals "$env_file" "REMOTE_BRANCH" "prd"
+}
+
+# Custom JDK version: DOCKERFILE_BUILD_JDK_VERSION=21-alpine → MAVEN_IMAGE jdk21
+setup_custom_jdk_version() {
+  local dir="$1"
+  echo '<project></project>' > "$dir/pom.xml"
+  rm -f "$dir/package.json"
+  export PROJECT_TYPE='java'
+  export CI_COMMIT_REF_NAME='dev'
+  export DOCKERFILE_BUILD_JDK_VERSION='21-alpine'
+}
+
+check_custom_jdk_version() {
+  local env_file="$1"
+  assert_env_equals "$env_file" "MAVEN_IMAGE" "ghcr.io/cdryzun/glci-builder-java:jdk21"
+}
+
+# FEAT_BRANCH unset on non-feat branch: DOCKER_IMAGE_BUILD should not be forced false
+setup_non_feat_branch() {
+  local dir="$1"
+  export CI_COMMIT_REF_NAME='dev'
+}
+
+check_non_feat_branch() {
+  local env_file="$1"
+  assert_env_equals "$env_file" "BUILD_ENV" "dev"
+  assert_env_equals "$env_file" "REMOTE_BRANCH" "dev"
+}
+
+# PRD_BUILD_CREATE_TAG should be reset to false when REMOTE_BRANCH != prd
+setup_prd_create_tag_non_prd() {
+  local dir="$1"
+  export CI_COMMIT_REF_NAME='sit'
+  export PRD_BUILD_CREATE_TAG='true'
+}
+
+check_prd_create_tag_non_prd() {
+  local env_file="$1"
+  assert_env_equals "$env_file" "PRD_BUILD_CREATE_TAG" "false"
+}
+
 main() {
   bash -n "$ROOT_DIR/scripts/pre.latest.sh"
   bash -n "$ROOT_DIR/scripts/pre.stable.sh"
@@ -146,6 +210,11 @@ main() {
     run_case "$script" setup_release_tag check_release_tag
     run_case "$script" setup_prd_hotfix_custom check_prd_hotfix_custom
     run_case "$script" setup_dockerfile_strict_false check_dockerfile_strict_false
+    run_case "$script" setup_branch_slash_convert check_branch_slash_convert
+    run_case "$script" setup_prd_hotfix_no_custom check_prd_hotfix_no_custom
+    run_case "$script" setup_custom_jdk_version check_custom_jdk_version
+    run_case "$script" setup_non_feat_branch check_non_feat_branch
+    run_case "$script" setup_prd_create_tag_non_prd check_prd_create_tag_non_prd
   done
 
   echo "All pre-script matrix tests passed."

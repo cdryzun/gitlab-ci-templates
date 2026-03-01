@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail # Enable strict mode: exit on error, undefined vars, and pipe failures
 
 # Load utility classes and module scripts
 for sh in _*.sh
@@ -39,9 +40,9 @@ fi
 # Backward-compatible custom remote branch overrides:
 # - Prefer correctly spelled CUSTOM_REMOTE_* variables
 # - Keep supporting legacy CUSTOME_REMOTE_* variables
-_CUSTOM_REMOTE_SIT_BRANCH="${CUSTOM_REMOTE_SIT_BRANCH:-${CUSTOME_REMOTE_SIT_BRANCH}}"
-_CUSTOM_REMOTE_PRD_BRANCH="${CUSTOM_REMOTE_PRD_BRANCH:-${CUSTOME_REMOTE_PRD_BRANCH}}"
-if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
+_CUSTOM_REMOTE_SIT_BRANCH="${CUSTOM_REMOTE_SIT_BRANCH:-${CUSTOME_REMOTE_SIT_BRANCH:-}}"
+_CUSTOM_REMOTE_PRD_BRANCH="${CUSTOM_REMOTE_PRD_BRANCH:-${CUSTOME_REMOTE_PRD_BRANCH:-}}"
+if [[ "${RELEASE_BUILD:-false}" == [Tt][Rr][Uu][Ee] ]];then
   _CI_COMMIT_REF_NAME="${_CI_COMMIT_REF_NAME#v}" # Remove leading v from docker Tag name
   dotenv DOCKER_IMAGE_TAG ${_CI_COMMIT_REF_NAME}
   dotenv BUILD_ENV prd
@@ -81,7 +82,7 @@ fi
 # Combine image & tag into complete image name
 dotenv DOCKER_IMAGE_NAME "${IMG_NAME}:${DOCKER_IMAGE_TAG}"
 
-if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
+if [[ "${RELEASE_BUILD:-false}" == [Tt][Rr][Uu][Ee] ]];then
   dotenv RELEASE_BUILD "${RELEASE_BUILD}"
 fi
 
@@ -100,7 +101,7 @@ case "${PROJECT_TYPE}" in
   golang)
     # Use Runner-mounted Go modules cache: /go/pkg/mod (mounted from host /root/go/pkg/mod)
     export GOPATH="/go"
-    mkdir -p "${GOPATH}/pkg/mod"
+    mkdir -p "${GOPATH}/pkg/mod" || true
     dotenv CACHE_DIR "${GOPATH}/pkg/mod"
     dotenv GOPATH "${GOPATH}"
     ;;
@@ -109,13 +110,13 @@ case "${PROJECT_TYPE}" in
     if [ "${PACKAGE_MANAGER}" == 'yarn' ]; then
       # Yarn global cache (use npm cache directory as fallback)
       export YARN_CACHE_FOLDER="/root/.npm/yarn-cache"
-      mkdir -p "${YARN_CACHE_FOLDER}"
+      mkdir -p "${YARN_CACHE_FOLDER}" || true
       dotenv CACHE_DIR "${YARN_CACHE_FOLDER}"
       dotenv YARN_CACHE_FOLDER "${YARN_CACHE_FOLDER}"
     else
       # pnpm store directory (mounted from host /root/.pnpm-store)
       export PNPM_STORE_DIR="/root/.pnpm-store"
-      mkdir -p "${PNPM_STORE_DIR}"
+      mkdir -p "${PNPM_STORE_DIR}" || true
       dotenv CACHE_DIR "${PNPM_STORE_DIR}"
       dotenv PNPM_STORE_DIR "${PNPM_STORE_DIR}"
     fi
@@ -125,14 +126,14 @@ case "${PROJECT_TYPE}" in
     if [ -f build.gradle ] || [ -f build.gradle.kts ]; then
       # Gradle: use Runner-mounted cache (mounted from host /root/.gradle)
       export GRADLE_USER_HOME="/root/.gradle"
-      mkdir -p "${GRADLE_USER_HOME}/caches"
+      mkdir -p "${GRADLE_USER_HOME}/caches" || true
       dotenv CACHE_DIR "${GRADLE_USER_HOME}/caches"
       dotenv GRADLE_USER_HOME "${GRADLE_USER_HOME}"
     else
       # Maven: use Runner-mounted cache (mounted from host /root/.m2)
       export MAVEN_REPO_LOCAL="/root/.m2/repository"
       export MAVEN_OPTS="-Dmaven.repo.local=${MAVEN_REPO_LOCAL}"
-      mkdir -p "${MAVEN_REPO_LOCAL}"
+      mkdir -p "${MAVEN_REPO_LOCAL}" || true
       dotenv CACHE_DIR "${MAVEN_REPO_LOCAL}"
       dotenv MAVEN_OPTS "${MAVEN_OPTS}"
     fi
@@ -197,8 +198,8 @@ fi
 # fi
 
 #  Determine whether feat feature branch builds Docker image
-if [[ "${FEAT_BRANCH,,}" == 'true' ]];then
-  if [[ "${FEAT_DOCKER_IMAGE_BUILD,,}" == 'true' ]];then
+if [[ "${FEAT_BRANCH:-}" == 'true' ]];then
+  if [[ "${FEAT_DOCKER_IMAGE_BUILD:-false}" == [Tt][Rr][Uu][Ee] ]];then
     dotenv DOCKER_IMAGE_BUILD "true"
   else
     dotenv DOCKER_IMAGE_BUILD 'false'

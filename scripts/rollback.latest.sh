@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -euo pipefail # Enable strict mode: exit on error, undefined vars, and pipe failures
 
 # printenv
 

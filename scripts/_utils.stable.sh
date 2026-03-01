@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Debug mode - only enable when explicitly requested
-if [ "${CI_DEBUG_TRACE}" == 'true' ];then
+if [ "${CI_DEBUG_TRACE:-}" == 'true' ];then
   LOG_LEVEL=debug
   set -x
 fi
@@ -142,7 +142,7 @@ fi
 function depthProjectExec() {
   if [ "${depth1_file_num}" -eq 1 ];then  # Check if there is a corresponding project file in the first level directory
     project_type_info `find . -maxdepth 1 -regex "${PROJECT_TYPE_REX}"|sed "s#./##g"` ${CI_PROJECT_NAME}
-    if [ ${1} ];then
+    if [ "${1:-}" ];then
       ${1} ${CI_PROJECT_NAME}
     fi
   elif [ "${depth1_file_num}" -gt 1 ];then # Error if multiple project files exist in the first level directory

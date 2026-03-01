@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail # Enable strict mode: exit on error, undefined vars, and pipe failures
 
 # Load utility classes and module scripts
 for sh in _*.sh
@@ -19,10 +20,10 @@ dotenv LOG_LEVEL ${LOG_LEVEL}
 # For Docker Hub, use DOCKER_HUB_ORGANIZATION instead of CI_PROJECT_NAMESPACE
 # because Docker Hub only supports single-level organization/username
 # Also flatten multi-level namespace into image name to avoid conflicts
-if [ "${DOCKER_REGISTRY}" = "docker.io" ]; then
+if [[ "${DOCKER_REGISTRY}" == "docker.io" ]]; then
   # Flatten namespace: replace / with -
   _flat_namespace=$(echo "${CI_PROJECT_NAMESPACE}" | tr '/' '-')
-  if [ -n "${DOCKER_HUB_ORGANIZATION}" ]; then
+  if [[ -n "${DOCKER_HUB_ORGANIZATION}" ]]; then
     # Docker Hub format: docker.io/{organization}/{namespace-project}
     # Use _ to separate flattened namespace and project name
     dotenv IMG_NAME ${DOCKER_REGISTRY}/${DOCKER_HUB_ORGANIZATION}/${_flat_namespace}_${CI_PROJECT_NAME}
@@ -39,9 +40,9 @@ fi
 # Backward-compatible custom remote branch overrides:
 # - Prefer correctly spelled CUSTOM_REMOTE_* variables
 # - Keep supporting legacy CUSTOME_REMOTE_* variables
-_CUSTOM_REMOTE_SIT_BRANCH="${CUSTOM_REMOTE_SIT_BRANCH:-${CUSTOME_REMOTE_SIT_BRANCH}}"
-_CUSTOM_REMOTE_PRD_BRANCH="${CUSTOM_REMOTE_PRD_BRANCH:-${CUSTOME_REMOTE_PRD_BRANCH}}"
-if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
+_CUSTOM_REMOTE_SIT_BRANCH="${CUSTOM_REMOTE_SIT_BRANCH:-${CUSTOME_REMOTE_SIT_BRANCH:-}}"
+_CUSTOM_REMOTE_PRD_BRANCH="${CUSTOM_REMOTE_PRD_BRANCH:-${CUSTOME_REMOTE_PRD_BRANCH:-}}"
+if [[ "${RELEASE_BUILD:-false}" == [Tt][Rr][Uu][Ee] ]];then
   _CI_COMMIT_REF_NAME="${_CI_COMMIT_REF_NAME#v}" # Remove leading v from docker Tag name
   dotenv DOCKER_IMAGE_TAG ${_CI_COMMIT_REF_NAME}
   dotenv BUILD_ENV prd
@@ -81,14 +82,14 @@ fi
 # Combine image & tag into complete image name
 dotenv DOCKER_IMAGE_NAME "${IMG_NAME}:${DOCKER_IMAGE_TAG}"
 
-if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
+if [[ "${RELEASE_BUILD:-false}" == [Tt][Rr][Uu][Ee] ]];then
   dotenv RELEASE_BUILD "${RELEASE_BUILD}"
 fi
 
 # If current project type is not specified, automatically match what code type the current project is, output $PROJECT_TYPE
-if [ -z "${PROJECT_TYPE}" ];then
+if [[ -z "${PROJECT_TYPE}" ]];then
   depthProjectExec
-elif [ -z "${BUILD_SHELL}" ] && [ "${PROJECT_TYPE}" == 'python' ];then
+elif [[ -z "${BUILD_SHELL}" && "${PROJECT_TYPE}" == 'python' ]];then
   # Python type without BUILD_SHELL set, update project type to model, subsequent execution will copy full source code
   dotenv PROJECT_TYPE 'py_model'
 fi
@@ -100,39 +101,39 @@ case "${PROJECT_TYPE}" in
   golang)
     # Use Runner-mounted Go modules cache: /go/pkg/mod (mounted from host /root/go/pkg/mod)
     export GOPATH="/go"
-    mkdir -p "${GOPATH}/pkg/mod"
+    mkdir -p "${GOPATH}/pkg/mod" || true
     dotenv CACHE_DIR "${GOPATH}/pkg/mod"
     dotenv GOPATH "${GOPATH}"
     ;;
   web)
     # Web projects: cache pnpm store or yarn cache
-    if [ "${PACKAGE_MANAGER}" == 'yarn' ]; then
+    if [[ "${PACKAGE_MANAGER}" == 'yarn' ]]; then
       # Yarn global cache (use npm cache directory as fallback)
       export YARN_CACHE_FOLDER="/root/.npm/yarn-cache"
-      mkdir -p "${YARN_CACHE_FOLDER}"
+      mkdir -p "${YARN_CACHE_FOLDER}" || true
       dotenv CACHE_DIR "${YARN_CACHE_FOLDER}"
       dotenv YARN_CACHE_FOLDER "${YARN_CACHE_FOLDER}"
     else
       # pnpm store directory (mounted from host /root/.pnpm-store)
       export PNPM_STORE_DIR="/root/.pnpm-store"
-      mkdir -p "${PNPM_STORE_DIR}"
+      mkdir -p "${PNPM_STORE_DIR}" || true
       dotenv CACHE_DIR "${PNPM_STORE_DIR}"
       dotenv PNPM_STORE_DIR "${PNPM_STORE_DIR}"
     fi
     ;;
   java)
     # Java projects: cache Maven or Gradle dependencies
-    if [ -f build.gradle ] || [ -f build.gradle.kts ]; then
+    if [[ -f build.gradle || -f build.gradle.kts ]]; then
       # Gradle: use Runner-mounted cache (mounted from host /root/.gradle)
       export GRADLE_USER_HOME="/root/.gradle"
-      mkdir -p "${GRADLE_USER_HOME}/caches"
+      mkdir -p "${GRADLE_USER_HOME}/caches" || true
       dotenv CACHE_DIR "${GRADLE_USER_HOME}/caches"
       dotenv GRADLE_USER_HOME "${GRADLE_USER_HOME}"
     else
       # Maven: use Runner-mounted cache (mounted from host /root/.m2)
       export MAVEN_REPO_LOCAL="/root/.m2/repository"
       export MAVEN_OPTS="-Dmaven.repo.local=${MAVEN_REPO_LOCAL}"
-      mkdir -p "${MAVEN_REPO_LOCAL}"
+      mkdir -p "${MAVEN_REPO_LOCAL}" || true
       dotenv CACHE_DIR "${MAVEN_REPO_LOCAL}"
       dotenv MAVEN_OPTS "${MAVEN_OPTS}"
     fi
@@ -171,7 +172,7 @@ declare -A UNIT_IMAGE_LIST=(
 )
 
 # Set base image used for unit testing and build
-if [ -z "${UNIT_IMAGE_LIST[$PROJECT_TYPE]}" ];then
+if [[ -z "${UNIT_IMAGE_LIST[$PROJECT_TYPE]}" ]];then
   echo "${Error}Unknown PROJECT_TYPE: ${PROJECT_TYPE}, falling back to toolbox image"
   dotenv _BUILD_IMAGE "${TOOLBOX_IMAGE}"
 else
@@ -182,9 +183,9 @@ fi
 # 1. prd branch: use toolbox (needs git for tag creation)
 # 2. BASE_BUILD_IMAGE override: use user-specified image
 # 3. Default: use project-type-specific builder image
-if [ "${CI_COMMIT_REF_NAME}" == 'prd' ];then
+if [[ "${CI_COMMIT_REF_NAME}" == 'prd' ]];then
     dotenv BUILD_IMAGE "${TOOLBOX_IMAGE}"
-elif [ -n "${BASE_BUILD_IMAGE}" ];then
+elif [[ -n "${BASE_BUILD_IMAGE}" ]];then
     dotenv BUILD_IMAGE "${BASE_BUILD_IMAGE}"
 else
     dotenv BUILD_IMAGE "${_BUILD_IMAGE}"
@@ -197,8 +198,8 @@ fi
 # fi
 
 #  Determine whether feat feature branch builds Docker image
-if [[ "${FEAT_BRANCH,,}" == 'true' ]];then
-  if [[ "${FEAT_DOCKER_IMAGE_BUILD,,}" == 'true' ]];then
+if [[ "${FEAT_BRANCH:-}" == 'true' ]];then
+  if [[ "${FEAT_DOCKER_IMAGE_BUILD:-false}" == [Tt][Rr][Uu][Ee] ]];then
     dotenv DOCKER_IMAGE_BUILD "true"
   else
     dotenv DOCKER_IMAGE_BUILD 'false'
@@ -215,7 +216,7 @@ fi
 # Check if custom Dockerfile exists (supports custom path or default root directory)
 # Use absolute path to ensure detection is in project root, not subproject directory
 DOCKERFILE_TO_CHECK=""
-if [ -n "${CUSTOM_DOCKERFILE_PATH}" ];then
+if [[ -n "${CUSTOM_DOCKERFILE_PATH}" ]];then
   # Support both absolute and relative paths: absolute path used directly, relative path based on project root
   if [[ "${CUSTOM_DOCKERFILE_PATH}" == /* ]];then
     _dockerfile_path="${CUSTOM_DOCKERFILE_PATH}"
@@ -223,11 +224,11 @@ if [ -n "${CUSTOM_DOCKERFILE_PATH}" ];then
     _dockerfile_path="${CI_PROJECT_DIR}/${CUSTOM_DOCKERFILE_PATH}"
   fi
   [ -f "${_dockerfile_path}" ] && DOCKERFILE_TO_CHECK="${_dockerfile_path}"
-elif [ -f "${CI_PROJECT_DIR}/Dockerfile" ];then
+elif [[ -f "${CI_PROJECT_DIR}/Dockerfile" ]];then
   DOCKERFILE_TO_CHECK="${CI_PROJECT_DIR}/Dockerfile"
 fi
 
-if [ -n "${DOCKERFILE_TO_CHECK}" ];then
+if [[ -n "${DOCKERFILE_TO_CHECK}" ]];then
   if [[ "${CUSTOM_DOCKERFILE_STRICT_CHECK,,}" == 'true' ]];then
     if [ $(cat "${DOCKERFILE_TO_CHECK}"|egrep -v "^#|^$"|egrep "^(ENTRYPOINT|USER|WORKDIR|HEALTHCHECK|LABEL|MAINTAINER|CMD)"|wc -l) -gt 0 ];then
         echo "${Error} Invalid instructions detected in custom Dockerfile (${DOCKERFILE_TO_CHECK})"

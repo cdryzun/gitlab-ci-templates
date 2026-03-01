@@ -91,6 +91,9 @@
   CUSTOM_NGINX_CONF: "docker/nginx.conf"
   CUSTOM_DOCKERFILE_PATH: ""
   CUSTOM_DOCKERFILE: ""
+  # Target stage name for multi-stage Docker builds (e.g., "production", "runner").
+  # Leave empty to build the final stage (default behavior for single-stage Dockerfiles).
+  DOCKER_APP_TYPE: ""
   # Enable strict validation for custom Dockerfile instructions in pre stage
   CUSTOM_DOCKERFILE_STRICT_CHECK: "false"
   DOCKER_WORKSPACE_PREPARE_CMD: ""

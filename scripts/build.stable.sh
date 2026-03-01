@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo # Enable pipeline mode, exit on error during execution
+set -euo pipefail # Enable strict mode: exit on error, undefined vars, and pipe failures
 
 # env
 DOCKER_SECRET_ARGS=''
@@ -62,7 +62,7 @@ EOF
                 # Change final jar package name
                 sed -i '/<finalName>/d' ${BUILD_MAVEN_POM_FILE} # Delete first to prevent conflicts
                 if [ "${RELEASE_BUILD}" == 'true' ];then
-                    sed -i "/<build>/a <finalName>${MAVEN_APP_NAME-"app"}-${CI_BUILD_REF_NAME##v}<\/finalName>" ${BUILD_MAVEN_POM_FILE}
+                    sed -i "/<build>/a <finalName>${MAVEN_APP_NAME-"app"}-${CI_COMMIT_REF_NAME##v}<\/finalName>" ${BUILD_MAVEN_POM_FILE}
                 else
                     sed -i "/<build>/a <finalName>${MAVEN_APP_NAME-"app"}<\/finalName>" ${BUILD_MAVEN_POM_FILE}
                 fi

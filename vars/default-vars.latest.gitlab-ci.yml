@@ -114,6 +114,9 @@
   CUSTOM_DOCKERFILE_PATH: ""
   # Whether to use custom Dockerfile (auto-detected by pre stage, usually no need to configure manually)
   CUSTOM_DOCKERFILE: ""
+  # Target stage name for multi-stage Docker builds (e.g., "production", "runner").
+  # Leave empty to build the final stage (default behavior for single-stage Dockerfiles).
+  DOCKER_APP_TYPE: ""
   # Enable strict validation for custom Dockerfile instructions in pre stage
   CUSTOM_DOCKERFILE_STRICT_CHECK: "false"
   # Docker build workspace preparation command, executed in DOCKER_DAEMON_WORKSPACE directory
@@ -172,7 +175,7 @@
   PRD_CD_AUTO_DEPLOY: "true"
   # prd branch, whether to auto create branch when running pipeline, default on
   PRD_CD_CREATE_TAG: "true"
-  DOCKERFILE_BUILD_JDK_VERSION: "jdk17"
+  DOCKERFILE_BUILD_JDK_VERSION: "17-alpine"
 
 # Default image list - Using GitHub Container Registry public images
 .default_image_vars:
