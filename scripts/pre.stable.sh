@@ -9,7 +9,7 @@ done
 
 #------ ENV environment; Process variable-related preprocessing
 # Convert special characters in branch names to prevent errors when generating tags from branches
-dotenv _CI_COMMIT_REF_NAME `echo ${CI_COMMIT_REF_NAME}|tr '/' '-'`
+dotenv _CI_COMMIT_REF_NAME "$(echo "${CI_COMMIT_REF_NAME}" | tr '/' '-')"
 # _BUILD_ENV=`echo "${CI_COMMIT_REF_NAME}"|awk -F '/' '{print $2}'`
 BUILD_TIME=`date +"%Y%m%d%H%M"` # Timestamp in container Tag, accurate to minute
 
@@ -36,25 +36,30 @@ else
 fi
 
 # Determine docker image tag name based on branch name
+# Backward-compatible custom remote branch overrides:
+# - Prefer correctly spelled CUSTOM_REMOTE_* variables
+# - Keep supporting legacy CUSTOME_REMOTE_* variables
+_CUSTOM_REMOTE_SIT_BRANCH="${CUSTOM_REMOTE_SIT_BRANCH:-${CUSTOME_REMOTE_SIT_BRANCH}}"
+_CUSTOM_REMOTE_PRD_BRANCH="${CUSTOM_REMOTE_PRD_BRANCH:-${CUSTOME_REMOTE_PRD_BRANCH}}"
 if [ "${RELEASE_BUILD}" == 'true' ];then
   _CI_COMMIT_REF_NAME=`echo ${_CI_COMMIT_REF_NAME}|sed "s#v##g"` # Remove v from docker Tag name
   dotenv DOCKER_IMAGE_TAG ${_CI_COMMIT_REF_NAME}
   dotenv BUILD_ENV prd
   dotenv REMOTE_BRANCH prd
 else
-  if [ "${_CI_COMMIT_REF_NAME}" == 'sit' -o "${_CI_COMMIT_REF_NAME}" == 'prd' ];then
-    if [[ -n "${CUSTOME_REMOTE_SIT_BRANCH}" ]];then
-      dotenv BUILD_ENV ${CUSTOME_REMOTE_SIT_BRANCH}
-      dotenv REMOTE_BRANCH ${CUSTOME_REMOTE_SIT_BRANCH}
+  if [[ "${_CI_COMMIT_REF_NAME}" == 'sit' || "${_CI_COMMIT_REF_NAME}" == 'prd' ]];then
+    if [[ -n "${_CUSTOM_REMOTE_SIT_BRANCH}" ]];then
+      dotenv BUILD_ENV ${_CUSTOM_REMOTE_SIT_BRANCH}
+      dotenv REMOTE_BRANCH ${_CUSTOM_REMOTE_SIT_BRANCH}
     else
       dotenv BUILD_ENV ${_CI_COMMIT_REF_NAME}
       dotenv REMOTE_BRANCH ${_CI_COMMIT_REF_NAME}
     fi
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}-${BUILD_TIME}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
   elif [[ ${_CI_COMMIT_REF_NAME} =~ ^prd-.*+$ ]];then
-    if [[ -n "${CUSTOME_REMOTE_PRD_BRANCH}" ]];then
-      dotenv BUILD_ENV ${CUSTOME_REMOTE_PRD_BRANCH}
-      dotenv REMOTE_BRANCH ${CUSTOME_REMOTE_PRD_BRANCH}
+    if [[ -n "${_CUSTOM_REMOTE_PRD_BRANCH}" ]];then
+      dotenv BUILD_ENV ${_CUSTOM_REMOTE_PRD_BRANCH}
+      dotenv REMOTE_BRANCH ${_CUSTOM_REMOTE_PRD_BRANCH}
     else
       dotenv BUILD_ENV prd
       dotenv REMOTE_BRANCH prd

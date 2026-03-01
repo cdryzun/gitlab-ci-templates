@@ -145,6 +145,12 @@
   CD_DEPLOY_IMGAGE: ""
   # Default commit push remote branch
   REMOTE_BRANCH: "dev"
+  # Optional custom target branch mapping (preferred names)
+  CUSTOM_REMOTE_SIT_BRANCH: ""
+  CUSTOM_REMOTE_PRD_BRANCH: ""
+  # Backward-compatible aliases (legacy typo)
+  CUSTOME_REMOTE_SIT_BRANCH: ""
+  CUSTOME_REMOTE_PRD_BRANCH: ""
   # ci auto commit message to charts repository, can use built-in "variables"
   DEPLOY_COMMIT_MESSAGE: "helm values updated by gitlab-ci pipeline in change-manifests task. Trigger by ${GITLAB_USER_NAME}"
   ROLLBACK_COMMIT_MESSAGE: "helm values rollback by gitlab-ci pipeline in change-manifests task. Trigger by ${GITLAB_USER_NAME}"

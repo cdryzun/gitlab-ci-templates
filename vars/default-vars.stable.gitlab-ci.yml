@@ -107,6 +107,12 @@
   GIT_AUTO_COMMIT_EMAIL: "ci-bot@example.com"
   CD_DEPLOY_IMGAGE: ""
   REMOTE_BRANCH: "dev"
+  # Optional custom target branch mapping (preferred names)
+  CUSTOM_REMOTE_SIT_BRANCH: ""
+  CUSTOM_REMOTE_PRD_BRANCH: ""
+  # Backward-compatible aliases (legacy typo)
+  CUSTOME_REMOTE_SIT_BRANCH: ""
+  CUSTOME_REMOTE_PRD_BRANCH: ""
   DEPLOY_COMMIT_MESSAGE: "chore: helm values updated by gitlab-ci pipeline"
   ROLLBACK_COMMIT_MESSAGE: "chore: helm values rollback by gitlab-ci pipeline"
   DEPLOY_REPO_YAML_TAG: ".image.tag"
