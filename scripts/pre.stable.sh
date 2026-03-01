@@ -11,7 +11,7 @@ done
 # Convert special characters in branch names to prevent errors when generating tags from branches
 dotenv _CI_COMMIT_REF_NAME "$(echo "${CI_COMMIT_REF_NAME}" | tr '/' '-')"
 # _BUILD_ENV=`echo "${CI_COMMIT_REF_NAME}"|awk -F '/' '{print $2}'`
-BUILD_TIME=`date +"%Y%m%d%H%M"` # Timestamp in container Tag, accurate to minute
+BUILD_TIME=$(date +"%Y%m%d%H%M") # Timestamp in container Tag, accurate to minute
 
 dotenv LOG_LEVEL ${LOG_LEVEL}
 
@@ -41,8 +41,8 @@ fi
 # - Keep supporting legacy CUSTOME_REMOTE_* variables
 _CUSTOM_REMOTE_SIT_BRANCH="${CUSTOM_REMOTE_SIT_BRANCH:-${CUSTOME_REMOTE_SIT_BRANCH}}"
 _CUSTOM_REMOTE_PRD_BRANCH="${CUSTOM_REMOTE_PRD_BRANCH:-${CUSTOME_REMOTE_PRD_BRANCH}}"
-if [ "${RELEASE_BUILD}" == 'true' ];then
-  _CI_COMMIT_REF_NAME=`echo ${_CI_COMMIT_REF_NAME}|sed "s#v##g"` # Remove v from docker Tag name
+if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
+  _CI_COMMIT_REF_NAME=$(echo "${_CI_COMMIT_REF_NAME}" | sed "s#v##g") # Remove v from docker Tag name
   dotenv DOCKER_IMAGE_TAG ${_CI_COMMIT_REF_NAME}
   dotenv BUILD_ENV prd
   dotenv REMOTE_BRANCH prd
@@ -81,7 +81,7 @@ fi
 # Combine image & tag into complete image name
 dotenv DOCKER_IMAGE_NAME "${IMG_NAME}:${DOCKER_IMAGE_TAG}"
 
-if [ "${RELEASE_BUILD}" == 'true' ];then
+if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
   dotenv RELEASE_BUILD "${RELEASE_BUILD}"
 fi
 
@@ -197,8 +197,8 @@ fi
 # fi
 
 #  Determine whether feat feature branch builds Docker image
-if [ "${FEAT_BRANCH}" == 'true' ];then
-  if [ "${FEAT_DOCKER_IMAGE_BUILD}" == 'true' ];then
+if [[ "${FEAT_BRANCH,,}" == 'true' ]];then
+  if [[ "${FEAT_DOCKER_IMAGE_BUILD,,}" == 'true' ]];then
     dotenv DOCKER_IMAGE_BUILD "${FEAT_DOCKER_IMAGE_BUILD}"
   else
     dotenv DOCKER_IMAGE_BUILD 'false'
@@ -206,7 +206,7 @@ if [ "${FEAT_BRANCH}" == 'true' ];then
 fi
 
 # Only prd branch can perform create tag action
-if [ "${PRD_BUILD_CREATE_TAG}" == 'true' -a "${REMOTE_BRANCH}" != 'prd' ];then
+if [[ "${PRD_BUILD_CREATE_TAG,,}" == 'true' && "${REMOTE_BRANCH}" != 'prd' ]];then
     dotenv PRD_BUILD_CREATE_TAG 'false'
 fi
 
