@@ -4,6 +4,11 @@
 # Automatically loaded by build.latest.sh as utility library
 # ============================================
 
+# Initialize color output variables if not already defined (sourced from _utils.sh)
+: "${Info:=Info: }"
+: "${Tip:=Note: }"
+: "${Error:=Error: }"
+
 # ============================================
 # Initialize Docker Buildx
 # ============================================
