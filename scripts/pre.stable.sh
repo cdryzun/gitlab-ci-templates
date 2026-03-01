@@ -191,6 +191,14 @@ else
     dotenv BUILD_IMAGE "${_BUILD_IMAGE}"
 fi
 
+# Set TEST_IMAGE to use the same language-specific image as BUILD_IMAGE
+# This ensures unit tests run in the correct environment
+if [ -n "${_BUILD_IMAGE}" ];then
+    dotenv TEST_IMAGE "${_BUILD_IMAGE}"
+else
+    dotenv TEST_IMAGE "${TOOLBOX_IMAGE}"
+fi
+
 # # For pipeline running on prd branch, set to not build image in build stage, but create Tag instead
 # if [ "${CI_COMMIT_REF_NAME}" == 'prd' ];then
 #     dotenv DOCKER_IMAGE_BUILD 'false'
