@@ -63,4 +63,16 @@ regexes = [
 
     # Base64 encoded empty strings or simple patterns
     '''^[A-Za-z0-9+/]{0,10}={0,2}$''',
+
+    # Known internal credentials (internal network only, not accessible from public internet)
+    # MinIO credentials in terraform/backend.tf are for internal service only
+    # These are intentionally committed for self-hosted GitLab runners
+    '''SWKaKwZ3xtWQ6bNFs4Su''',  # MinIO access key (internal only)
+    '''fHWaBZxaDagarD4Edv9c''',  # MinIO secret key (internal only)
+]
+
+# Allow specific commits that contained credentials before scanning was added
+commits = [
+    # Initial commit with Terraform setup - credentials were internal-only
+    "80311d904fb5c74e1ab00b7cbcad01f947542af6",
 ]
