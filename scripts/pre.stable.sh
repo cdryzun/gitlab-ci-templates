@@ -9,9 +9,9 @@ done
 
 #------ ENV environment; Process variable-related preprocessing
 # Convert special characters in branch names to prevent errors when generating tags from branches
-dotenv _CI_COMMIT_REF_NAME `echo ${CI_COMMIT_REF_NAME}|tr '/' '-'`
+dotenv _CI_COMMIT_REF_NAME "$(echo "${CI_COMMIT_REF_NAME}" | tr '/' '-')"
 # _BUILD_ENV=`echo "${CI_COMMIT_REF_NAME}"|awk -F '/' '{print $2}'`
-BUILD_TIME=`date +"%Y%m%d%H%M"` # Timestamp in container Tag, accurate to minute
+BUILD_TIME=$(date +"%Y%m%d%H%M") # Timestamp in container Tag, accurate to minute
 
 dotenv LOG_LEVEL ${LOG_LEVEL}
 
@@ -36,25 +36,30 @@ else
 fi
 
 # Determine docker image tag name based on branch name
-if [ "${RELEASE_BUILD}" == 'true' ];then
-  _CI_COMMIT_REF_NAME=`echo ${_CI_COMMIT_REF_NAME}|sed "s#v##g"` # Remove v from docker Tag name
+# Backward-compatible custom remote branch overrides:
+# - Prefer correctly spelled CUSTOM_REMOTE_* variables
+# - Keep supporting legacy CUSTOME_REMOTE_* variables
+_CUSTOM_REMOTE_SIT_BRANCH="${CUSTOM_REMOTE_SIT_BRANCH:-${CUSTOME_REMOTE_SIT_BRANCH}}"
+_CUSTOM_REMOTE_PRD_BRANCH="${CUSTOM_REMOTE_PRD_BRANCH:-${CUSTOME_REMOTE_PRD_BRANCH}}"
+if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
+  _CI_COMMIT_REF_NAME="${_CI_COMMIT_REF_NAME#v}" # Remove leading v from docker Tag name
   dotenv DOCKER_IMAGE_TAG ${_CI_COMMIT_REF_NAME}
   dotenv BUILD_ENV prd
   dotenv REMOTE_BRANCH prd
 else
-  if [ ${_CI_COMMIT_REF_NAME} == 'sit' -o ${_CI_COMMIT_REF_NAME} == 'prd' ];then
-    if [[ -n CUSTOME_REMOTE_SIT_BRANCH ]];then
-      dotenv BUILD_ENV ${CUSTOME_REMOTE_SIT_BRANCH}
-      dotenv REMOTE_BRANCH ${CUSTOME_REMOTE_SIT_BRANCH}
+  if [[ "${_CI_COMMIT_REF_NAME}" == 'sit' || "${_CI_COMMIT_REF_NAME}" == 'prd' ]];then
+    if [[ -n "${_CUSTOM_REMOTE_SIT_BRANCH}" ]];then
+      dotenv BUILD_ENV ${_CUSTOM_REMOTE_SIT_BRANCH}
+      dotenv REMOTE_BRANCH ${_CUSTOM_REMOTE_SIT_BRANCH}
     else
       dotenv BUILD_ENV ${_CI_COMMIT_REF_NAME}
       dotenv REMOTE_BRANCH ${_CI_COMMIT_REF_NAME}
     fi
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}-${BUILD_TIME}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
   elif [[ ${_CI_COMMIT_REF_NAME} =~ ^prd-.*+$ ]];then
-    if [[ -n CUSTOME_REMOTE_PRD_BRANCH ]];then
-      dotenv BUILD_ENV ${CUSTOME_REMOTE_PRD_BRANCH}
-      dotenv REMOTE_BRANCH ${CUSTOME_REMOTE_PRD_BRANCH}
+    if [[ -n "${_CUSTOM_REMOTE_PRD_BRANCH}" ]];then
+      dotenv BUILD_ENV ${_CUSTOM_REMOTE_PRD_BRANCH}
+      dotenv REMOTE_BRANCH ${_CUSTOM_REMOTE_PRD_BRANCH}
     else
       dotenv BUILD_ENV prd
       dotenv REMOTE_BRANCH prd
@@ -64,6 +69,7 @@ else
     # feat/feature branch recognition, deployment target is dev environment
     dotenv BUILD_ENV feat
     dotenv REMOTE_BRANCH dev
+    dotenv FEAT_BRANCH "true"
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}-${BUILD_TIME}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
   else
     dotenv BUILD_ENV dev
@@ -75,7 +81,7 @@ fi
 # Combine image & tag into complete image name
 dotenv DOCKER_IMAGE_NAME "${IMG_NAME}:${DOCKER_IMAGE_TAG}"
 
-if [ "${RELEASE_BUILD}" ];then
+if [[ "${RELEASE_BUILD,,}" == 'true' ]];then
   dotenv RELEASE_BUILD "${RELEASE_BUILD}"
 fi
 
@@ -147,8 +153,8 @@ esac
 if [[ -z "${PROJECT_TYPE}" ]] || [[ "${PROJECT_TYPE}" == "java" ]]; then
   if [[ -n "${DOCKERFILE_BUILD_JDK_VERSION}" ]] && [[ ! ${DOCKERFILE_BUILD_JDK_VERSION} =~ '8' ]];then
       _jdk_version=$(echo ${DOCKERFILE_BUILD_JDK_VERSION}|awk -F '-' '{print $1}')
-      _MAVEN_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
-      _SONAR_IMAGE="docker.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
+      _MAVEN_IMAGE="ghcr.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
+      _SONAR_IMAGE="ghcr.io/cdryzun/glci-builder-java:jdk${_jdk_version}"
       dotenv MAVEN_IMAGE ${_MAVEN_IMAGE}
       dotenv SONAR_IMAGE ${_SONAR_IMAGE}
   fi
@@ -191,16 +197,16 @@ fi
 # fi
 
 #  Determine whether feat feature branch builds Docker image
-if [ "${FEAT_BRANCH}" ];then
-  if [ "${FEAT_DOCKER_IMAGE_BUILD}" == 'true' ];then
-    dotenv DOCKER_IMAGE_BUILD "${FEAT_DOCKER_IMAGE_BUILD}"
+if [[ "${FEAT_BRANCH,,}" == 'true' ]];then
+  if [[ "${FEAT_DOCKER_IMAGE_BUILD,,}" == 'true' ]];then
+    dotenv DOCKER_IMAGE_BUILD "true"
   else
     dotenv DOCKER_IMAGE_BUILD 'false'
   fi
 fi
 
 # Only prd branch can perform create tag action
-if [ "${PRD_BUILD_CREATE_TAG}" == 'true' -a "${REMOTE_BRANCH}" != 'prd' ];then
+if [[ "${PRD_BUILD_CREATE_TAG,,}" == 'true' && "${REMOTE_BRANCH}" != 'prd' ]];then
     dotenv PRD_BUILD_CREATE_TAG 'false'
 fi
 
@@ -222,12 +228,13 @@ elif [ -f "${CI_PROJECT_DIR}/Dockerfile" ];then
 fi
 
 if [ -n "${DOCKERFILE_TO_CHECK}" ];then
-  # if [ $(cat ${DOCKERFILE_TO_CHECK}|egrep -v "^#|^$"|egrep "^(ENTRYPOINT|USER|WORKDIR|HEALTHCHECK|LABEL|MAINTAINER|CMD)"|wc -l) -gt 0 ];then
-  #     echo "${Error} Invalid instructions detected in custom Dockerfile (${DOCKERFILE_TO_CHECK})"
-  #     exit 1
-  # else
+  if [[ "${CUSTOM_DOCKERFILE_STRICT_CHECK,,}" == 'true' ]];then
+    if [ $(cat "${DOCKERFILE_TO_CHECK}"|egrep -v "^#|^$"|egrep "^(ENTRYPOINT|USER|WORKDIR|HEALTHCHECK|LABEL|MAINTAINER|CMD)"|wc -l) -gt 0 ];then
+        echo "${Error} Invalid instructions detected in custom Dockerfile (${DOCKERFILE_TO_CHECK})"
+        exit 1
+    fi
+  fi
   dotenv CUSTOM_DOCKERFILE 'true'
-  # fi
 fi
 
 # # For tag builds based on release branch retag, image is not rebuilt
@@ -241,4 +248,3 @@ fi
 #       dotenv RETAG_IMGAE_NAME ''
 #    fi
 # fi
-

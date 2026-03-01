@@ -114,6 +114,8 @@
   CUSTOM_DOCKERFILE_PATH: ""
   # Whether to use custom Dockerfile (auto-detected by pre stage, usually no need to configure manually)
   CUSTOM_DOCKERFILE: ""
+  # Enable strict validation for custom Dockerfile instructions in pre stage
+  CUSTOM_DOCKERFILE_STRICT_CHECK: "false"
   # Docker build workspace preparation command, executed in DOCKER_DAEMON_WORKSPACE directory
   # Used to prepare dependency config files needed for Dockerfile build (e.g., nginx.conf, config.json, etc.)
   # Example: "cp ${CI_PROJECT_DIR}/config/nginx.conf . && cp ${CI_PROJECT_DIR}/config/app.conf ."
@@ -145,6 +147,12 @@
   CD_DEPLOY_IMGAGE: ""
   # Default commit push remote branch
   REMOTE_BRANCH: "dev"
+  # Optional custom target branch mapping (preferred names)
+  CUSTOM_REMOTE_SIT_BRANCH: ""
+  CUSTOM_REMOTE_PRD_BRANCH: ""
+  # Backward-compatible aliases (legacy typo)
+  CUSTOME_REMOTE_SIT_BRANCH: ""
+  CUSTOME_REMOTE_PRD_BRANCH: ""
   # ci auto commit message to charts repository, can use built-in "variables"
   DEPLOY_COMMIT_MESSAGE: "helm values updated by gitlab-ci pipeline in change-manifests task. Trigger by ${GITLAB_USER_NAME}"
   ROLLBACK_COMMIT_MESSAGE: "helm values rollback by gitlab-ci pipeline in change-manifests task. Trigger by ${GITLAB_USER_NAME}"

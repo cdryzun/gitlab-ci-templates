@@ -29,6 +29,7 @@ If you find a bug or have a suggestion for improvement:
 4. **Test your changes**
    - Verify templates work in a test GitLab project
    - Ensure no syntax errors in YAML files
+   - Run local pre-script matrix checks: `hack/test-pre-matrix.sh`
 5. **Commit your changes**
    ```bash
    git commit -m "feat: brief description of your change"
