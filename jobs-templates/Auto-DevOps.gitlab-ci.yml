@@ -19,7 +19,7 @@ include:
   # Jobs
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/PreJob.stable.gitlab-ci.yml'
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/SonarQube.stable.gitlab-ci.yml'
-  # - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Test.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Test.stable.gitlab-ci.yml'
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Build.stable.gitlab-ci.yml'
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Trivy-Container-Scanning.stable.gitlab-ci.yml'
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/Gitlab-Container-Scanning.stable.gitlab-ci.yml'
