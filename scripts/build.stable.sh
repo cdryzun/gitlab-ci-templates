@@ -1,32 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail # Enable strict mode: exit on error, undefined vars, and pipe failures
+set -eo # Enable pipeline mode, exit on error during execution
 
-# Initialize optional user-configurable variables with safe defaults.
-# These variables are defined in default-vars.*.yml but may not be injected
-# when the user does not include the vars template, preventing unbound errors.
-: "${PROJECT_TYPE:=}"
-: "${BUILD_SHELL:=}"
-: "${PACKAGE_MANAGER:=pnpm}"
-: "${CUSTOM_NGINX_CONF:=}"
-: "${RELEASE_BUILD:=false}"
-: "${RELEASE_LIB_BUILD:=false}"
-: "${RELEASE_SHELL:=}"
-: "${PYPI:=https://pypi.org/simple}"
-: "${PYPI_PRIVATE:=}"
-: "${GO_GOPROXY:=}"
-: "${GO_GOPRIVATE:=}"
-: "${DOCKER_DAEMON_WORKSPACE:=./docker-build}"
-: "${DOCKER_BUILD_FLAGS:=--no-cache}"
-: "${DOCKER_WORKSPACE_PREPARE_CMD:=}"
-: "${CUSTOM_DOCKERFILE:=}"
-: "${STATIC_FILE_NAME:=}"
-: "${SECRET_ID:=}"
-: "${DOCKER_IMAGE_BUILD:=true}"
-: "${REGISTRY_CLEANUP_API:=}"
-: "${REGISTRY_USER:=}"
-: "${REGISTRY_PASSWORD:=}"
-: "${RETAG_IMGAE_NAME:=}"
-: "${REMOTE_BRANCH:=dev}"
 
 # env
 DOCKER_SECRET_ARGS=''

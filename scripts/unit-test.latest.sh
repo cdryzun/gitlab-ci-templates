@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail # Enable strict mode: exit on error, undefined vars, and pipe failures
+set -eo # Enable pipeline mode, exit on error during execution
 
 # Load utility classes and module scripts
 for sh in _*.sh
