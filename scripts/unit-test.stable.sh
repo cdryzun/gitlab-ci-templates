@@ -41,6 +41,22 @@ function unit_test() {
       pip3 install -r requirements.txt -i ${PYPI}
     fi
     shell_exec "${UNIT_TEST_CMD[${PROJECT_TYPE}]}"
+  elif [ "${PROJECT_TYPE}" == "web" ]; then
+    # Node.js projects: install dependencies first, then run tests
+    if [ -f package.json ]; then
+      echo "${Info}Installing Node.js dependencies..."
+      if [ "${PACKAGE_MANAGER}" == 'yarn' ]; then
+        yarn install
+      else
+        # Default to pnpm, fallback to npm if pnpm is not available
+        if command -v pnpm &> /dev/null; then
+          pnpm install
+        else
+          npm install
+        fi
+      fi
+    fi
+    shell_exec "${UNIT_TEST_CMD[${PROJECT_TYPE}]}"
   else
     shell_exec "${UNIT_TEST_CMD[${PROJECT_TYPE}]}"
   fi
