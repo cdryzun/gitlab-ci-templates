@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail # Enable strict mode: exit on error, undefined vars, and pipe failures
 
+# Initialize optional user-configurable variables with safe defaults.
+# These variables are defined in default-vars.*.yml but may not be injected
+# when the user does not include the vars template, preventing unbound errors.
+: "${PROJECT_TYPE:=}"
+: "${BUILD_SHELL:=}"
+: "${PACKAGE_MANAGER:=pnpm}"
+: "${DOCKER_REGISTRY:=docker.io}"
+: "${DOCKER_HUB_ORGANIZATION:=}"
+: "${RELEASE_BUILD:=false}"
+: "${FEAT_DOCKER_IMAGE_BUILD:=false}"
+: "${PRD_BUILD_CREATE_TAG:=true}"
+: "${DOCKERFILE_BUILD_JDK_VERSION:=}"
+: "${BASE_BUILD_IMAGE:=}"
+: "${CUSTOM_DOCKERFILE_PATH:=}"
+: "${CUSTOM_DOCKERFILE_STRICT_CHECK:=false}"
+: "${CUSTOM_REMOTE_SIT_BRANCH:=}"
+: "${CUSTOM_REMOTE_PRD_BRANCH:=}"
+: "${CUSTOME_REMOTE_SIT_BRANCH:=}"
+: "${CUSTOME_REMOTE_PRD_BRANCH:=}"
+: "${LOG_LEVEL:=info}"
+
 # Load utility classes and module scripts
 for sh in _*.sh
 do
