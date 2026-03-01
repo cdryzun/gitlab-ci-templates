@@ -1,0 +1,22 @@
+# Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars to version control!
+
+# GitLab Personal Access Token
+# Generate at: https://your-gitlab-instance.com/-/profile/personal_access_tokens
+gitlab_token = "glpat-your-token-here"
+
+# GitLab Base URL
+# Your GitLab instance API endpoint
+gitlab_base_url = "https://your-gitlab-instance.com/api/v4/"
+
+# MinIO S3 Endpoint
+# Your MinIO or S3-compatible storage endpoint
+minio_endpoint = "https://your-minio-instance.com"
+
+# Vault Keys
+# List of vault keys to fetch and store as GitLab variables
+vault_key = [
+  "EXAMPLE_KEY_1",
+  "EXAMPLE_KEY_2"
+]
