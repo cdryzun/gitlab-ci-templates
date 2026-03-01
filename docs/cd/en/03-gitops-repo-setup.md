@@ -37,7 +37,7 @@ gitGraph
    branch sit
    checkout sit
    commit id: "ci: tag e4f5a6b (sit)"
-   checkout main
+   checkout prd
    merge sit id: "release v1.0.0 (MR approved)" tag: "v1.0.0"
 ```
 
@@ -45,7 +45,7 @@ gitGraph
 |--------|-------------|-------|
 | `dev` | DEV | Development; updated automatically by CI |
 | `sit` | SIT | Staging; updated automatically by CI |
-| `main` | PRD | Production; merged via MR after approval |
+| `prd` | PRD | Production; merged via MR after approval |
 
 ## 2. Create the repository in GitLab
 
@@ -211,9 +211,9 @@ git commit -m "feat: initialize go-hello helm chart"
 # Push the dev branch (used by ArgoCD for the DEV environment)
 git push origin dev
 
-# Create the main branch (used by ArgoCD for the PRD environment)
-git checkout -b main
-git push origin main
+# Create the prd branch (used by ArgoCD for the PRD environment; CI pushes to this branch)
+git checkout -b prd
+git push origin prd
 ```
 
 ## 4. How CI updates the image tag

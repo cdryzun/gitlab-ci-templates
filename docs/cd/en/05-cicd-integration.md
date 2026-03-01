@@ -67,7 +67,7 @@ variables:
   # Auto-deploy switches per environment
   DEV_CD_AUTO_DEPLOY: "true"
   SIT_CD_AUTO_DEPLOY: "true"
-  PRD_CD_AUTO_DEPLOY: "true"   # PRD: opens an MR instead of a direct push
+  PRD_CD_AUTO_DEPLOY: "true"   # Kept at default value; PRD flow is controlled by branch protection (MR), not this variable
 ```
 
 ## 3. Branch-to-environment mapping
@@ -118,12 +118,12 @@ MR URL: https://gitlab.example.com/gitops/go-hello/-/merge_requests/123
 
 ## 5. ArgoCD sync from CI (optional)
 
-If `ARGOCD_SERVER` and `ARGOCD_AUTH_TOKEN` are configured, the CI job actively triggers an ArgoCD sync after updating the GitOps repo:
+If `ARGOCD_SERVER` and `ARGOCD_AUTH_TOKEN` are configured, the CI job actively triggers an ArgoCD sync after updating the GitOps repo. The sync is performed by the `.argocd_app_sync` snippet in `utils/deploy.stable.gitlab-ci.yml`; the argocd CLI authenticates by reading the `ARGOCD_SERVER` and `ARGOCD_AUTH_TOKEN` environment variables directly:
 
-```yaml
-# Logic inside utils/deploy.stable.gitlab-ci.yml
-argocd app sync "${APP_NAME}" --server "${ARGOCD_SERVER}" --auth-token "${ARGOCD_AUTH_TOKEN}"
-argocd app wait "${APP_NAME}" --health --timeout 300
+```bash
+# Actual sync logic in utils/deploy.stable.gitlab-ci.yml
+argocd app sync "${APP_NAME}" || true
+argocd app wait "${APP_NAME}" --health
 ```
 
 Application name format: `{DEPLOY_REPO_PROJ}-{DEPLOY_REPO_NAME}-{REMOTE_BRANCH}`

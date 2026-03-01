@@ -67,7 +67,7 @@ variables:
   # 环境自动部署开关
   DEV_CD_AUTO_DEPLOY: "true"
   SIT_CD_AUTO_DEPLOY: "true"
-  PRD_CD_AUTO_DEPLOY: "true"  # PRD 环境自动提 MR，不直接推送
+  PRD_CD_AUTO_DEPLOY: "true"  # 保留默认值，PRD 流程由分支保护机制（MR）控制，不受此变量影响
 ```
 
 ## 3. 分支与环境映射
@@ -118,12 +118,12 @@ MR URL: https://gitlab.example.com/gitops/go-hello/-/merge_requests/123
 
 ## 5. ArgoCD 同步配置（可选）
 
-如果配置了 `ARGOCD_SERVER` 和 `ARGOCD_AUTH_TOKEN`，CI 在更新 GitOps 仓库后会主动触发 ArgoCD 同步：
+如果配置了 `ARGOCD_SERVER` 和 `ARGOCD_AUTH_TOKEN`，CI 在更新 GitOps 仓库后会主动触发 ArgoCD 同步。同步逻辑由 `utils/deploy.stable.gitlab-ci.yml` 中的 `.argocd_app_sync` 片段执行，argocd CLI 通过读取环境变量（`ARGOCD_SERVER`、`ARGOCD_AUTH_TOKEN`）完成认证：
 
-```yaml
-# utils/deploy.stable.gitlab-ci.yml 中的同步逻辑
-argocd app sync "${APP_NAME}" --server "${ARGOCD_SERVER}" --auth-token "${ARGOCD_AUTH_TOKEN}"
-argocd app wait "${APP_NAME}" --health --timeout 300
+```bash
+# utils/deploy.stable.gitlab-ci.yml 中的实际同步逻辑
+argocd app sync "${APP_NAME}" || true
+argocd app wait "${APP_NAME}" --health
 ```
 
 应用名称格式：`{DEPLOY_REPO_PROJ}-{DEPLOY_REPO_NAME}-{REMOTE_BRANCH}`

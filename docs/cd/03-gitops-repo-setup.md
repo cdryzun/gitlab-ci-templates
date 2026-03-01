@@ -37,7 +37,7 @@ gitGraph
    branch sit
    checkout sit
    commit id: "ci: tag e4f5a6b (sit)"
-   checkout main
+   checkout prd
    merge sit id: "release v1.0.0 (MR approved)" tag: "v1.0.0"
 ```
 
@@ -45,7 +45,7 @@ gitGraph
 |------|------|------|
 | `dev` | DEV | 开发环境，CI 自动更新 |
 | `sit` | SIT | 测试环境，CI 自动更新 |
-| `main` | PRD | 生产环境，MR 审批后合并 |
+| `prd` | PRD | 生产环境，MR 审批后合并 |
 
 ## 2. 在 GitLab 创建仓库
 
@@ -211,9 +211,9 @@ git commit -m "feat: initialize go-hello helm chart"
 # 推送 dev 分支（ArgoCD DEV 环境使用此分支）
 git push origin dev
 
-# 创建 main 分支（ArgoCD PRD 环境使用此分支）
-git checkout -b main
-git push origin main
+# 创建 prd 分支（ArgoCD PRD 环境使用此分支，CI 会推送到此分支）
+git checkout -b prd
+git push origin prd
 ```
 
 ## 4. CI 更新镜像 Tag 的方式
