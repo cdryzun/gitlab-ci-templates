@@ -58,10 +58,10 @@ function unit_test() {
     fi
     shell_exec "${UNIT_TEST_CMD[${PROJECT_TYPE}]}"
   elif [ "${PROJECT_TYPE}" == "golang" ]; then
-    # Golang projects: download dependencies first if go.mod exists
+    # Golang projects: run go mod tidy first to ensure go.sum is complete
     if [ -f go.mod ]; then
-      echo "${Info}Downloading Go module dependencies..."
-      go mod download
+      echo "${Info}Tidying Go module dependencies..."
+      go mod tidy
     fi
     shell_exec "${UNIT_TEST_CMD[${PROJECT_TYPE}]}"
   else
