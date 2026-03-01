@@ -31,6 +31,7 @@ flowchart TD
 | 03 | [GitOps 仓库](./03-gitops-repo-setup.md) | 创建 Helm Charts 仓库结构 |
 | 04 | [ArgoCD 接入](./04-argocd-gitops-integration.md) | ArgoCD 接入 GitOps 仓库 |
 | 05 | [CI/CD 集成](./05-cicd-integration.md) | GitLab CI 触发 CD 流程 |
+| 06 | [多项目 GitOps](./06-multi-project-gitops.md) | 单仓库多项目管理与 CD 集成 |
 
 ## 系统要求
 

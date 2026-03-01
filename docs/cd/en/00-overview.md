@@ -31,6 +31,7 @@ flowchart TD
 | 03 | [GitOps Repository](./03-gitops-repo-setup.md) | Create Helm Charts repository structure |
 | 04 | [ArgoCD Integration](./04-argocd-gitops-integration.md) | Connect ArgoCD to GitOps repository |
 | 05 | [CI/CD Integration](./05-cicd-integration.md) | GitLab CI triggers CD pipeline |
+| 06 | [Multi-Project GitOps](./06-multi-project-gitops.md) | Single-repo multi-project management and CD integration |
 
 ## System Requirements
 
