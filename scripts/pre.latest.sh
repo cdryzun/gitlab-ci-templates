@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Load utility classes and module scripts
+for sh in _*.sh
+do
+  [[ -e "$sh" ]] || break
+  source "${sh}"
+done
+
 #------ ENV environment; Process variable-related preprocessing
 # Convert special characters in branch names to prevent errors when generating tags from branches
 dotenv _CI_COMMIT_REF_NAME `echo ${CI_COMMIT_REF_NAME}|tr '/' '-'`
@@ -69,7 +76,7 @@ fi
 # Combine image & tag into complete image name
 dotenv DOCKER_IMAGE_NAME "${IMG_NAME}:${DOCKER_IMAGE_TAG}"
 
-if [ "${RELEASE_BUILD}" ];then
+if [ "${RELEASE_BUILD}" == 'true' ];then
   dotenv RELEASE_BUILD "${RELEASE_BUILD}"
 fi
 
@@ -185,7 +192,7 @@ fi
 # fi
 
 #  Determine whether feat feature branch builds Docker image
-if [ "${FEAT_BRANCH}" ];then
+if [ "${FEAT_BRANCH}" == 'true' ];then
   if [ "${FEAT_DOCKER_IMAGE_BUILD}" == 'true' ];then
     dotenv DOCKER_IMAGE_BUILD "${FEAT_DOCKER_IMAGE_BUILD}"
   else
