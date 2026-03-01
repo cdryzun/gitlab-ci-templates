@@ -81,6 +81,8 @@ Auto-DevOps 模板自动根据当前分支决定部署到哪个环境：
 | `v*.*.*` (release tag) | `prd` | PRD（创建 MR，需审批） |
 | `prd` | `prd` | PRD（创建 MR，需审批） |
 
+> **Release tag 触发条件**：推送 `v*.*.*` 格式的 tag 时，需要在 `.gitlab-ci.yml` 或 GitLab CI/CD Variables 中设置 `RELEASE_BUILD: "true"`，模板才会将 `REMOTE_BRANCH` 设置为 `prd`。未设置时，tag 推送会回退到 `dev` 环境。
+
 ## 4. PRD 环境保护机制
 
 ```mermaid
@@ -127,6 +129,8 @@ argocd app wait "${APP_NAME}" --health --timeout 300
 应用名称格式：`{DEPLOY_REPO_PROJ}-{DEPLOY_REPO_NAME}-{REMOTE_BRANCH}`
 
 例如：`go-hello-go-hello-dev`
+
+> **说明**：单应用仓库模式下，`DEPLOY_REPO_PROJ`（项目文件夹名）与仓库名通常相同，导致名称中出现重复部分（如 `go-hello-go-hello-dev`），这是正常行为。在[多项目共享仓库模式](./06-multi-project-gitops.md)中，仓库名为 `charts`，命名更清晰（如 `go-hello-charts-dev`）。
 
 ## 6. 验证 CD 流程
 

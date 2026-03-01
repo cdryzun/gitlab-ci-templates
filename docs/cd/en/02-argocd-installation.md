@@ -98,6 +98,11 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d; echo
 ```
 
+> If the command returns empty output (ArgoCD 3.x removes the initial secret in some installation configurations), use the following instead:
+> ```bash
+> argocd admin initial-password -n argocd
+> ```
+
 ## 6. Verify access
 
 ```bash

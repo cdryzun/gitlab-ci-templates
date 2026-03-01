@@ -7,6 +7,8 @@ This chapter addresses two core questions:
 1. **How to manage multiple projects in a single GitOps repository**, using branches to separate environments
 2. **How the CD stage integrates with the GitOps repository**, completing the full chain from CI image build to ArgoCD auto-deploy
 
+> **Relationship to Chapter 3**: [Chapter 3](./03-gitops-repo-setup.md) demonstrates the model where each application has its own dedicated GitOps repository (suitable for projects that are fully independent and require separate access control). This chapter demonstrates the **single-repository multi-project** model (suitable for teams managing multiple services with unified governance). Both models can be chosen based on your needs. The core CD logic is the same; the main differences are in repository structure and ArgoCD Application naming.
+
 ## 1. Multi-Project GitOps Repository Design
 
 ### 1.1 Repository Structure: Folders Isolate Projects, Branches Isolate Environments
@@ -74,7 +76,7 @@ The CI template automatically derives `REMOTE_BRANCH` (the GitOps target branch)
 flowchart TD
     SOURCE["CI_COMMIT_REF_NAME\n(current branch/tag of application repo)"]
 
-    SOURCE --> R1{Is it a release tag?\nv*.*.*}
+    SOURCE --> R1{RELEASE_BUILD=true?\nusually triggered by release tag}
     R1 -->|"Yes"| PRD1["REMOTE_BRANCH = prd\nDOCKER_IMAGE_TAG = v1.2.3"]
 
     SOURCE --> R2{Is it sit or prd branch?}
@@ -90,6 +92,8 @@ flowchart TD
     R5 -->|"Yes"| DEV2["REMOTE_BRANCH = dev\nDOCKER_IMAGE_TAG = {branch}-{time}-{sha}-{pid}"]
 ```
 
+> **Note**: The release tag path to `prd` (R1) depends on the variable `RELEASE_BUILD=true`. When pushing a release tag, you must configure `RELEASE_BUILD: "true"` in `.gitlab-ci.yml`; otherwise it falls back to `dev`.
+>
 > Use `CUSTOM_REMOTE_SIT_BRANCH` and `CUSTOM_REMOTE_PRD_BRANCH` to customize branch mappings.
 
 ## 2. ArgoCD Application Naming Convention
@@ -157,13 +161,16 @@ sequenceDiagram
 
     Dev->>GitApp: git push feat-my-feature
     GitApp->>CI: Trigger pipeline
-    CI->>CI: .pre: REMOTE_BRANCH=dev<br/>DOCKER_IMAGE_TAG=feat-...-abc123-456
-    CI->>Reg: build: docker push<br/>image:feat-...-abc123-456
-    CI->>GitOps: deploy: clone dev branch<br/>update go-hello/values.yaml<br/>image.tag=feat-...-abc123-456
+    CI->>CI: .pre: REMOTE_BRANCH=dev<br/>DOCKER_IMAGE_TAG=feat-my-feature-20240101120000-abc123-456
+    CI->>Reg: build: docker push<br/>image:feat-my-feature-20240101120000-abc123-456
+    CI->>GitOps: deploy: clone dev branch<br/>update go-hello/values.yaml<br/>image.tag=feat-my-feature-20240101120000-abc123-456
     GitOps-->>Argo: Detects dev branch change
     Argo->>K8s: helm upgrade go-hello-charts-dev
     K8s-->>Dev: Application updated (go-hello-dev namespace)
 ```
+
+> **DOCKER_IMAGE_TAG format**: `{branch}-{BUILD_TIME}-{CI_COMMIT_SHORT_SHA}-{CI_PIPELINE_ID}`
+> `BUILD_TIME` is accurate to the minute (e.g., `20240101120000`), ensuring each build of the same branch produces a unique tag and prevents image overwrites.
 
 ### 3.2 CI Variable Reference
 

@@ -7,6 +7,8 @@
 1. **如何在一个 GitOps 仓库中管理多个项目**，并以分支区分不同环境
 2. **CD Stage 如何与 GitOps 仓库配合**，实现从 CI 镜像构建到 ArgoCD 自动部署的完整链路
 
+> **与第三章的关系**：[第三章](./03-gitops-repo-setup.md)展示每个应用拥有独立 GitOps 仓库的模式（适合项目间完全独立、需要单独权限控制的场景）。本章展示**单仓库多项目**模式（适合同一团队管理多个服务、希望统一治理的场景）。两种模式可按需选择，核心 CD 逻辑相同，主要差异体现在仓库结构和 ArgoCD Application 命名上。
+
 ## 1. 多项目 GitOps 仓库设计
 
 ### 1.1 仓库结构：文件夹隔离项目，分支隔离环境
@@ -74,7 +76,7 @@ CI 模板在 `.pre` 阶段根据**应用代码仓库的源分支**自动推导 `
 flowchart TD
     SOURCE["CI_COMMIT_REF_NAME\n（应用代码仓库的当前分支/Tag）"]
 
-    SOURCE --> R1{是 release tag?\nv*.*.*}
+    SOURCE --> R1{RELEASE_BUILD=true?\n通常由 release tag 触发}
     R1 -->|"是"| PRD1["REMOTE_BRANCH = prd\nDOCKER_IMAGE_TAG = v1.2.3"]
 
     SOURCE --> R2{是 sit 或 prd 分支?}
@@ -90,6 +92,8 @@ flowchart TD
     R5 -->|"是"| DEV2["REMOTE_BRANCH = dev\nDOCKER_IMAGE_TAG = {branch}-{time}-{sha}-{pid}"]
 ```
 
+> **注意**：进入 `prd` 的 release tag 路径（R1）依赖变量 `RELEASE_BUILD=true`。推送 release tag 时，需要在 `.gitlab-ci.yml` 中配置 `RELEASE_BUILD: "true"`，否则会回退到 `dev`。
+>
 > 可通过 `CUSTOM_REMOTE_SIT_BRANCH` 和 `CUSTOM_REMOTE_PRD_BRANCH` 自定义映射关系。
 
 ## 2. ArgoCD Application 命名约定
@@ -157,13 +161,16 @@ sequenceDiagram
 
     Dev->>GitApp: git push feat-my-feature
     GitApp->>CI: 触发流水线
-    CI->>CI: .pre: REMOTE_BRANCH=dev<br/>DOCKER_IMAGE_TAG=feat-...-abc123-456
-    CI->>Reg: build: docker push<br/>image:feat-...-abc123-456
-    CI->>GitOps: deploy: clone dev 分支<br/>更新 go-hello/values.yaml<br/>image.tag=feat-...-abc123-456
+    CI->>CI: .pre: REMOTE_BRANCH=dev<br/>DOCKER_IMAGE_TAG=feat-my-feature-20240101120000-abc123-456
+    CI->>Reg: build: docker push<br/>image:feat-my-feature-20240101120000-abc123-456
+    CI->>GitOps: deploy: clone dev 分支<br/>更新 go-hello/values.yaml<br/>image.tag=feat-my-feature-20240101120000-abc123-456
     GitOps-->>Argo: 检测到 dev 分支变更
     Argo->>K8s: helm upgrade go-hello-charts-dev
     K8s-->>Dev: 应用更新完成 (go-hello-dev namespace)
 ```
+
+> **DOCKER_IMAGE_TAG 格式**：`{branch}-{BUILD_TIME}-{CI_COMMIT_SHORT_SHA}-{CI_PIPELINE_ID}`
+> 其中 `BUILD_TIME` 精确到分钟（如 `20240101120000`），确保同一分支多次构建的标签唯一，避免镜像覆盖。
 
 ### 3.2 CI 变量配置一览
 

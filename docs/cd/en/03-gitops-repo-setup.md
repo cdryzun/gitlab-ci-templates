@@ -6,6 +6,8 @@ This chapter creates a GitOps repository on GitLab to store Helm Charts. ArgoCD 
 
 **Core GitOps principle**: The desired state of the application (Helm values, image tag) is stored in Git. ArgoCD continuously reconciles the cluster's actual state with Git.
 
+> **Repository mode note**: This chapter demonstrates the **single-application dedicated repository** model (each application has its own GitOps repository). If you need to **manage multiple projects in a single repository**, see [Chapter 6: Multi-Project GitOps Repository Design](./06-multi-project-gitops.md).
+
 ## 1. Repository structure
 
 Recommended GitOps repository layout:

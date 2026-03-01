@@ -81,6 +81,8 @@ The Auto-DevOps template automatically determines the target environment from th
 | `v*.*.*` (release tag) | `prd` | PRD (MR, requires approval) |
 | `prd` | `prd` | PRD (MR, requires approval) |
 
+> **Release tag trigger requirement**: When pushing a `v*.*.*` tag, you must set `RELEASE_BUILD: "true"` in `.gitlab-ci.yml` or in GitLab CI/CD Variables for the template to set `REMOTE_BRANCH` to `prd`. Without this setting, a tag push falls back to the `dev` environment.
+
 ## 4. PRD environment protection
 
 ```mermaid
@@ -127,6 +129,8 @@ argocd app wait "${APP_NAME}" --health --timeout 300
 Application name format: `{DEPLOY_REPO_PROJ}-{DEPLOY_REPO_NAME}-{REMOTE_BRANCH}`
 
 Example: `go-hello-go-hello-dev`
+
+> **Note**: In the single-app dedicated repository model, `DEPLOY_REPO_PROJ` (the project folder name) and the repository name are typically identical, causing a repeated segment in the name (e.g., `go-hello-go-hello-dev`). This is expected behaviour. In the [multi-project shared repository model](./06-multi-project-gitops.md), the repository name is `charts`, which produces cleaner names (e.g., `go-hello-charts-dev`).
 
 ## 6. Verify the CD flow
 

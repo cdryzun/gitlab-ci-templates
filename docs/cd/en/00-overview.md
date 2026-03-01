@@ -28,10 +28,21 @@ flowchart TD
 |---------|------|---------|
 | 01 | [K3s Installation](./01-k3s-installation.md) | Install K3s single-node cluster |
 | 02 | [ArgoCD Installation](./02-argocd-installation.md) | Install ArgoCD via Helm |
-| 03 | [GitOps Repository](./03-gitops-repo-setup.md) | Create Helm Charts repository structure |
+| 03 | [GitOps Repository](./03-gitops-repo-setup.md) | Create Helm Charts repository structure (single-app dedicated repo) |
 | 04 | [ArgoCD Integration](./04-argocd-gitops-integration.md) | Connect ArgoCD to GitOps repository |
 | 05 | [CI/CD Integration](./05-cicd-integration.md) | GitLab CI triggers CD pipeline |
 | 06 | [Multi-Project GitOps](./06-multi-project-gitops.md) | Single-repo multi-project management and CD integration |
+
+## GitOps Repository Architecture Selection
+
+Choose one of the following repository models based on your team size and project organization:
+
+| Model | Reference | Use Case |
+|-------|-----------|----------|
+| **Single-app dedicated repository**<br/>Each application has its own GitOps repository | Chapters 03-05 | Independent deployments, separate access control, cross-team collaboration |
+| **Single-repo multi-project**<br/>All applications share one GitOps repository, separated by folders | Chapter 06 | One team managing multiple services with unified governance |
+
+The core CD logic is identical for both models. The main differences are in GitOps repository structure and ArgoCD Application naming conventions.
 
 ## System Requirements
 
