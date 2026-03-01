@@ -35,4 +35,9 @@ Thumbs.db
 
 # h2 data
 *.db
-.vscode/*
+.vscode/*# Ignore Terraform state and variable files
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform/
+terraform.tfvars
