@@ -25,6 +25,20 @@ gitops/go-hello.git          # GitOps repo (separate from the application code r
 
 **Branch strategy**:
 
+```mermaid
+gitGraph
+   commit id: "init chart"
+   branch dev
+   checkout dev
+   commit id: "ci: tag a1b2c3d"
+   commit id: "ci: tag e4f5a6b"
+   branch sit
+   checkout sit
+   commit id: "ci: tag e4f5a6b (sit)"
+   checkout main
+   merge sit id: "release v1.0.0 (MR approved)" tag: "v1.0.0"
+```
+
 | Branch | Environment | Notes |
 |--------|-------------|-------|
 | `dev` | DEV | Development; updated automatically by CI |

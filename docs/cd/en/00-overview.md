@@ -6,25 +6,20 @@ This guide describes how to set up a GitOps-based CD environment using K3s and A
 
 ## Target Architecture
 
-```
-GitLab CI (CI Pipeline)
-    |
-    | 1. Build code & push image
-    | 2. Update GitOps repo (values.yaml image.tag)
-    v
-GitOps Repository (Helm Charts)
-    |
-    | 3. ArgoCD detects change (auto-sync)
-    v
-ArgoCD (GitOps Controller)
-    |
-    | 4. Helm render -> kubectl apply
-    v
-Kubernetes (K3s)
-    |
-    | 5. Deploy / update application
-    v
-Application (Running Pod)
+```mermaid
+flowchart TD
+    CI["GitLab CI\nCI Pipeline"]
+    REG["Container Registry"]
+    GITOPS["GitOps Repository\nHelm Charts"]
+    ARGO["ArgoCD\nGitOps Controller"]
+    K8S["Kubernetes\nK3s"]
+    APP["Application\nRunning Pod"]
+
+    CI -->|"1. Build code & push image"| REG
+    CI -->|"2. Update image.tag"| GITOPS
+    GITOPS -->|"3. Detect change / auto-sync"| ARGO
+    ARGO -->|"4. Helm render → kubectl apply"| K8S
+    K8S -->|"5. Run"| APP
 ```
 
 ## Chapters

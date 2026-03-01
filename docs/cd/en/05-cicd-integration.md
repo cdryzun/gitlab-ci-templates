@@ -6,24 +6,26 @@ This chapter explains how to use the gitlab-ci-templates Auto-DevOps pipeline to
 
 ## Complete CD flow
 
-```
-Application repo (go-hello)
-    |
-    | git push -> CI pipeline triggered
-    v
-.pre stage -> build stage -> deploy stage
-    |              |               |
-    | Env detect  | Build & push  | Update GitOps repo
-    |              | Docker image  | (update values.yaml image.tag)
-    v              v               |
-                           git push -> dev branch
-                                   |
-                                   v
-                           ArgoCD detects change
-                                   |
-                                   | argocd app sync
-                                   v
-                           Kubernetes deploys new version
+```mermaid
+flowchart TD
+    PUSH["git push\nApplication repo"]
+    CI["GitLab CI Pipeline"]
+    PRE[".pre stage\nEnv detection & variable setup"]
+    BUILD["build stage\nBuild & push image"]
+    DEPLOY["deploy stage\nUpdate GitOps repo"]
+    GITOPS["GitOps Repository\nvalues.yaml image.tag updated"]
+    ARGO["ArgoCD\nDetects Git change"]
+    K8S["Kubernetes\nRolling update"]
+
+    PUSH --> CI
+    CI --> PRE
+    CI --> BUILD
+    CI --> DEPLOY
+    PRE -->|"PROJECT_TYPE / DOCKER_IMAGE_TAG"| BUILD
+    BUILD -->|"Image pushed"| DEPLOY
+    DEPLOY -->|"git push dev branch"| GITOPS
+    GITOPS -->|"Polling / Webhook"| ARGO
+    ARGO -->|"argocd app sync"| K8S
 ```
 
 ## 1. CI variable configuration
@@ -80,6 +82,26 @@ The Auto-DevOps template automatically determines the target environment from th
 | `prd` | `prd` | PRD (MR, requires approval) |
 
 ## 4. PRD environment protection
+
+```mermaid
+flowchart TD
+    TAG["git push v*.*.*\nrelease tag"]
+    BRANCH["CI creates branch\nci/update-tag-v1.2.3"]
+    COMMIT["Commit image.tag change"]
+    MR["Auto-create Merge Request\ntarget: prd branch"]
+    REVIEW{"Human review"}
+    MERGE["MR merged to prd"]
+    ARGO["ArgoCD syncs\nPRD deployment"]
+    REJECT["MR closed\nno deployment"]
+
+    TAG --> BRANCH
+    BRANCH --> COMMIT
+    COMMIT --> MR
+    MR --> REVIEW
+    REVIEW -->|"Approve & Merge"| MERGE
+    REVIEW -->|"Reject"| REJECT
+    MERGE --> ARGO
+```
 
 For PRD environments the CD script:
 1. Creates a new branch in the GitOps repo (e.g. `ci/update-tag-v1.2.3`)

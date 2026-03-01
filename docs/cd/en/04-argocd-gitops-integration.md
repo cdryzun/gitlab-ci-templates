@@ -114,7 +114,27 @@ argocd repo add ...
 # Error: rpc error: ... context deadline exceeded
 ```
 
-**Root cause**:
+**Root cause (network topology)**:
+
+```mermaid
+flowchart TD
+    subgraph PVE_HOST["PVE Hypervisor Host (10.16.110.17)"]
+        subgraph pod_net["Pod Network (10.42.0.0/16)"]
+            REPO["argocd-repo-server\n10.42.0.x"]
+        end
+        MASQ["iptables MASQUERADE\nsrc IP → 10.16.110.17"]
+        BRIDGE["PVE Bridge vmbr0.1111"]
+    end
+    subgraph pve_vm["PVE Virtual Machine"]
+        GITLAB["GitLab VM\n10.16.110.119"]
+    end
+
+    REPO -->|"outbound request"| MASQ
+    MASQ -->|"hairpin blocked"| BRIDGE
+    BRIDGE -. "traffic never arrives" .-> GITLAB
+    PVE_HOST -->|"host direct access OK"| GITLAB
+```
+
 - Pods in 10.42.0.x send packets that are MASQUERADE'd to the host IP (e.g. 10.16.110.17)
 - The PVE bridge does not forward those packets to co-located VMs
 - As a result, both GitLab VMs and public internet destinations are unreachable from pods, while the host's own services (e.g. NodePort) remain accessible

@@ -25,6 +25,20 @@ gitops/go-hello.git          # GitOps 仓库（独立于应用代码仓库）
 
 **分支策略**：
 
+```mermaid
+gitGraph
+   commit id: "init chart"
+   branch dev
+   checkout dev
+   commit id: "ci: tag a1b2c3d"
+   commit id: "ci: tag e4f5a6b"
+   branch sit
+   checkout sit
+   commit id: "ci: tag e4f5a6b (sit)"
+   checkout main
+   merge sit id: "release v1.0.0 (MR approved)" tag: "v1.0.0"
+```
+
 | 分支 | 环境 | 说明 |
 |------|------|------|
 | `dev` | DEV | 开发环境，CI 自动更新 |

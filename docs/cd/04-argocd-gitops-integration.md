@@ -115,7 +115,27 @@ argocd repo add ...
 # 错误: rpc error: ... context deadline exceeded
 ```
 
-**根本原因**：
+**根本原因（网络拓扑）**：
+
+```mermaid
+flowchart TD
+    subgraph PVE宿主机["PVE 宿主机 (10.16.110.17)"]
+        subgraph pod_net["Pod 网络 (10.42.0.0/16)"]
+            REPO["argocd-repo-server\n10.42.0.x"]
+        end
+        MASQ["iptables MASQUERADE\n源 IP → 10.16.110.17"]
+        BRIDGE["PVE Bridge vmbr0.1111"]
+    end
+    subgraph pve_vm["PVE 虚拟机"]
+        GITLAB["GitLab VM\n10.16.110.119"]
+    end
+
+    REPO -->|"发出请求"| MASQ
+    MASQ -->|"hairpin 被阻断"| BRIDGE
+    BRIDGE -. "流量无法到达" .-> GITLAB
+    PVE宿主机 -->|"宿主机直接访问 OK"| GITLAB
+```
+
 - PVE 宿主机上的 Pod（10.42.0.x）发出的数据包经过 MASQUERADE 后，源 IP 变为宿主机 IP
 - 但 PVE 的 bridge 转发机制阻止了宿主机发出的流量进入 VM 网络（hairpin 问题）
 - 外网访问（如 8.8.8.8）同样无法访问

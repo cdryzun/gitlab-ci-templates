@@ -6,24 +6,26 @@
 
 ## 完整 CD 流程
 
-```
-应用代码仓库 (go-hello)
-    |
-    | git push → CI 流水线触发
-    v
-.pre 阶段 → build 阶段 → deploy 阶段
-    |              |              |
-    | 环境检测   | 镜像构建&推送 | 更新 GitOps 仓库
-    |              |              | (更新 values.yaml image.tag)
-    v              v              |
-                           git push → dev 分支
-                                  |
-                                  v
-                           ArgoCD 检测变更
-                                  |
-                                  | argocd app sync
-                                  v
-                           K8s 部署新版本
+```mermaid
+flowchart TD
+    PUSH["git push\n应用代码仓库"]
+    CI["GitLab CI 流水线"]
+    PRE[".pre 阶段\n环境检测 & 变量计算"]
+    BUILD["build 阶段\n镜像构建 & 推送"]
+    DEPLOY["deploy 阶段\n更新 GitOps 仓库"]
+    GITOPS["GitOps 仓库\nvalues.yaml image.tag 更新"]
+    ARGO["ArgoCD\n检测到 Git 变更"]
+    K8S["Kubernetes\n滚动更新 Pod"]
+
+    PUSH --> CI
+    CI --> PRE
+    CI --> BUILD
+    CI --> DEPLOY
+    PRE -->|"PROJECT_TYPE / DOCKER_IMAGE_TAG"| BUILD
+    BUILD -->|"镜像推送完成"| DEPLOY
+    DEPLOY -->|"git push dev 分支"| GITOPS
+    GITOPS -->|"自动轮询 / Webhook 通知"| ARGO
+    ARGO -->|"argocd app sync"| K8S
 ```
 
 ## 1. CI 变量配置
@@ -80,6 +82,26 @@ Auto-DevOps 模板自动根据当前分支决定部署到哪个环境：
 | `prd` | `prd` | PRD（创建 MR，需审批） |
 
 ## 4. PRD 环境保护机制
+
+```mermaid
+flowchart TD
+    TAG["git push v*.*.*\nrelease tag"]
+    BRANCH["CI 创建新分支\nci/update-tag-v1.2.3"]
+    COMMIT["提交 image.tag 变更"]
+    MR["自动创建 Merge Request\n目标分支: prd"]
+    REVIEW{"人工审批"}
+    MERGE["MR 合并到 prd"]
+    ARGO["ArgoCD 同步\nPRD 环境部署"]
+    REJECT["MR 关闭\n不部署"]
+
+    TAG --> BRANCH
+    BRANCH --> COMMIT
+    COMMIT --> MR
+    MR --> REVIEW
+    REVIEW -->|"Approve & Merge"| MERGE
+    REVIEW -->|"Reject"| REJECT
+    MERGE --> ARGO
+```
 
 对于 PRD 环境，CD 脚本会：
 1. 在 GitOps 仓库创建一个新分支（如 `ci/update-tag-v1.2.3`）

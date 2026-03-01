@@ -6,25 +6,20 @@
 
 ## 目标架构
 
-```
-GitLab CI (CI 流水线)
-    |
-    | 1. 代码构建 & 镜像推送
-    | 2. 更新 GitOps 仓库 (values.yaml image.tag)
-    v
-GitOps 仓库 (Helm Charts)
-    |
-    | 3. ArgoCD 检测变更 (自动同步)
-    v
-ArgoCD (GitOps 控制器)
-    |
-    | 4. Helm 渲染 → kubectl apply
-    v
-Kubernetes (K3s)
-    |
-    | 5. 应用部署/更新
-    v
-应用 (Running Pod)
+```mermaid
+flowchart TD
+    CI["GitLab CI\nCI 流水线"]
+    REG["Container Registry\n镜像仓库"]
+    GITOPS["GitOps 仓库\nHelm Charts"]
+    ARGO["ArgoCD\nGitOps 控制器"]
+    K8S["Kubernetes\nK3s"]
+    APP["应用\nRunning Pod"]
+
+    CI -->|"1. 代码构建 & 镜像推送"| REG
+    CI -->|"2. 更新 image.tag"| GITOPS
+    GITOPS -->|"3. 检测变更 / 自动同步"| ARGO
+    ARGO -->|"4. Helm 渲染 → kubectl apply"| K8S
+    K8S -->|"5. 运行"| APP
 ```
 
 ## 文档章节
