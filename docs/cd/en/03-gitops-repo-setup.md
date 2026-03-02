@@ -37,6 +37,7 @@ gitGraph
    branch sit
    checkout sit
    commit id: "ci: tag e4f5a6b (sit)"
+   branch prd
    checkout prd
    merge sit id: "release v1.0.0 (MR approved)" tag: "v1.0.0"
 ```
