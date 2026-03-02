@@ -34,12 +34,14 @@ gitGraph
    checkout dev
    commit id: "ci: tag a1b2c3d"
    commit id: "ci: tag e4f5a6b"
+   checkout main
    branch sit
    checkout sit
    commit id: "ci: tag e4f5a6b (sit)"
+   checkout main
    branch prd
    checkout prd
-   merge sit id: "release v1.0.0 (MR approved)" tag: "v1.0.0"
+   merge sit id: "release v1.0.0" tag: "v1.0.0"
 ```
 
 | Branch | Environment | Notes |
