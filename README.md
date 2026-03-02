@@ -235,6 +235,26 @@ Secret scanning runs automatically on every push via [Gitleaks](https://github.c
 
 ---
 
+## Documentation
+
+### Core Docs
+
+- **[CD Setup Guide](docs/cd/00-overview.md)**: Complete ArgoCD GitOps workflow
+- **[SOP](docs/SOP-Template-Development.md)**: Template development standard operating procedures
+- **[Troubleshooting](docs/troubleshooting/README.md)**: Solutions to common problems
+
+### Featured Troubleshooting
+
+- **[PVE + K3s NodePort Compatibility](docs/troubleshooting/networking/pve-k3s-nodeport-compatibility.md)**: Solving network issues between Proxmox VMs and K3s
+- **[ArgoCD Webhook Setup](docs/troubleshooting/kubernetes/argocd-webhook-setup.md)**: Configuring GitLab webhooks for auto-sync
+
+### Language
+
+- [中文文档](docs/troubleshooting/README.md)
+- [English Docs](docs/troubleshooting/en/README.md)
+
+---
+
 ## Contributing
 
 Issues and PRs are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
