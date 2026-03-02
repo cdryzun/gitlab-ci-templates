@@ -34,10 +34,12 @@ Push your code and watch the pipeline run.
 
 The template automatically detects the following project types:
 
-- **Java**: Detects `pom.xml` or `build.gradle`
+- **Java**: Detects `pom.xml`, `build.gradle`, or `build.gradle.kts`
 - **Node.js**: Detects `package.json`
-- **Python**: Detects `requirements.txt` or `setup.py`
+- **Python**: Detects `requirements.txt` (only — see note below)
 - **Golang**: Detects `go.mod`
+
+> **Note for Python projects without `requirements.txt`**: If your project uses only `setup.py` or `pyproject.toml`, auto-detection will fail with "Unable to find matching project file." Set `PROJECT_TYPE: "python"` explicitly to bypass detection.
 
 ## Common Scenarios
 
