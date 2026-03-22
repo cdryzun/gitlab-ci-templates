@@ -19,7 +19,7 @@ stages:
 test:
   extends:
     - .npm_test
-    - .unit_test_base 
+    - .unit_test_base
 
 build:
   extends:

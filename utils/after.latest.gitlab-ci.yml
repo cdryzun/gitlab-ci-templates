@@ -23,4 +23,3 @@
     - rm -rf ~/.ash_history || true
     - rm -rf ~/.bash_history || true
     - rm -rf ~/.pip/pip.conf || true
-    

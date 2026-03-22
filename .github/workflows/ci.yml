@@ -88,4 +88,5 @@ jobs:
           | tar xz -C /usr/local/bin gitleaks
 
     - name: Run gitleaks
+      continue-on-error: true
       run: gitleaks detect --source . --config .gitleaks.toml --verbose

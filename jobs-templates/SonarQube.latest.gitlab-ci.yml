@@ -2,7 +2,7 @@
 # .common_sonar_rules:
 #   rules:
 #     - if: '$SONAR_COMMON == "true"
-#       && ($CI_COMMIT_REF_NAME =~ /^(dev|master|develop|release)((-|_)[-_0-9a-z]{1,12})?$/ 
+#       && ($CI_COMMIT_REF_NAME =~ /^(dev|master|develop|release)((-|_)[-_0-9a-z]{1,12})?$/
 #       || $CI_COMMIT_REF_NAME =~ /^v?\d+\.\d+\.\d+((\-[a-zA-Z0-9]+)+)?$/)'
 #       variables:
 #         SONAR_GATE: "true"

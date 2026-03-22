@@ -7,7 +7,7 @@ variables:
 
 default:
   image: ${MAVEN_IMAGE}
-  
+
 workflow:
   rules:
     !reference [ .trigger_rule, rules ]

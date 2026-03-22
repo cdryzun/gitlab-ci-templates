@@ -16,11 +16,11 @@ stages:
 scan:
   extends:
     - .image_scan_base
-  
+
 deploy:
   extends:
     - .image_deploy_base
-    
+
 workflow:
   rules:
     !reference [ .trigger_rule, rules ]

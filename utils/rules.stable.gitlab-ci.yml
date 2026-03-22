@@ -34,20 +34,20 @@
      - *release_version
      - when: on_success
 
-    
+
 .image_scan_rules:
   rules:
     - if: '$BUILD_SHELL && $PROJECT_TYPE == "python"'
       when: never
-    - if: '$CI_COMMIT_REF_NAME !~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/ 
+    - if: '$CI_COMMIT_REF_NAME !~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
         && $DOCKER_IMAGE_SCAN_IMAGE == "true" && $DOCKER_IMAGE_BUILD == "true"'
-    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/ 
+    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
         && $DOCKER_IMAGE_BUILD == "true" && $DOCKER_IMAGE_SCAN_IMAGE == "true" && $FEAT_DOCKER_IMAGE_BUILD == "true"'
 
 # Only default branch triggers pipeline, requires manual confirmation. Schedule triggered pipelines do not require manual confirmation
 .master_schedule_manual_trigger:
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" 
+    - if: '$CI_PIPELINE_SOURCE == "schedule"
       && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: manual
@@ -68,7 +68,7 @@
 .develop_deploy_manual:
   rules:
     - if: '($CI_COMMIT_REF_NAME =~ /^(vk|dev|feat)((-|_)[-_0-9a-z]{1,12})?$/ || $DEPLOY_ENABLE == "true")
-        && $DEPLOY_REPO 
+        && $DEPLOY_REPO
         && DEPLOY_REPO_PROJ'
       variables:
         REMOTE_BRANCH: "dev"
@@ -84,12 +84,12 @@
         SIT_CD_AUTO_DEPLOY: "false"
     - *release_version
     # Branches starting with dev|sit|prd|feat|bugfix|hotfix connected with - can trigger; $CI_COMMIT_BEFORE_SHA filters out new branch creation triggers
-    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|dev|sit)$/ 
+    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|dev|sit)$/
         && ($CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE == "web")'
       variables:
         *default_trigger_vars
-    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/ 
-        && ($CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE == "web")' 
+    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
+        && ($CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE == "web")'
       variables:
         RELEASE_BUILD: "false"
         FEAT_BRANCH: "true"
@@ -102,7 +102,7 @@
   rules:
     - if: '($BUILD_SHELL && $PROJECT_TYPE == "python") || $DEPLOY_REPO == null'
       when: never
-    - if: '($CI_COMMIT_REF_NAME =~ /^prd-\d+-[a-z0-9]+-[0-9]+$/ && $PRD_BUILD_CREATE_TAG != "true") 
+    - if: '($CI_COMMIT_REF_NAME =~ /^prd-\d+-[a-z0-9]+-[0-9]+$/ && $PRD_BUILD_CREATE_TAG != "true")
         ||  $CI_COMMIT_REF_NAME == "prd" || $DEPLOY_REPO == null'
       when: never
     - if: '($CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/ || $CI_COMMIT_REF_NAME == "dev")
@@ -116,14 +116,14 @@
     - if: '($CI_COMMIT_REF_NAME == "prd" || $CI_COMMIT_REF_NAME =~ /^prd-\d+-[a-z0-9]+-[0-9]+$/)
         && $SIT_CD_AUTO_DEPLOY == "false"'
       when: manual
-    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/ 
-        && $DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true" && $FEAT_DOCKER_IMAGE_BUILD == "true" 
+    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
+        && $DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true" && $FEAT_DOCKER_IMAGE_BUILD == "true"
         && $FEAT_CD_AUTO_DEPLOY == "true"'
-    - if: '$CI_COMMIT_REF_NAME !~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/ 
+    - if: '$CI_COMMIT_REF_NAME !~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
         && $DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true"'
-    - if: '$CI_COMMIT_REF_NAME !~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/ 
+    - if: '$CI_COMMIT_REF_NAME !~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
         && $DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true"'
       when: manual
-    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/ 
+    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
         && $DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true" && $FEAT_DOCKER_IMAGE_BUILD == "true"'
       when: manual

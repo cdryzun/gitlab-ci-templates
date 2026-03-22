@@ -15,7 +15,7 @@ cache:
 
 stages:
   !reference [ .general_stage, stages ]
-    
+
 scan:
   extends:
     - .image_scan_base

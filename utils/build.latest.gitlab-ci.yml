@@ -186,7 +186,7 @@
   script:
     - !reference [ .npm-generate-config, script ]
     - |
-      set -x 
+      set -x
       # Check if docker/nginx.conf exists in the project
       if [ -e ${CUSTOM_NGINX_CONF} ];then
           mv ${CUSTOM_NGINX_CONF} ${DOCKER_DAEMON_WORKSPACE}/nginx.conf

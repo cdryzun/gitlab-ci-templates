@@ -87,7 +87,7 @@
       fi
     - |
       set -x
-      if [ -e requirements.txt ];then 
+      if [ -e requirements.txt ];then
         pip3 install -r requirements.txt -i ${PYPI}
       else
         pip3 install pytest pytest-cov -i ${PYPI}

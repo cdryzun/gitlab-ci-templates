@@ -64,7 +64,7 @@ all_charts_syntax_check:
 
 .argocd_exec: &argocd_exec
   script:
-    - | 
+    - |
       # Match action
       case ${ACTION} in
         "create_all")

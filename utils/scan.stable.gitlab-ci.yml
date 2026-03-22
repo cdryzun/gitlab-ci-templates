@@ -27,7 +27,7 @@
 ###################### Below this line are code snippets split by function or module
 .security_scan_docker_image:
   stage: scan
-  extends: 
+  extends:
     - .harbor_auth
     - .container_security_scan
     - .build_after_script
@@ -37,7 +37,7 @@
 
 .common_sonar_analyze:
   stage: sonar
-  extends: 
+  extends:
     - .sonar_common
 
 
@@ -47,24 +47,24 @@
   script:
     - |
       set +x
-      GLOBAL_PROJECT_ARGS="-Dsonar.projectKey=${CI_PROJECT_NAME} 
-                            -Dsonar.projectName=${CI_PROJECT_NAME} 
-                            -Dsonar.projectVersion=${CI_COMMIT_REF_NAME} 
+      GLOBAL_PROJECT_ARGS="-Dsonar.projectKey=${CI_PROJECT_NAME}
+                            -Dsonar.projectName=${CI_PROJECT_NAME}
+                            -Dsonar.projectVersion=${CI_COMMIT_REF_NAME}
                             -Dsonar.projectDescription=${CI_PROJECT_TITLE}"
       GLOBAL_SERVER_ARGS="-Dsonar.ws.timeout=30
-                            -Dsonar.links.homepage=${CI_PROJECT_URL} 
+                            -Dsonar.links.homepage=${CI_PROJECT_URL}
                             -Dsonar.host.url=${SONAR_URL}
                             -Dsonar.login=${SONAR_TOKEN}
                             -Dsonar.sourceEncoding=UTF-8
                             -Dsonar.java.binaries="${SONAR_BINARIES}"
                             -Dsonar.java.test.binaries="${SONAR_TEST_BINARIES}"
                             -Dsonar.java.surefire.report=target/surefire-reports"
-      GLOBAL_MR_ARGS="-Dsonar.pullrequest.key=${CI_MERGE_REQUEST_IID} 
-                      -Dsonar.pullrequest.branch=${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME} 
-                      -Dsonar.pullrequest.base=${CI_MERGE_REQUEST_TARGET_BRANCH_NAME} 
-                      -Dsonar.gitlab.ref_name=${CI_COMMIT_REF_NAME} 
-                      -Dsonar.gitlab.commit_sha=${CI_COMMIT_SHA} 
-                      -Dsonar.gitlab.project_id=${CI_PROJECT_PATH} 
+      GLOBAL_MR_ARGS="-Dsonar.pullrequest.key=${CI_MERGE_REQUEST_IID}
+                      -Dsonar.pullrequest.branch=${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}
+                      -Dsonar.pullrequest.base=${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}
+                      -Dsonar.gitlab.ref_name=${CI_COMMIT_REF_NAME}
+                      -Dsonar.gitlab.commit_sha=${CI_COMMIT_SHA}
+                      -Dsonar.gitlab.project_id=${CI_PROJECT_PATH}
                       -Dsonar.pullrequest.gitlab.repositorySlug=${CI_PROJECT_ID}"
       MULTI_BRANCH_ARGS="-Dsonar.branch.name=${CI_COMMIT_REF_NAME}"
       set -x
