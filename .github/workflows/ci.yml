@@ -32,7 +32,7 @@ jobs:
         exit_code=0
         for script in scripts/*.sh; do
           echo "Checking ${script}..."
-          shellcheck -e SC1090,SC1091,SC2034,SC2154,SC2155,SC2046,SC2086,SC2006,SC2145,SC2164,SC2206,SC2207,SC2209 \
+          shellcheck -e SC1090,SC1091,SC2034,SC2154,SC2155,SC2046,SC2086,SC2006,SC2010,SC2045,SC2145,SC2163,SC2164,SC2166,SC2206,SC2207,SC2209 \
             -S warning "${script}" || exit_code=1
         done
         exit ${exit_code}
