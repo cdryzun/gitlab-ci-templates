@@ -45,6 +45,8 @@ graph LR
 
 ## 快速开始
 
-[:material-rocket-launch: 30 秒接入](guide/quickstart.md){ .md-button .md-button--primary }
-[:material-file-document: 变量参考](reference/variables.md){ .md-button }
-[:material-github: GitHub](https://github.com/cdryzun/gitlab-ci-templates){ .md-button }
+[30 秒接入 :material-rocket-launch:](guide/quickstart.md){ .md-button .md-button--primary }
+
+[变量参考 :material-file-document:](reference/variables.md){ .md-button }
+
+[GitHub :material-github:](https://github.com/cdryzun/gitlab-ci-templates){ .md-button }
