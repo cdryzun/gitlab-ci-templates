@@ -37,11 +37,6 @@ theme:
 
 plugins:
   - search
-  - i18n:
-      default_language: zh
-      languages:
-        zh: 中文
-        en: English
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -50,7 +45,7 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details
