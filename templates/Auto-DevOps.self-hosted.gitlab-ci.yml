@@ -1,0 +1,42 @@
+# Self-Hosted Version - Auto DevOps Template
+# Use this when hosting templates on your own GitLab instance.
+# All includes use local references (no external network required).
+
+include:
+  # Variables
+  - local: 'vars/default-vars.stable.gitlab-ci.yml'
+  - local: 'vars/multiarch-vars.stable.gitlab-ci.yml'
+  - local: 'vars/vault.stable.gitlab-ci.yml'
+  # Utils
+  - local: 'utils/rules.stable.gitlab-ci.yml'
+  - local: 'utils/before.stable.gitlab-ci.yml'
+  - local: 'utils/after.stable.gitlab-ci.yml'
+  - local: 'utils/build.stable.gitlab-ci.yml'
+  - local: 'utils/deploy.stable.gitlab-ci.yml'
+  - local: 'utils/scan.stable.gitlab-ci.yml'
+  - local: 'utils/test.stable.gitlab-ci.yml'
+  - local: 'utils/manage.stable.gitlab-ci.yml'
+  # Jobs
+  - local: 'jobs-templates/PreJob.stable.gitlab-ci.yml'
+  - local: 'jobs-templates/SonarQube.stable.gitlab-ci.yml'
+  - local: 'jobs-templates/Test.stable.gitlab-ci.yml'
+  - local: 'jobs-templates/Build.stable.gitlab-ci.yml'
+  - local: 'jobs-templates/Trivy-Container-Scanning.stable.gitlab-ci.yml'
+  - local: 'jobs-templates/Gitlab-Container-Scanning.stable.gitlab-ci.yml'
+  - local: 'jobs-templates/Deploy.stable.gitlab-ci.yml'
+  - local: 'jobs-templates/Rollback.stable.gitlab-ci.yml'
+
+variables:
+  extends: .default_vars
+  TEMPLATE_CONTEXT: 'stable'
+
+cache:
+  paths:
+    - ${CACHE_DIR}
+
+stages:
+  !reference [ .general_stage, stages ]
+
+workflow:
+  rules:
+    !reference [ .trigger_rule, rules ]
