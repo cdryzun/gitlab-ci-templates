@@ -1,5 +1,5 @@
 site_name: gitlab-ci-templates
-site_url: https://cdryzun.github.io/gitlab-ci-templates
+site_url: https://gitlab-ci-templates.vercel.app/
 site_description: Drop-in CI/CD templates for GitLab - build, test, scan, deploy in one include
 repo_url: https://github.com/cdryzun/gitlab-ci-templates
 repo_name: cdryzun/gitlab-ci-templates
