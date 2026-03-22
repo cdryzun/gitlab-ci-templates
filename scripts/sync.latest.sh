@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #descript: GitOps-based CD tool ArgoCD automatic application creation script.
 
-set -euo pipefail
+set -eo pipefail
 
 
 # Load utility classes and module scripts

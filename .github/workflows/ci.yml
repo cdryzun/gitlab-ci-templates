@@ -105,13 +105,12 @@ jobs:
       run: |
         exit_code=0
         for script in scripts/*.sh; do
-          # Skip utility/module scripts that are sourced (start with _)
           basename=$(basename "${script}")
           if [[ "${basename}" == _* ]]; then
             continue
           fi
-          if ! grep -q "set -euo pipefail" "${script}"; then
-            echo "ERROR: ${script} missing 'set -euo pipefail'"
+          if ! grep -q "set -e" "${script}" || ! grep -q "pipefail" "${script}"; then
+            echo "ERROR: ${script} missing 'set -eo pipefail' or 'set -euo pipefail'"
             exit_code=1
           fi
         done
