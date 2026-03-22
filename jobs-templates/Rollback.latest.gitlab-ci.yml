@@ -9,6 +9,7 @@ cd-rollback:
   before_script:
     - !reference [ .utils_shell_function, script ]
     - !reference [ .alias, script ]
+    - !reference [ .check_glab, script ]
   # dependencies:
   #   - pre
   #   - cd-deploy
@@ -22,6 +23,7 @@ cd-rollback:
     - .runner_tag
     - .deploy_gitlab_auth_vars
     - .gitlab_auth_vars
+    - .gitlab_apitoken_vars
   rules:
     !reference [ .cd_deploy, rules ]
   when: manual

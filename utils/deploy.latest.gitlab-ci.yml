@@ -1,0 +1,89 @@
+
+###################### Below this line are code snippets split by function or module
+.image_deploy_base:
+  image: "${CD_DEPLOY_IMAGE}"
+  stage: deploy
+  secrets:
+    !reference [ .deploy_secrets, secrets ]
+  script:
+    - !reference [ .replacement_tag_push, script ]
+    - !reference [ .argocd_app_sync, script ]
+  extends:
+    - .runner_tag
+  rules:
+    !reference [ .develop_deploy_manual, rules ]
+  environment:
+    name: "${CI_COMMIT_REF_NAME}"
+
+# Update values in values.yaml in the remote charts repository and push to the remote repository.
+.replacement_tag_push:
+  script:
+    - |
+      # Print deployment environment
+      echo "${REMOTE_BRANCH}"
+    - |
+      set -eu
+      # sleep 1800  # debug
+      # Predefined variables for easier generalization later
+      if [ "${CD_DEPLOY_IMGAGE}" ];then
+          export DEPLOY_TAG_NAME="${CD_DEPLOY_IMGAGE}"
+      else
+          export DEPLOY_TAG_NAME="${DEV_DOCKER_TAG_PERFIX}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
+      fi
+      if [ "${DEPLOY_REPO_PROJ}" ];then
+          export _DEPLOY_REPO_PROJ="${DEPLOY_REPO_PROJ}"
+      else
+          export _DEPLOY_REPO_PROJ="${CI_PROJECT_NAME}"
+      fi
+      _DEPLOY_REPO_NOPROTO="${DEPLOY_REPO#*://}"
+      export _DEPLOY_REPO="${_DEPLOY_REPO_NOPROTO%.git}"
+      if echo "${DEPLOY_REPO}" | grep -q "://"; then
+        _SCHEME="${DEPLOY_REPO%%://*}"
+      else
+        _SCHEME="https"
+      fi
+
+      git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
+      git config --global user.name "${GIT_AUTO_COMMIT_NAME}"
+      git clone --branch ${REMOTE_BRANCH} --depth 1 "${_SCHEME}://${GIT_AUTO_COMMIT_NAME}:${GITLAB_REPO_COMMIT_TOKEN}@${_DEPLOY_REPO}.git" repo
+      cd "repo/${_DEPLOY_REPO_PROJ}"
+      ls -l
+
+      # Get current value from yaml
+      oldImage=$(yq e "${DEPLOY_REPO_YAML_TAG}" "${DEPLOY_VALUE_FILE}")
+
+      if [ "${oldImage}" ];then
+        echo "old value: ${oldImage}"
+        echo "replacing with new value: ${DEPLOY_TAG_NAME}"
+        DEPLOY_TAG_NAME="${DEPLOY_TAG_NAME}" yq e -i "${DEPLOY_REPO_YAML_TAG} = strenv(DEPLOY_TAG_NAME)" "${DEPLOY_VALUE_FILE}"
+        echo "verifying new value: $(yq e "${DEPLOY_REPO_YAML_TAG}" "${DEPLOY_VALUE_FILE}")"
+      else
+        echo "Get ${DEPLOY_REPO_YAML_TAG} values is null, please check and retry."
+        exit 1
+      fi
+
+      if ! git diff-index --quiet HEAD --; then
+        git status
+        git add .
+        git commit -m "${DEPLOY_COMMIT_MESSAGE}"
+        git push origin "${REMOTE_BRANCH}"
+      else
+          echo "no changes, git repository is up to date"
+      fi
+
+# This stage depends on ARGOCD_SERVER & ARGOCD_AUTH_TOKEN environment variables
+# Note: argocd CLI is pre-installed in glci-toolbox image
+.argocd_app_sync:
+  script:
+    - |
+      # Check if argocd command exists
+      if [ ! -e /usr/local/bin/argocd ]; then
+        echo "Error: argocd CLI not found. Please use glci-toolbox image."
+        exit 1
+      fi
+    - |
+      # Execute argocd application sync
+      set -x
+      argocd version
+      argocd app sync "${_DEPLOY_REPO_PROJ}-${_DEPLOY_REPO##*/}-${REMOTE_BRANCH}" || true
+      argocd app wait "${_DEPLOY_REPO_PROJ}-${_DEPLOY_REPO##*/}-${REMOTE_BRANCH}" --health

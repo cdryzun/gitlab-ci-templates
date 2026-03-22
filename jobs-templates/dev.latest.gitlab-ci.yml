@@ -1,6 +1,6 @@
 include:
-  - local: "vars/*.stable.gitlab-ci.yml"
-  - local: "utils/*.stable.gitlab-ci.yml"
+  - local: "vars/*.latest.gitlab-ci.yml"
+  - local: "utils/*.latest.gitlab-ci.yml"
 
 variables:
   extends: .default_vars

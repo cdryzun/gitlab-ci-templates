@@ -12,8 +12,8 @@
     - !reference [ .check_glab, script ]
   script:
     - |
-      script_download _utils.stable.sh _utils.sh
-      script_download cd-deploy.stable.sh
+      script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
+      script_download cd-deploy.${TEMPLATE_CONTEXT}.sh
       chmod +x ./run.sh
       shell_exec ./run.sh
   extends:

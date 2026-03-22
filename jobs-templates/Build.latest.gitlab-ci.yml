@@ -1,16 +1,6 @@
 build:
   stage: build
   image: ${BUILD_IMAGE}
-#  before_script:
-#    - !reference [ .utils_shell_function, script ]
-#    - !reference [ .alias, script ]
-#    - !reference [ .check_curl, script ]
-#    - !reference [ .npm_before_jobs, script ]
-#    - !reference [ .check_docker, script ]
-#    - !reference [ .docker_login, script ]
-#    - !reference [ .maven-generate-config, script ]
-#    - !reference [ .npm-generate-config, script ]
-#  allow_failure: true
   extends:
     - .runner_tag
     - .nexus_auth
@@ -21,6 +11,7 @@ build:
     - .load_artifacts_env
     - .harbor_auth
     - .gitlab_apitoken_vars
+    - .clean_auth_files
   script:
     - |
       script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
