@@ -166,6 +166,21 @@ variables:
     && go mod tidy && go build -o app ./...
 ```
 
+### React / Vue / Next.js
+
+All frontend frameworks with `package.json` are auto-detected. Just set your build command:
+
+```yaml
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  BUILD_SHELL: "pnpm run build"
+  PACKAGE_MANAGER: "pnpm"
+```
+
+Output goes to `dist/`, served via Nginx. Works with Vite, Webpack, or any bundler that outputs to `dist/`.
+
 ### Library Projects (No Docker)
 
 ```yaml

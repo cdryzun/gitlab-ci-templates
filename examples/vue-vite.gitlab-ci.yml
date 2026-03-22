@@ -1,0 +1,8 @@
+# Vue 3 (Vite) -- builds to dist/, served via Nginx
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  BUILD_SHELL: "pnpm run build"
+  PACKAGE_MANAGER: "pnpm"
+  NODE_UNIT_TEST_SHELL: "pnpm test"

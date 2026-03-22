@@ -196,6 +196,21 @@ variables:
     && go mod tidy && go build -o app ./...
 ```
 
+### React / Vue / Next.js
+
+所有前端框架只要有 `package.json` 就能自动识别，设置构建命令即可：
+
+```yaml
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  BUILD_SHELL: "pnpm run build"
+  PACKAGE_MANAGER: "pnpm"
+```
+
+产物输出到 `dist/`，自动打包进 Nginx 镜像。Vite、Webpack 等打包工具均支持。
+
 ### 纯库项目（不构建镜像）
 
 ```yaml
