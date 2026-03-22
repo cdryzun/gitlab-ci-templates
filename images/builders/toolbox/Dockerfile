@@ -7,14 +7,14 @@ LABEL maintainer="cdryzun"
 LABEL description="Utility image with common DevOps tools"
 LABEL org.opencontainers.image.source="https://github.com/cdryzun/gitlab-ci-templates"
 
-# Versions
-ARG YQ_VERSION=4.40.5
-ARG JQ_VERSION=1.7
-ARG HELM_VERSION=3.14.0
-ARG KUBECTL_VERSION=1.29.2
-ARG DOCKER_VERSION=24.0.7
-ARG GLAB_VERSION=1.86.0
-ARG ARGOCD_VERSION=2.10.0
+# Versions - pinned to latest stable releases
+ARG YQ_VERSION=4.52.4
+ARG JQ_VERSION=1.7.1
+ARG HELM_VERSION=3.20.1
+ARG KUBECTL_VERSION=1.35.3
+ARG DOCKER_VERSION=27.5.1
+ARG GLAB_VERSION=1.89.0
+ARG ARGOCD_VERSION=2.14.21
 
 # Install base dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -34,7 +34,7 @@ RUN curl -fsSL https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/
     chmod +x /usr/local/bin/yq
 
 # Install jq
-RUN curl -fsSL https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux-amd64 \
+RUN curl -fsSL https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-amd64 \
     -o /usr/local/bin/jq && \
     chmod +x /usr/local/bin/jq
 
@@ -67,8 +67,5 @@ RUN curl -fsSL https://github.com/argoproj/argo-cd/releases/download/v${ARGOCD_V
     -o /usr/local/bin/argocd && \
     chmod +x /usr/local/bin/argocd
 
-# Set working directory
 WORKDIR /workspace
-
-# Default command
 CMD ["bash"]

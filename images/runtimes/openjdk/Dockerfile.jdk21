@@ -1,0 +1,34 @@
+# OpenJDK Runtime Image - JDK 21
+# Minimal JRE for Java applications
+
+FROM eclipse-temurin:17-jre-jammy
+
+LABEL maintainer="cdryzun"
+LABEL description="OpenJDK 21 JRE runtime for Java applications"
+LABEL org.opencontainers.image.source="https://github.com/cdryzun/gitlab-ci-templates"
+
+# Install additional tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set timezone
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Create non-root user
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+# Create deployment directory
+RUN mkdir -p /opt/deployments && \
+    chown -R appuser:appgroup /opt/deployments
+
+WORKDIR /opt/deployments
+
+USER appuser
+
+# JVM options for container environment
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=90.0"
+
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

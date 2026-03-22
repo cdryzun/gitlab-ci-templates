@@ -1,7 +1,7 @@
 # Alpine Base Runtime Image
 # Minimal base for various applications
 
-FROM alpine:3.19
+FROM alpine:3.22
 
 LABEL maintainer="cdryzun"
 LABEL description="Minimal Alpine base runtime"

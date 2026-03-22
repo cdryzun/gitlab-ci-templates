@@ -260,10 +260,10 @@ Pre-built on GitHub Container Registry -- all tools pre-installed, no downloads 
 
 | Image | Tags | Includes |
 |---|---|---|
-| `ghcr.io/cdryzun/glci-builder-java` | `jdk8`, `jdk11`, `jdk17` | Maven, Gradle, SonarScanner |
-| `ghcr.io/cdryzun/glci-builder-nodejs` | `18`, `20`, `24` | pnpm, yarn, npm |
-| `ghcr.io/cdryzun/glci-builder-python` | `3.10`, `3.11`, `3.12` | pip, poetry |
-| `ghcr.io/cdryzun/glci-builder-golang` | `1.21`, `1.22`, `1.23` | Go toolchain |
+| `ghcr.io/cdryzun/glci-builder-java` | `jdk8`, `jdk11`, `jdk17`, `jdk21` | Maven, Gradle, SonarScanner |
+| `ghcr.io/cdryzun/glci-builder-nodejs` | `20`, `22`, `24` | pnpm, yarn, npm |
+| `ghcr.io/cdryzun/glci-builder-python` | `3.11`, `3.12`, `3.13` | pip, poetry |
+| `ghcr.io/cdryzun/glci-builder-golang` | `1.22`, `1.23`, `1.24` | Go toolchain, golangci-lint |
 | `ghcr.io/cdryzun/glci-builder-golang-nodejs` | `go1.23-node20`, `go1.24-node22`, ... | Go + Node.js combo |
 | `ghcr.io/cdryzun/glci-toolbox` | `latest` | docker, helm, glab, yq, argocd |
 
