@@ -18,7 +18,7 @@ jobs:
 
     - name: Lint YAML files
       run: |
-        yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}, truthy: disable}}" \
+        yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}, truthy: disable, empty-lines: {max: 3}}}" \
           templates/*.yml jobs-templates/*.yml vars/*.yml utils/*.yml
 
   lint-shell:

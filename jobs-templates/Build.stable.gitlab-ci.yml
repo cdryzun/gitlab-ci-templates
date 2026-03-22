@@ -34,7 +34,7 @@ build:
       if [ -n "${CUSTOM_DOCKERFILE_PATH}" ];then
         cp -rf ${CUSTOM_DOCKERFILE_PATH} ${DOCKER_DAEMON_WORKSPACE}/
       else
-        dockerfile_download Dockerfile.${TEMPLATE_CONTEXT}.sh Dockerfile.${TEMPLATE_CONTEXT}.sh 
+        dockerfile_download Dockerfile.${TEMPLATE_CONTEXT}.sh Dockerfile.${TEMPLATE_CONTEXT}.sh
         cd ${DOCKER_DAEMON_WORKSPACE}
         bash Dockerfile.${TEMPLATE_CONTEXT}.sh "${PROJECT_TYPE}"
       fi
