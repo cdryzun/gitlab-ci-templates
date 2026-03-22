@@ -1,7 +1,8 @@
 # Golang Application Dockerfile Template
 # Lightweight Go application container based on Alpine Linux
 
-FROM alpine:3.22 as golang
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}alpine:3.22 as golang
 
 LABEL maintainer="DevOps Team"
 

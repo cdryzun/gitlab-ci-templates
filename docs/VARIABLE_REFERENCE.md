@@ -29,6 +29,7 @@ All variables with their defaults and descriptions. Override any of these in you
 | `IMG_NAME` | _(auto-generated)_ | Full image name without tag. Built from registry + namespace + project. |
 | `DOCKER_IMAGE_TAG` | _(auto-generated)_ | Image tag, derived from branch name + timestamp + commit SHA. |
 | `DOCKER_BUILD_FLAGS` | `--no-cache` | Extra `docker build` flags. |
+| `DOCKER_MIRROR_PREFIX` | _(empty)_ | Docker Hub mirror prefix with trailing slash (e.g., `proxyhub.example.com/`). Prepended to base images in Dockerfile templates. |
 | `DOCKER_DAEMON_WORKSPACE` | `./docker-build` | Working directory for Docker build context. |
 | `DOCKER_WORKSPACE_PREPARE_CMD` | _(empty)_ | Shell command to run inside build workspace before `docker build`. |
 | `CUSTOM_DOCKERFILE` | _(auto-detected)_ | Set to `true` to use project's own Dockerfile instead of built-in templates. |

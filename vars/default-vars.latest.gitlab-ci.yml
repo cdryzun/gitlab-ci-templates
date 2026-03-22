@@ -108,6 +108,9 @@
   FEAT_DOCKER_IMAGE_BUILD: "false"
   # Extra parameters added during docker build, such as "--no-cache" to build without cache, multiple parameters separated by space
   DOCKER_BUILD_FLAGS: '--no-cache'
+  # Docker Hub mirror prefix for accelerated image pulls (e.g., "proxyhub.example.com/")
+  # Must include trailing slash. Leave empty to pull directly from Docker Hub.
+  DOCKER_MIRROR_PREFIX: ""
   # Specify custom nginx config to use, default is docker/nginx.conf in project
   CUSTOM_NGINX_CONF: "docker/nginx.conf"
   # Specify custom Dockerfile path for current project, supports relative or absolute path, leave empty to use default template

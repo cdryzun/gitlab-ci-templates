@@ -88,6 +88,9 @@
   DOCKER_IMAGE_BUILD: "true"
   FEAT_DOCKER_IMAGE_BUILD: "false"
   DOCKER_BUILD_FLAGS: '--no-cache'
+  # Docker Hub mirror prefix for accelerated image pulls (e.g., "proxyhub.example.com/")
+  # Must include trailing slash. Leave empty to pull directly from Docker Hub.
+  DOCKER_MIRROR_PREFIX: ""
   CUSTOM_NGINX_CONF: "docker/nginx.conf"
   CUSTOM_DOCKERFILE_PATH: ""
   CUSTOM_DOCKERFILE: ""

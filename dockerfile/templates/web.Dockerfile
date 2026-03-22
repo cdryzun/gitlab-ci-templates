@@ -1,8 +1,9 @@
 # Web Frontend Dockerfile Template
 # 基于 Nginx 的前端静态资源容器镜像
 
+ARG DOCKER_MIRROR_PREFIX=""
 ARG NGINX_VERSION=1.24-alpine
-FROM nginx:${NGINX_VERSION} as web
+FROM ${DOCKER_MIRROR_PREFIX}nginx:${NGINX_VERSION} as web
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"

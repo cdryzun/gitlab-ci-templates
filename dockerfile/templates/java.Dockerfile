@@ -1,8 +1,9 @@
 # Java Application Dockerfile Template
 # 基于 OpenJDK 的标准 Java 应用容器镜像
 
+ARG DOCKER_MIRROR_PREFIX=""
 ARG OPENJDK_VERSION=17-alpine
-FROM eclipse-temurin:${OPENJDK_VERSION} as java
+FROM ${DOCKER_MIRROR_PREFIX}eclipse-temurin:${OPENJDK_VERSION} as java
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"

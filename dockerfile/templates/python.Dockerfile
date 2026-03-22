@@ -1,7 +1,8 @@
 # Python Application Dockerfile Template
 # Python application container image
 
-FROM python:3.11-alpine as python
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}python:3.11-alpine as python
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
