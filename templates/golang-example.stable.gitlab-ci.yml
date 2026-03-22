@@ -20,7 +20,5 @@ variables:
   # GO_GOPRIVATE: "gitlab.example.com"
 
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/golang.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/golang.stable.gitlab-ci.yml'
 

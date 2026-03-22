@@ -28,9 +28,7 @@ variables:
 
 
 include:
-  - project: 'devops/ci-templates'
-    ref: devops
-    file: 'jobs-templates/python.stable.gitlab-ci.yml'
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/jobs-templates/python.stable.gitlab-ci.yml'
 
 
 # Custom project build job, job name is fixed as build, please do not change.
