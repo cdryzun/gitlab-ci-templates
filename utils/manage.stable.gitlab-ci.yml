@@ -61,16 +61,24 @@
         set +x
         local script_name="${1}"
         local output_name="${2:-run.sh}"
-        curl -fsSL "${TEMPLATE_REPO_RAW_URL}/scripts/${script_name}" -o "${output_name}"
+        local _auth_header=""
+        if [ -n "${CI_JOB_TOKEN:-}" ]; then
+          _auth_header="JOB-TOKEN: ${CI_JOB_TOKEN}"
+        fi
+        curl -fsSL ${_auth_header:+-H "${_auth_header}"} "${TEMPLATE_REPO_RAW_URL}/scripts/${script_name}" -o "${output_name}"
         set -x
       }
     - |
-      # Download dockerfile from GitHub raw URL
+      # Download dockerfile template
       # Usage: dockerfile_download Dockerfile.stable.sh Dockerfile.stable.sh
       function dockerfile_download(){
         set +x
         local dockerfile_name="${1}"
         local output_name="${2:-Dockerfile}"
-        curl -fsSL "${TEMPLATE_REPO_RAW_URL}/dockerfile/${dockerfile_name}" -o "${DOCKER_DAEMON_WORKSPACE}/${output_name}"
+        local _auth_header=""
+        if [ -n "${CI_JOB_TOKEN:-}" ]; then
+          _auth_header="JOB-TOKEN: ${CI_JOB_TOKEN}"
+        fi
+        curl -fsSL ${_auth_header:+-H "${_auth_header}"} "${TEMPLATE_REPO_RAW_URL}/dockerfile/${dockerfile_name}" -o "${DOCKER_DAEMON_WORKSPACE}/${output_name}"
         set -x
       }
