@@ -147,6 +147,8 @@
   # Email used in auto commit
   GIT_AUTO_COMMIT_EMAIL: "ci-bot@example.com"
   # Image name used in CD deployment stage, will replace "${DEV_DOCKER_TAG_PERFIX}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}" default version when set
+  CD_DEPLOY_IMAGE: ""
+  # Backward-compatible alias (legacy typo)
   CD_DEPLOY_IMGAGE: ""
   # Default commit push remote branch
   REMOTE_BRANCH: "dev"

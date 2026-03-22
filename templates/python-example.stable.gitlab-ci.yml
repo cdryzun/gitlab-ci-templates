@@ -21,7 +21,7 @@ variables:
   SONAR_DIR: "./src"
 
   # docker image artifact repository, no modification needed by default
-  HARBOR_URL: "harbor.iquantex.com"
+  HARBOR_URL: "harbor.example.com"
 
   # Additional parameters added during docker build, such as "--no-cache" to build without cache, multiple parameters separated by space
   DOCKER_BUILD_FLAGS: ''

@@ -256,14 +256,14 @@ binaries/
 ```dockerfile
 # Java 示例
 ARG OPENJDK_VERSION=11-jre-slim
-FROM hub.iquantex.com/base/openjdk:${OPENJDK_VERSION}
+FROM openjdk:${OPENJDK_VERSION}
 
 # Web 示例
 ARG NGINX_VERSION=1.22-alpine
-FROM hub.iquantex.com/base/nginx:${NGINX_VERSION}
+FROM nginx:${NGINX_VERSION}
 
 # Golang 示例
-FROM proxyhub.cpinnov.run/alpine:3.18
+FROM alpine:3.18
 ```
 
 ## 常见问题

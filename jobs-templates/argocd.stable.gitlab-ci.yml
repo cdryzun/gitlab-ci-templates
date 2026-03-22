@@ -14,7 +14,7 @@ default:
 
 # Global common variables
 variables:
-  GLOBAL_DOMAIN: "iquantex.com"
+  GLOBAL_DOMAIN: "example.com"
   # Deployment project repository URL
   REPO_URL: "${CI_PROJECT_URL}.git"
   # Project name defined by deployment tool, need to get from operations

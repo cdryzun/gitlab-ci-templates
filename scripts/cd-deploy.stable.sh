@@ -36,7 +36,7 @@ else
 fi
 
 # argocd binary download URL
-# ARGOCD_FILE_URL='https://nexus.iquantex.com/repository/static-file/tools/argocd'
+# ARGOCD_FILE_URL: Configure ArgoCD CLI download URL if not using glci-toolbox image
 
 git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
 git config --global user.name "${GIT_AUTO_COMMIT_NAME}"

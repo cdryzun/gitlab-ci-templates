@@ -32,6 +32,8 @@ Thumbs.db
 
 # IDE and editor tools
 .serena/
+.agents/
+.spec-workflow/
 
 # h2 data
 *.db

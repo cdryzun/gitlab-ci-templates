@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
-set -eo # Enable pipeline mode, exit on error during execution
+set -euo pipefail
 
 
-# env
 DOCKER_SECRET_ARGS=''
-
-# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
@@ -50,7 +47,7 @@ EOF
             ' ${BUILD_MAVEN_POM_FILE}
                 fi
 
-                BUILD_SHELL=${BUILD_SHELL-'mvn clean package'}
+                BUILD_SHELL="${BUILD_SHELL-mvn clean package}"
                 # release build
                 if [ "${RELEASE_LIB_BUILD}" == 'true' ];then
                     # Fix file changes that cause release plugin to fail
@@ -71,7 +68,7 @@ EOF
                 shell_exec "${BUILD_SHELL}"
             elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
                 # Gradle project
-                shell_exec "${BUILD_SHELL-'gradle clean build -x test'}"
+                shell_exec "${BUILD_SHELL-gradle clean build -x test}"
             else
                 echo "${Error}Maven or Gradle build file not found"
                 exit 1
@@ -79,8 +76,13 @@ EOF
             ;;
         python)
             # Install dependencies before building whl package
-            if [ -f ./requestments-build.txt ];then
-                pip install -r ./requestments-build.txt -i "${PYPI}"
+            # Support both legacy filename (requestments) and correct spelling (requirements)
+            _build_req="${CI_PROJECT_DIR}/requirements-build.txt"
+            if [ ! -f "${_build_req}" ] && [ -f "${CI_PROJECT_DIR}/requestments-build.txt" ]; then
+                _build_req="${CI_PROJECT_DIR}/requestments-build.txt"
+            fi
+            if [ -f "${_build_req}" ];then
+                pip install -r "${_build_req}" -i "${PYPI}"
             fi
             # Execute build command
             shell_exec "${BUILD_SHELL}"
@@ -201,8 +203,8 @@ function docker_workspace_prepare(){
         echo "${Tip}Command content: ${DOCKER_WORKSPACE_PREPARE_CMD}"
         echo "${Tip}Execution directory: ${DOCKER_DAEMON_WORKSPACE}"
 
-        # Execute user-defined pre-command
-        eval "${DOCKER_WORKSPACE_PREPARE_CMD}"
+        # Execute user-defined pre-command in a subshell for safety
+        bash -euo pipefail -c "${DOCKER_WORKSPACE_PREPARE_CMD}"
 
         if [ $? -eq 0 ]; then
             echo "${Info}Workspace preparation command executed successfully"

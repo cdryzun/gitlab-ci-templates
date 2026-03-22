@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo
+set -euo pipefail
 
 # ============================================
 # Multi-architecture build script extension

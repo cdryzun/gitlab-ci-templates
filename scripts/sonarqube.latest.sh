@@ -1,5 +1,5 @@
-#!/bin/bash
-set -eo # Enable pipeline mode, exit on error during execution
+#!/usr/bin/env bash
+set -euo pipefail
 
 # Load utility classes and module scripts
 for sh in _*.sh
@@ -23,7 +23,7 @@ function sonar_scan(){
 				shell_exec 'mvn test'
 			fi
 		else
-			shell_exec ${BUILD_SHELL-'mvn clean package'}
+			shell_exec "${BUILD_SHELL-mvn clean package}"
 		fi
 	fi
 

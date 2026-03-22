@@ -6,11 +6,8 @@ if [ "${CI_DEBUG_TRACE:-}" == 'true' ];then
   set -x
 fi
 
-# Store initial built-in variables and utility functions during script execution
-# This section loads utility functions and variables
 function shell_exec(){
-    set -eo # Enable pipeline mode, exit on error during execution
-    echo "${1}"|bash
+    bash -euo pipefail -c "${1}"
 }
 
 echo=echo
@@ -22,7 +19,7 @@ if ! $cmd -e "" | grep -qE '^-e'; then
 fi
 done
 
-# Output message with text-related variables
+# Terminal colors
 export CSI=$($echo -e "\033[")
 export CEND="${CSI}0m"
 export CDGREEN="${CSI}32m"
@@ -41,20 +38,18 @@ export Info="${CGREEN}[Info]: ${CEND}"
 export Error="${CRED}[Error]: ${CEND}"
 export Tip="${CYELLOW}[Note]: ${CEND}"
 
-# Initialize variables with empty default values
 PROJECT_TYPE_REX=''
 EXCLUDE_PROJECT_LIST=''
 
-# Inherit exclusion list variable from GitLab CI
 EXCLUDE_PROJECT=${SONAR_EXCLUDE_PATH:-''}
 
 # Split exclude list using "|" as separator for grep filtering
-if [ $EXCLUDE_PROJECT ];then
+if [ -n "${EXCLUDE_PROJECT}" ];then
 	echo "${Info}Exclusion list is set, list as follows:"
 	EXCLUDE_PROJECT_arr=(${EXCLUDE_PROJECT//,/" "})
 	for exclude_path_index in "${!EXCLUDE_PROJECT_arr[@]}";do
 		printf "  %-1s %-4s \n" "(${exclude_path_index})" "${EXCLUDE_PROJECT_arr[$exclude_path_index]}"
-		if [ ! $EXCLUDE_PROJECT_LIST ];then
+		if [ -z "${EXCLUDE_PROJECT_LIST}" ];then
 			EXCLUDE_PROJECT_LIST="${EXCLUDE_PROJECT_arr[$exclude_path_index]}"
 		else
 			EXCLUDE_PROJECT_LIST="${EXCLUDE_PROJECT_LIST}|${EXCLUDE_PROJECT_arr[$exclude_path_index]}"
@@ -103,15 +98,13 @@ declare -A SECRET_ID_FILE=(
   ["PIP_CONFIG"]="/root/.pip/pip.conf"
 )
 
-# Pre-stage variable preprocessing related function
+# Write key=value to build.env and source it
 function dotenv() {
-  # Use absolute path to ensure operations on the same build.env file across different directories
   local ENV_FILE_ABS="${CI_PROJECT_DIR}/${ENV_FILE}"
-  echo ${1}=${2} >> "${ENV_FILE_ABS}"
+  echo "${1}=${2}" >> "${ENV_FILE_ABS}"
   source "${ENV_FILE_ABS}"
 }
 
-# Output current project type
 function project_type_info() {
 	case $1 in
 		*)
@@ -123,7 +116,7 @@ function project_type_info() {
 # Automatically generate regex pattern from TYPE_LIST dictionary values
 for type_each in "${!TYPE_LIST[@]}";do
 	type_each=`echo "${type_each}"|sed "s#\.#\\\\\.#g"`
-	if [ ! $PROJECT_TYPE_REX ];then
+	if [ -z "${PROJECT_TYPE_REX}" ];then
 		PROJECT_TYPE_REX="${type_each}"
 	else
 		PROJECT_TYPE_REX="${PROJECT_TYPE_REX}\|${type_each}"
@@ -191,10 +184,7 @@ function depthProjectExec() {
   fi
 }
 
-# URL environment prefix conversion function
-# Parameters: target URL
-# Function: Replace environment identifiers (PRE/TEST/PROD) in the URL with corresponding internal prefixes
-# Note: This is a sample implementation, users can modify according to their needs
+# Replace environment prefixes in URLs (sample implementation, customize as needed)
 function convert_url() {
   local url=$1
   # Users can configure their own internal URL prefix

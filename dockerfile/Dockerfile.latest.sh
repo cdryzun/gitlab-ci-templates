@@ -98,7 +98,7 @@ generate_web_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Web Application Dockerfile (Nginx)
 ARG NGINX_VERSION=1.18-alpine
-FROM hub.iquantex.com/base/nginx:${NGINX_VERSION} as web
+FROM nginx:${NGINX_VERSION} as web
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -138,7 +138,7 @@ generate_java_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Java Application Dockerfile
 ARG OPENJDK_VERSION=8-alpine
-FROM hub.iquantex.com/base/openjdk:${OPENJDK_VERSION} as java
+FROM openjdk:${OPENJDK_VERSION} as java
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -179,7 +179,7 @@ generate_python_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Python Application Dockerfile
 ARG PYTHON_VERSION=3-alpine
-FROM hub.iquantex.com/base/conda:base-mini as python
+FROM python:3-alpine as python
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -197,7 +197,7 @@ LABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR} \
 # Set environment variables
 ENV APP=${APP_NAME} \
     PIP_DEFAULT_TIMEOUT=100 \
-    PYPI_HOST='https://nexus.iquantex.com/repository/private-pypi'
+    PYPI_HOST='https://pypi.org/simple'
 
 # Set working directory
 WORKDIR /usr/src/${APP_NAME}
@@ -208,8 +208,6 @@ COPY . .
 # Install dependencies and cleanup
 RUN pip config --global set global.index-url ${PYPI_HOST}/simple && \
     pip config --global set global.index ${PYPI_HOST} && \
-    curl -fsSL "https://nexus.iquantex.com/repository/static-file/tools/netrc" -o ~/.netrc && \
-    chmod 0600 ~/.netrc && \
     pip install -r ./requirements.txt && \
     find /usr/local/conda/ -follow -type f -name '*.conda,*.js.map,*.tar.bz2' -delete && \
     conda clean -afy && \

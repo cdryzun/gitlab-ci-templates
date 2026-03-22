@@ -110,6 +110,8 @@
   RELEASE_RETAG_DISABLE: "false"
   GIT_AUTO_COMMIT_NAME: "ci-bot"
   GIT_AUTO_COMMIT_EMAIL: "ci-bot@example.com"
+  CD_DEPLOY_IMAGE: ""
+  # Backward-compatible alias (legacy typo)
   CD_DEPLOY_IMGAGE: ""
   REMOTE_BRANCH: "dev"
   # Optional custom target branch mapping (preferred names)

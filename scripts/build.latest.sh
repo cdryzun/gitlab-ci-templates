@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-set -eo # Enable pipeline mode, exit on error during execution
+set -euo pipefail
 
 
-# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
@@ -41,10 +40,10 @@ EOF
                 else
                     sed -i "/<build>/a <finalName>${MAVEN_APP_NAME-"app"}<\/finalName>" ${BUILD_MAVEN_POM_FILE}
                 fi
-                shell_exec "${BUILD_SHELL-'mvn clean package'}"
+                shell_exec "${BUILD_SHELL-mvn clean package}"
             elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
                 # Gradle project
-                shell_exec "${BUILD_SHELL-'gradle clean build -x test'}"
+                shell_exec "${BUILD_SHELL-gradle clean build -x test}"
             else
                 echo "${Error}Maven or Gradle build file not found"
                 exit 1
@@ -123,8 +122,8 @@ function docker_workspace_prepare(){
         echo "${Tip}Command content: ${DOCKER_WORKSPACE_PREPARE_CMD}"
         echo "${Tip}Execution directory: ${DOCKER_DAEMON_WORKSPACE}"
 
-        # Execute user-defined pre-command
-        eval "${DOCKER_WORKSPACE_PREPARE_CMD}"
+        # Execute user-defined pre-command in a subshell for safety
+        bash -euo pipefail -c "${DOCKER_WORKSPACE_PREPARE_CMD}"
 
         if [ $? -eq 0 ]; then
             echo "${Info}Workspace preparation command executed successfully"

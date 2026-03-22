@@ -239,6 +239,7 @@ Secret scanning runs automatically on every push via [Gitleaks](https://github.c
 
 ### Core Docs
 
+- **[Variable Reference](docs/VARIABLE_REFERENCE.md)**: Every configurable variable with defaults and descriptions
 - **[CD Setup Guide](docs/cd/00-overview.md)**: Complete ArgoCD GitOps workflow
 - **[SOP](docs/SOP-Template-Development.md)**: Template development standard operating procedures
 - **[Troubleshooting](docs/troubleshooting/README.md)**: Solutions to common problems

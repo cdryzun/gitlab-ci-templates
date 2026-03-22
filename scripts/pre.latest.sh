@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
 
-# Load utility classes and module scripts
 for sh in _*.sh
 do
   [[ -e "$sh" ]] || break
   source "${sh}"
 done
 
-#------ ENV environment; Process variable-related preprocessing
-# Convert special characters in branch names to prevent errors when generating tags from branches
+# Sanitize branch name for docker tags
 dotenv _CI_COMMIT_REF_NAME "$(echo "${CI_COMMIT_REF_NAME}" | tr '/' '-')"
 # _BUILD_ENV=`echo "${CI_COMMIT_REF_NAME}"|awk -F '/' '{print $2}'`
 BUILD_TIME=$(date +"%Y%m%d%H%M") # Timestamp in container Tag, accurate to minute
