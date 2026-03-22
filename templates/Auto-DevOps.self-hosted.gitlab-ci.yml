@@ -1,6 +1,12 @@
 # Self-Hosted Version - Auto DevOps Template
 # Use this when hosting templates on your own GitLab instance.
-# All includes use local references (no external network required).
+# All includes reference the same project (no external network required).
+#
+# Usage in downstream projects:
+#   include:
+#     - project: 'your-group/gitlab-ci-templates'
+#       ref: open
+#       file: 'templates/Auto-DevOps.self-hosted.gitlab-ci.yml'
 
 include:
   # Variables
