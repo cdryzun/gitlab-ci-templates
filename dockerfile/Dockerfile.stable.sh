@@ -117,8 +117,9 @@ fi
 generate_web_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Web Application Dockerfile (Nginx)
+ARG DOCKER_MIRROR_PREFIX=""
 ARG NGINX_VERSION=1.24-alpine
-FROM nginx:${NGINX_VERSION} as web
+FROM ${DOCKER_MIRROR_PREFIX}nginx:${NGINX_VERSION} as web
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -202,8 +203,9 @@ EOF
 generate_python_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Python Application Dockerfile
+ARG DOCKER_MIRROR_PREFIX=""
 ARG PYTHON_VERSION=3-alpine
-FROM python:${PYTHON_VERSION}
+FROM ${DOCKER_MIRROR_PREFIX}python:${PYTHON_VERSION}
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -248,7 +250,8 @@ cat > Dockerfile << 'EOF'
 # ============================================
 # Runtime Stage: Runtime stage (multi-architecture)
 # ============================================
-FROM alpine:3.22
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}alpine:3.22
 
 LABEL maintainer="DevOps Team <devops@example.com>"
 
@@ -331,8 +334,9 @@ cat > Dockerfile << 'EOF'
 # ============================================
 # Build Stage: Compile stage (multi-architecture)
 # ============================================
+ARG DOCKER_MIRROR_PREFIX=""
 ARG GO_VERSION=1.23
-FROM golang:${GO_VERSION}-alpine AS builder
+FROM ${DOCKER_MIRROR_PREFIX}golang:${GO_VERSION}-alpine AS builder
 
 # Auto-injected Buildx platform variables
 ARG TARGETPLATFORM
@@ -382,9 +386,10 @@ RUN file /build/${APP_NAME} && \
 # ============================================
 # Runtime Stage: Runtime stage (multi-architecture)
 # ============================================
-FROM alpine:3.22
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}alpine:3.22
 
-LABEL maintainer="DevOps Team <devops@example.com>"
+LABEL maintainer="DevOps Team"
 
 # Build arguments (runtime metadata)
 ARG PORT=2025
@@ -441,7 +446,8 @@ EOF
 generate_golang_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Golang Application Dockerfile
-FROM alpine:3.22 as golang
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}alpine:3.22 as golang
 
 LABEL maintainer="DevOps Team <devops@example.com>"
 
@@ -490,7 +496,8 @@ EOF
 generate_py_model_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Python Model Dockerfile (InitContainer)
-FROM alpine:latest as py_model
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}alpine:latest as py_model
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"

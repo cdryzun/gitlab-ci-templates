@@ -106,7 +106,7 @@ CMD ["node", "src/index.js"]
 
 ## 流水线验证
 
-- **流水线 URL**: https://gitlab.treesir.pub/sre/devops/nodejs-hello/-/pipelines/6196
+- **流水线 URL**: https://your-gitlab.example.com/your-group/your-project/-/pipelines/xxx
 - **状态**: ✅ 全部成功
 - **Jobs**:
   - ✅ pre 阶段成功

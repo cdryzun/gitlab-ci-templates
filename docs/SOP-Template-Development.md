@@ -425,7 +425,7 @@ glab api projects/sre%2Fdevops%2Fgo-hello/pipelines/6159/jobs | \
 glab api projects/sre%2Fdevops%2Fgo-hello/jobs/19762/trace | tail -100
 
 # 6. 分析和修复
-cd /md0/vibe/gitlab-ci-templates
+cd /path/to/gitlab-ci-templates
 bash -n scripts/*.sh
 git show HEAD --stat
 # ... 实施修复 ...

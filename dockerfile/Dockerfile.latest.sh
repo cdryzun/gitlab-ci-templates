@@ -97,8 +97,9 @@ fi
 generate_web_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Web Application Dockerfile (Nginx)
-ARG NGINX_VERSION=1.18-alpine
-FROM nginx:${NGINX_VERSION} as web
+ARG DOCKER_MIRROR_PREFIX=""
+ARG NGINX_VERSION=1.24-alpine
+FROM ${DOCKER_MIRROR_PREFIX}nginx:${NGINX_VERSION} as web
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -138,7 +139,7 @@ generate_java_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Java Application Dockerfile
 ARG OPENJDK_VERSION=8-alpine
-FROM openjdk:${OPENJDK_VERSION} as java
+FROM ${DOCKER_MIRROR_PREFIX}eclipse-temurin:${OPENJDK_VERSION} as java
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -179,7 +180,8 @@ generate_python_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Python Application Dockerfile
 ARG PYTHON_VERSION=3-alpine
-FROM python:3-alpine as python
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}python:3-alpine as python
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -232,7 +234,8 @@ cat > Dockerfile << 'EOF'
 # ============================================
 # Runtime Stage: Runtime stage (multi-architecture)
 # ============================================
-FROM alpine:3.22
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}alpine:3.22
 
 LABEL maintainer="DevOps Team <devops@example.com>"
 
@@ -319,7 +322,7 @@ cat > Dockerfile << 'EOF'
 # Build Stage: Compile stage (multi-architecture)
 # ============================================
 ARG GO_VERSION=1.23
-FROM golang:${GO_VERSION}-alpine AS builder
+FROM ${DOCKER_MIRROR_PREFIX}golang:${GO_VERSION}-alpine AS builder
 
 # Auto-injected Buildx platform variables
 ARG TARGETPLATFORM
@@ -369,7 +372,7 @@ RUN file /build/${APP_NAME} && \
 # ============================================
 # Runtime Stage: Runtime stage (multi-architecture)
 # ============================================
-FROM alpine:3.22
+FROM ${DOCKER_MIRROR_PREFIX}alpine:3.22
 
 LABEL maintainer="DevOps Team <devops@example.com>"
 
@@ -428,7 +431,7 @@ EOF
 generate_golang_dockerfile() {
 cat > Dockerfile << 'EOF'
 # Golang Application Dockerfile
-FROM alpine:3.22 as golang
+FROM ${DOCKER_MIRROR_PREFIX}alpine:3.22 as golang
 
 LABEL maintainer="DevOps Team <devops@example.com>"
 

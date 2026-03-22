@@ -31,7 +31,6 @@ troubleshooting/
 | 问题 | 描述 | 难度 |
 |------|------|------|
 | [ArgoCD Webhook 配置](kubernetes/argocd-webhook-setup.md) | 配置 GitLab webhook 触发 ArgoCD 自动同步 | 初级 |
-| [ArgoCD 自动同步失败](kubernetes/argocd-sync-issues.md) | ArgoCD 应用无法自动同步的常见原因 | 中级 |
 
 ### CI/CD
 

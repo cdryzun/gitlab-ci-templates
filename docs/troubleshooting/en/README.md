@@ -20,7 +20,6 @@ troubleshooting/
 |-------|-------------|------------|
 | [PVE + K3s NodePort Compatibility](networking/pve-k3s-nodeport-compatibility.md) | PVE VMs cannot access K3s NodePort services | Intermediate |
 
-### Proxmox
 
 | Issue | Description | Difficulty |
 |-------|-------------|------------|
@@ -31,7 +30,6 @@ troubleshooting/
 | Issue | Description | Difficulty |
 |-------|-------------|------------|
 | [ArgoCD Webhook Setup](kubernetes/argocd-webhook-setup.md) | Configure GitLab webhook to trigger ArgoCD auto-sync | Beginner |
-| [ArgoCD Auto-Sync Issues](kubernetes/argocd-sync-issues.md) | Common causes of ArgoCD application failing to auto-sync | Intermediate |
 
 ### CI/CD
 
