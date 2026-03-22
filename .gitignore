@@ -43,3 +43,4 @@ Thumbs.db
 *.tfvars
 .terraform/
 terraform.tfvars
+site/

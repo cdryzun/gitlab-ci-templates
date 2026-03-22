@@ -1,0 +1,85 @@
+site_name: gitlab-ci-templates
+site_url: https://cdryzun.github.io/gitlab-ci-templates
+site_description: Drop-in CI/CD templates for GitLab - build, test, scan, deploy in one include
+repo_url: https://github.com/cdryzun/gitlab-ci-templates
+repo_name: cdryzun/gitlab-ci-templates
+edit_uri: edit/open/docs/
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - i18n:
+      default_language: zh
+      languages:
+        zh: 中文
+        en: English
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_mermaid
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Quick Start:
+    - 30-Second Setup: guide/quickstart.md
+    - Language Examples: guide/examples.md
+    - Self-Hosted Setup: guide/self-hosted.md
+  - Configuration:
+    - Variable Reference: reference/variables.md
+    - Builder Images: reference/images.md
+    - Acceleration: reference/mirrors.md
+  - GitOps:
+    - Overview: cd/00-overview.md
+    - K3s Installation: cd/01-k3s-installation.md
+    - ArgoCD Installation: cd/02-argocd-installation.md
+    - GitOps Repo Setup: cd/03-gitops-repo-setup.md
+    - ArgoCD Integration: cd/04-argocd-gitops-integration.md
+    - CI/CD Integration: cd/05-cicd-integration.md
+    - Multi-Project: cd/06-multi-project-gitops.md
+  - Troubleshooting:
+    - Overview: troubleshooting/README.md
+    - PVE + K3s NodePort: troubleshooting/networking/pve-k3s-nodeport-compatibility.md
+    - ArgoCD Webhook: troubleshooting/kubernetes/argocd-webhook-setup.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
