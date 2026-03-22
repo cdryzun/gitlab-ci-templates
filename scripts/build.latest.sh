@@ -164,6 +164,7 @@ function docker_build_push(){
     -t "${DOCKER_IMAGE_NAME}" . \
     "${DOCKER_BUILD_FLAGS}" \
     --build-arg DOCKER_MIRROR_PREFIX="${DOCKER_MIRROR_PREFIX:-}" \
+    --build-arg APP_NAME="${MAVEN_APP_NAME:-${CI_PROJECT_NAME}}" \
     --build-arg CI_COMMIT_SHORT_SHA="$CI_COMMIT_SHORT_SHA" \
     --build-arg CI_BUILD_DATE="$(date +%Y-%m-%d/%H:%M)" \
     --build-arg CI_PROJECT_NAME="${CI_PROJECT_NAME}" \

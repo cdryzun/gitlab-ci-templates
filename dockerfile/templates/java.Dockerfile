@@ -26,7 +26,7 @@ ENV APP=${APP_NAME}
 
 # Copy the JAR file
 # Note: The build process should ensure the JAR is named app*.jar
-COPY --chown=daemon:daemon app*.jar /opt/deployments/${APP}.jar
+COPY --chown=daemon:daemon *.jar /opt/deployments/${APP}.jar
 
 # Set working directory
 WORKDIR /opt/deployments

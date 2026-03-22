@@ -183,17 +183,17 @@
   DOCKERFILE_BUILD_JDK_VERSION: "17-alpine"
 
 # Default image list - Using GitHub Container Registry public images
+# To accelerate pulls, set IMAGE_MIRROR_PREFIX (e.g., "proxyhub.example.com/")
 .default_image_vars:
-  # Base build image used in pipeline build stage, will auto-select corresponding image based on project type
-  # To override build image for specific project type, set this variable directly
+  IMAGE_MIRROR_PREFIX: ""
   BASE_BUILD_IMAGE: ""
-  MAVEN_IMAGE: "ghcr.io/cdryzun/glci-builder-java:jdk17"
-  GRADLE_IMAGE: "ghcr.io/cdryzun/glci-builder-java:jdk17"
-  NODE_IMAGE: "ghcr.io/cdryzun/glci-builder-nodejs:20"
-  SONAR_IMAGE: "ghcr.io/cdryzun/glci-builder-java:jdk17"
-  TOOLBOX_IMAGE: "ghcr.io/cdryzun/glci-toolbox:latest"
-  PYTHON_IMAGE: "ghcr.io/cdryzun/glci-builder-python:3.11"
-  GO_IMAGE: "ghcr.io/cdryzun/glci-builder-golang:1.23"
+  MAVEN_IMAGE: "${IMAGE_MIRROR_PREFIX}ghcr.io/cdryzun/glci-builder-java:jdk17"
+  GRADLE_IMAGE: "${IMAGE_MIRROR_PREFIX}ghcr.io/cdryzun/glci-builder-java:jdk17"
+  NODE_IMAGE: "${IMAGE_MIRROR_PREFIX}ghcr.io/cdryzun/glci-builder-nodejs:20"
+  SONAR_IMAGE: "${IMAGE_MIRROR_PREFIX}ghcr.io/cdryzun/glci-builder-java:jdk17"
+  TOOLBOX_IMAGE: "${IMAGE_MIRROR_PREFIX}ghcr.io/cdryzun/glci-toolbox:latest"
+  PYTHON_IMAGE: "${IMAGE_MIRROR_PREFIX}ghcr.io/cdryzun/glci-builder-python:3.11"
+  GO_IMAGE: "${IMAGE_MIRROR_PREFIX}ghcr.io/cdryzun/glci-builder-golang:1.23"
   CD_DEPLOY_IMAGE: "${TOOLBOX_IMAGE}"
   TEST_IMAGE: "${TOOLBOX_IMAGE}"
 
