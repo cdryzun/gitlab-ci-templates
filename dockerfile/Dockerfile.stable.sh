@@ -160,8 +160,9 @@ jdk_version=$(normalize_jdk_version "${DOCKERFILE_BUILD_JDK_VERSION:-jdk17-alpin
 echo -e "${Info}Generating Java Dockerfile, JDK version: ${jdk_version}"
 cat > Dockerfile << EOF
 # Java Application Dockerfile
+ARG DOCKER_MIRROR_PREFIX=""
 ARG OPENJDK_VERSION=${jdk_version}
-FROM eclipse-temurin:\${OPENJDK_VERSION} as java
+FROM \${DOCKER_MIRROR_PREFIX}eclipse-temurin:\${OPENJDK_VERSION} as java
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"
@@ -180,7 +181,7 @@ LABEL CI_COMMIT_AUTHOR=\${CI_COMMIT_AUTHOR} \\
 ENV APP=\${CI_PROJECT_NAME}
 
 # Copy JAR file
-COPY --chown=daemon:daemon app*.jar /opt/deployments/\${APP}.jar
+COPY --chown=daemon:daemon *.jar /opt/deployments/\${APP}.jar
 
 # Set working directory
 WORKDIR /opt/deployments

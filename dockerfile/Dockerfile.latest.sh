@@ -157,7 +157,7 @@ LABEL CI_COMMIT_AUTHOR=${CI_COMMIT_AUTHOR} \
 ENV APP=${APP_NAME}
 
 # Copy JAR file
-COPY app*.jar /opt/deployments/${APP}.jar
+COPY *.jar /opt/deployments/${APP}.jar
 
 # Set working directory
 WORKDIR /opt/deployments
