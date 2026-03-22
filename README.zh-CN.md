@@ -7,7 +7,7 @@
 [![Build Images](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/build-images.yml/badge.svg)](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/build-images.yml)
 [![GHCR](https://img.shields.io/badge/images-ghcr.io-blue?logo=docker)](https://github.com/cdryzun?tab=packages)
 
-[English](README.md) | 中文
+[English](README.md) | 中文 | [在线文档](https://cdryzun.github.io/gitlab-ci-templates/)
 
 ---
 
