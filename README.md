@@ -2,7 +2,7 @@
 
 > Drop-in CI/CD for GitLab. One `include`, full pipeline -- build, test, scan, deploy.
 
-English | [中文](README.zh-CN.md) | [Documentation](https://cdryzun.github.io/gitlab-ci-templates/)
+English | [中文](README.zh-CN.md) | [Documentation](https://www.treesir.pub/gitlab-ci-templates/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/ci.yml/badge.svg)](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/ci.yml)
