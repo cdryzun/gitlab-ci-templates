@@ -1,0 +1,7 @@
+# Library project -- build and test only, no Docker image
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  DOCKER_IMAGE_BUILD: "false"
+  BUILD_SHELL: "mvn clean install"

@@ -1,0 +1,7 @@
+# Golang -- minimal configuration
+# Auto-detects go.mod, compiles binary, builds Alpine-based Docker image
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  GO_UNIT_TEST_SHELL: "go test -v ./..."

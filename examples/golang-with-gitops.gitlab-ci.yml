@@ -1,0 +1,16 @@
+# Golang with full GitOps deployment
+# Builds, tests, pushes Docker image, updates Helm values repo, ArgoCD syncs
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  GO_UNIT_TEST_SHELL: "go test -v ./..."
+  FEAT_DOCKER_IMAGE_BUILD: "true"
+
+  # GitOps deployment (requires DEPLOY_REPO in CI/CD variables)
+  DEPLOY_REPO_PROJ: "my-service"
+  DEPLOY_VALUE_FILE: "values-dev.yaml"
+  DEPLOY_REPO_YAML_TAG: ".image.tag"
+  FEAT_CD_AUTO_DEPLOY: "true"
+  DEV_CD_AUTO_DEPLOY: "true"
+  SIT_CD_AUTO_DEPLOY: "true"

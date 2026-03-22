@@ -1,0 +1,9 @@
+# Java (Maven) -- minimal configuration
+# Auto-detects pom.xml, builds with Maven, pushes Docker image
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  BUILD_SHELL: "mvn clean package -DskipTests"
+  DOCKERFILE_BUILD_JDK_VERSION: "17"
+  MAVEN_APP_NAME: "my-service"

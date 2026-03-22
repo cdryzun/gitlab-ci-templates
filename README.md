@@ -1,6 +1,6 @@
 # gitlab-ci-templates
 
-> Drop-in CI/CD for GitLab. One `include`, full pipeline — build, test, scan, deploy.
+> Drop-in CI/CD for GitLab. One `include`, full pipeline -- build, test, scan, deploy.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/ci.yml/badge.svg)](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/ci.yml)
@@ -13,67 +13,111 @@
 **Get a production-grade CI/CD pipeline in 3 lines of YAML.**
 Auto-detects Java, Node.js, Python, and Golang. Batteries included: Docker builds, SonarQube, ArgoCD GitOps, secret scanning, and rollback support.
 
+```mermaid
+graph LR
+    A[".gitlab-ci.yml<br/>(3 lines)"] -->|include| B["Auto-DevOps Template"]
+    B --> C[".pre"]
+    C -->|auto-detect| D["build"]
+    D --> E["test"]
+    E --> F["deploy"]
+    F --> G["rollback"]
+
+    C -.-|"Java / Node.js / Python / Go"| D
+    D -.-|"Docker build & push"| E
+    E -.-|"Unit test + SonarQube"| F
+    F -.-|"ArgoCD GitOps"| G
+```
+
 ---
 
-## Why This Project?
+## Before / After
 
-| Pain Point | This Template |
-|---|---|
-| Every project reinvents the pipeline | One shared template, consistent across all repos |
-| CI config grows to 500+ lines | 3-line include, sensible defaults |
-| Language-specific quirks need custom setup | Auto-detection handles Maven, pnpm, pip, go modules |
-| Deployment is stitched together manually | Built-in ArgoCD GitOps + Helm + rollback |
-| Secrets leak in pipelines | Gitleaks scanning on every push |
+<table>
+<tr><th>Without this template (200+ lines)</th><th>With this template (6 lines)</th></tr>
+<tr>
+<td>
+
+```yaml
+stages:
+  - build
+  - test
+  - docker
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2"
+
+build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn clean package -DskipTests
+  artifacts:
+    paths: [target/]
+
+test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn test
+
+docker:
+  stage: docker
+  image: docker:24
+  services: [docker:24-dind]
+  script:
+    - docker build -t $IMAGE .
+    - docker push $IMAGE
+
+# ... 150 more lines for deploy,
+# rollback, scanning, caching...
+```
+
+</td>
+<td>
+
+```yaml
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  BUILD_SHELL: "mvn clean package -DskipTests"
+  DOCKERFILE_BUILD_JDK_VERSION: "17"
+```
+
+</td>
+</tr>
+</table>
 
 ---
 
 ## Quickstart (30 seconds)
 
-Add one line to your `.gitlab-ci.yml`:
+Add to your `.gitlab-ci.yml`:
 
 ```yaml
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
 ```
 
-That's it. Push and watch your pipeline run.
+Push and watch your pipeline run. That's it.
 
-**Optional overrides:**
-
-```yaml
-variables:
-  BUILD_SHELL: "mvn clean package -Dmaven.test.skip=true"
-  UNIT_TEST_ENABLE: "true"
-  DOCKER_REGISTRY: "docker.io"
-```
-
----
-
-## What You Get
-
-```
-.pre     ->  Environment prep, variable injection
-build    ->  Auto-detected build (Maven / pnpm / pip / go)
-             Docker image build & push (multi-arch)
-test     ->  Unit tests with language-specific runners
-             SonarQube code quality scan (optional)
-deploy   ->  ArgoCD GitOps sync via Helm values update
-rollback ->  One-job rollback to previous image tag
-```
+**Self-hosted GitLab?** Mirror this repo to your instance, then use `include: project:` for faster, offline-capable CI. See [Self-Hosted Setup](docs/cd/00-overview.md).
 
 ---
 
 ## Language Examples
 
-### Java
+### Java (Maven / Gradle)
 
 ```yaml
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
 
 variables:
-  BUILD_SHELL: "mvn clean package -Dmaven.test.skip=true"
-  DOCKERFILE_BUILD_JDK_VERSION: "17-alpine"
+  BUILD_SHELL: "mvn clean package -DskipTests"
+  DOCKERFILE_BUILD_JDK_VERSION: "17"
+  MAVEN_APP_NAME: "my-service"        # JAR filename, visible in `ps` output
 ```
 
 ### Node.js
@@ -84,7 +128,7 @@ include:
 
 variables:
   BUILD_SHELL: "pnpm run build"
-  PACKAGE_MANAGER: "pnpm"
+  PACKAGE_MANAGER: "pnpm"             # or "yarn"
 ```
 
 ### Python
@@ -92,114 +136,35 @@ variables:
 ```yaml
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
-
-variables:
-  BUILD_SHELL: "pip install -r requirements.txt"
 ```
+
+No `BUILD_SHELL` needed -- auto-detects `requirements.txt` and builds accordingly.
 
 ### Golang
 
 ```yaml
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
-
-variables:
-  BUILD_SHELL: "go build -o app ./..."
 ```
+
+Auto-detects `go.mod`, compiles with `-ldflags "-s -w"`, outputs binary named after the project.
 
 ### Golang + Node.js (Embedded Frontend)
 
-For projects that embed frontend assets into Go binaries via `go:embed`:
+For projects using `go:embed` to bundle frontend assets:
 
 ```yaml
 include:
   - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
 
 variables:
-  BASE_BUILD_IMAGE: "ghcr.io/cdryzun/glci-builder-golang-nodejs:go1.23-node20"
+  BASE_BUILD_IMAGE: "ghcr.io/cdryzun/glci-builder-golang-nodejs:go1.24-node22"
   BUILD_SHELL: |
-    cd web && pnpm install && pnpm build && cd .. \
+    cd web && pnpm install && pnpm build && cd ..
     && go mod tidy && go build -o app ./...
 ```
 
-**Available Golang+Node.js images:**
-
-| Tag | Go | Node.js |
-|---|---|---|
-| `go1.23-node20` | 1.23 | 20 LTS |
-| `go1.23-node22` | 1.23 | 22 LTS |
-| `go1.24-node20` | 1.24 | 20 LTS |
-| `go1.24-node22` | 1.24 | 22 LTS |
-| `go1.24-node24` | 1.24 | 24 |
-| `go1.25-node22` | 1.25 | 22 LTS |
-| `go1.25-node24` | 1.25 | 24 |
-| `go1.26-node22` | 1.26 | 22 LTS |
-| `go1.26-node24` | 1.26 | 24 |
-
----
-
-## CI Builder Images
-
-Pre-built images on GitHub Container Registry — no external dependencies at runtime.
-
-| Image | Tags | Includes |
-|---|---|---|
-| `ghcr.io/cdryzun/glci-builder-java` | `jdk8`, `jdk11`, `jdk17` | Maven, Gradle, SonarScanner |
-| `ghcr.io/cdryzun/glci-builder-nodejs` | `18`, `20`, `24` | pnpm, yarn, npm |
-| `ghcr.io/cdryzun/glci-builder-python` | `3.10`, `3.11`, `3.12` | pip, poetry |
-| `ghcr.io/cdryzun/glci-builder-golang` | `1.21`, `1.22`, `1.23` | Go toolchain |
-| `ghcr.io/cdryzun/glci-builder-golang-nodejs` | `go1.23-node20`, ... | Go + Node.js combo |
-| `ghcr.io/cdryzun/glci-toolbox` | `latest` | docker, helm, glab, yq, argocd |
-
----
-
-## GitOps Deployment (ArgoCD)
-
-The templates support a GitOps workflow: push image tag to a Helm values repo, ArgoCD syncs automatically.
-
-```
-CI Pipeline
-    |
-    +-- build --> push image to registry
-    |
-    +-- deploy --> clone charts repo
-                   update image.tag in values.yaml
-                   push / create MR (PRD)
-                   ArgoCD detects change --> syncs cluster
-```
-
-Environment branching:
-
-| Source Branch | Target | Environment |
-|---|---|---|
-| `feat/*` / `feature/*` | `dev` | Development |
-| `sit` | `sit` | Staging |
-| `v*.*.*` / `prd` | `prd` | Production (MR required) |
-
----
-
-## Configuration Reference
-
-### Core Variables
-
-| Variable | Description | Default |
-|---|---|---|
-| `BUILD_SHELL` | Build command | auto-detected |
-| `UNIT_TEST_ENABLE` | Run unit tests | `true` |
-| `DOCKER_IMAGE_BUILD` | Build and push Docker image | `true` |
-| `DOCKER_REGISTRY` | Docker registry URL | `docker.io` |
-| `SONAR_URL` | SonarQube server URL | — |
-| `SONAR_GATE` | Fail pipeline on quality gate | `false` |
-
-### Custom Dockerfile
-
-```yaml
-variables:
-  CUSTOM_DOCKERFILE: "true"
-  CUSTOM_DOCKERFILE_PATH: "${CI_PROJECT_DIR}/Dockerfile"
-```
-
-### Library Projects (No Docker Build)
+### Library Projects (No Docker)
 
 ```yaml
 variables:
@@ -208,62 +173,145 @@ variables:
 
 ---
 
+## Pipeline Stages
+
+```mermaid
+graph LR
+    PRE[".pre<br/>env detection<br/>variable injection"] --> BUILD["build<br/>compile + docker push"]
+    BUILD --> TEST["test<br/>unit tests<br/>SonarQube"]
+    TEST --> DEPLOY["deploy<br/>GitOps values update<br/>ArgoCD sync"]
+    DEPLOY --> ROLLBACK["rollback<br/>one-click revert"]
+
+    style PRE fill:#e1f5fe
+    style BUILD fill:#fff3e0
+    style TEST fill:#e8f5e9
+    style DEPLOY fill:#f3e5f5
+    style ROLLBACK fill:#fce4ec
+```
+
+---
+
+## GitOps Deployment (ArgoCD)
+
+Push image tag to a Helm values repo, ArgoCD syncs automatically:
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant CI as GitLab CI
+    participant Reg as Docker Registry
+    participant Git as Charts Repo
+    participant Argo as ArgoCD
+    participant K8s as Kubernetes
+
+    Dev->>CI: git push
+    CI->>CI: build + test
+    CI->>Reg: docker push image:tag
+    CI->>Git: update values.yaml (image.tag)
+    Git-->>Argo: webhook / poll
+    Argo->>K8s: sync deployment
+```
+
+**Environment branching:**
+
+| Source Branch | Deploy Target | Behavior |
+|---|---|---|
+| `feat/*` / `feature/*` | dev | Auto-deploy (optional) |
+| `dev` | dev | Auto-deploy |
+| `sit` | sit | Auto-deploy |
+| `prd` / `v*.*.*` | prd | Creates MR for approval |
+
+---
+
+## Acceleration & Mirrors
+
+For China mainland or air-gapped environments, configure these in GitLab CI/CD Variables:
+
+| Variable | Purpose | Example |
+|---|---|---|
+| `IMAGE_MIRROR_PREFIX` | Accelerate builder image pulls (ghcr.io) | `proxyhub.example.com/` |
+| `DOCKER_MIRROR_PREFIX` | Accelerate Dockerfile base image pulls | `proxyhub.example.com/` |
+| `MAVEN_REGISTRY` | Maven mirror | `https://maven.aliyun.com/repository/public` |
+| `NODE_REGISTRY` | npm mirror | `https://registry.npmmirror.com` |
+| `PYPI` | pip mirror | `https://pypi.tuna.tsinghua.edu.cn/simple` |
+
+---
+
+## CI Builder Images
+
+Pre-built on GitHub Container Registry -- all tools pre-installed, no downloads at runtime.
+
+| Image | Tags | Includes |
+|---|---|---|
+| `ghcr.io/cdryzun/glci-builder-java` | `jdk8`, `jdk11`, `jdk17` | Maven, Gradle, SonarScanner |
+| `ghcr.io/cdryzun/glci-builder-nodejs` | `18`, `20`, `24` | pnpm, yarn, npm |
+| `ghcr.io/cdryzun/glci-builder-python` | `3.10`, `3.11`, `3.12` | pip, poetry |
+| `ghcr.io/cdryzun/glci-builder-golang` | `1.21`, `1.22`, `1.23` | Go toolchain |
+| `ghcr.io/cdryzun/glci-builder-golang-nodejs` | `go1.23-node20`, `go1.24-node22`, ... | Go + Node.js combo |
+| `ghcr.io/cdryzun/glci-toolbox` | `latest` | docker, helm, glab, yq, argocd |
+
+---
+
+## Configuration Reference
+
+See **[Variable Reference](docs/VARIABLE_REFERENCE.md)** for the full list (60+ variables).
+
+**Most commonly used:**
+
+| Variable | Default | Description |
+|---|---|---|
+| `BUILD_SHELL` | _(auto)_ | Build command override |
+| `PROJECT_TYPE` | _(auto)_ | `java` / `web` / `python` / `golang` |
+| `DOCKER_IMAGE_BUILD` | `true` | Set `false` for library projects |
+| `UNIT_TEST_ENABLE` | `true` | Toggle unit tests |
+| `CUSTOM_DOCKERFILE` | _(auto)_ | Use your own Dockerfile |
+| `DEPLOY_REPO` | -- | GitOps Helm charts repo URL (enables CD) |
+
+---
+
 ## Repository Layout
 
 ```
-templates/              # Entry point — include these in your projects
+templates/              # Entry point -- include these in your projects
 jobs-templates/         # Reusable job definitions per language/stage
 utils/                  # Rule snippets, before/after scripts
 vars/                   # Default variable definitions
 scripts/                # Shell scripts executed by CI jobs
 dockerfile/templates/   # Application Dockerfile templates
-images/                 # CI builder image sources (Java, Node, Python, Go)
-.github/workflows/      # Builder image CI + secret scanning
+images/                 # CI builder image sources
+examples/               # Ready-to-use .gitlab-ci.yml examples
 ```
 
-The project uses a two-track system:
-- `*.stable.*` — production-ready
-- `*.latest.*` — experimental / in-development
+Two-track system: `*.stable.*` (production) and `*.latest.*` (experimental).
 
 ---
 
 ## Security
 
-Secret scanning runs automatically on every push via [Gitleaks](https://github.com/gitleaks/gitleaks).
-
-[![Secret Scan](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/ci.yml/badge.svg)](https://github.com/cdryzun/gitlab-ci-templates/actions/workflows/ci.yml)
+- Secret scanning on every push via [Gitleaks](https://github.com/gitleaks/gitleaks)
+- Container vulnerability scanning via [Trivy](https://github.com/aquasecurity/trivy)
+- See [SECURITY.md](SECURITY.md) for vulnerability reporting
 
 ---
 
 ## Documentation
 
-### Core Docs
-
-- **[Variable Reference](docs/VARIABLE_REFERENCE.md)**: Every configurable variable with defaults and descriptions
-- **[CD Setup Guide](docs/cd/00-overview.md)**: Complete ArgoCD GitOps workflow
-- **[SOP](docs/SOP-Template-Development.md)**: Template development standard operating procedures
-- **[Troubleshooting](docs/troubleshooting/README.md)**: Solutions to common problems
-
-### Featured Troubleshooting
-
-- **[PVE + K3s NodePort Compatibility](docs/troubleshooting/networking/pve-k3s-nodeport-compatibility.md)**: Solving network issues between Proxmox VMs and K3s
-- **[ArgoCD Webhook Setup](docs/troubleshooting/kubernetes/argocd-webhook-setup.md)**: Configuring GitLab webhooks for auto-sync
-
-### Language
-
-- [中文文档](docs/troubleshooting/README.md)
-- [English Docs](docs/troubleshooting/en/README.md)
+- **[Variable Reference](docs/VARIABLE_REFERENCE.md)** -- Full variable list with defaults
+- **[CD Setup Guide](docs/cd/00-overview.md)** -- K3s + ArgoCD + GitOps from scratch
+- **[Troubleshooting](docs/troubleshooting/README.md)** -- Common issues and fixes
+- **[SOP](docs/SOP-Template-Development.md)** -- Template development procedures
+- **[CHANGELOG](CHANGELOG.md)** -- Version history
 
 ---
 
 ## Contributing
 
-Issues and PRs are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Issues and PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-If this project saves you time, consider giving it a star — it helps others find it.
+If this saves you time, a star helps others find it.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT -- see [LICENSE](LICENSE).

@@ -1,0 +1,8 @@
+# Python -- minimal configuration
+# Auto-detects requirements.txt, zero config needed
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  PYTHON_UNIT_TEST_SHELL: "python -m pytest -v"
+  DOCKER_DAEMON_WORKSPACE: "/tmp/docker-build"

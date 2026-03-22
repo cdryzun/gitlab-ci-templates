@@ -1,0 +1,12 @@
+# Node.js backend (Express/Koa with custom Dockerfile)
+# For backend services that need a custom Dockerfile instead of Nginx
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  CUSTOM_DOCKERFILE: "true"
+  CUSTOM_DOCKERFILE_PATH: "${CI_PROJECT_DIR}/Dockerfile"
+  DOCKER_DAEMON_WORKSPACE: "/tmp/docker-build"
+  DOCKER_WORKSPACE_PREPARE_CMD: "cp -r ${CI_PROJECT_DIR}/package.json ${CI_PROJECT_DIR}/src ."
+  BUILD_SHELL: "mkdir -p dist"
+  NODE_UNIT_TEST_SHELL: "npm test"

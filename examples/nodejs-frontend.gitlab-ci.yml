@@ -1,0 +1,8 @@
+# Node.js frontend (pnpm + Nginx) -- minimal configuration
+# Auto-detects package.json, builds static files, serves via Nginx
+include:
+  - remote: 'https://raw.githubusercontent.com/cdryzun/gitlab-ci-templates/open/templates/Auto-DevOps.gitlab-ci.yml'
+
+variables:
+  BUILD_SHELL: "pnpm run build"
+  PACKAGE_MANAGER: "pnpm"
