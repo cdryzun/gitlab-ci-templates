@@ -51,12 +51,12 @@ function update_deploy_file() {
   old_tag=$(yq e "${DEPLOY_REPO_YAML_TAG}" "${deploy_file}")
   old_tag="${old_tag##*:}"
   if [ -n "${old_tag}" ]; then
-    echo "old value: ${CYELLOW}${old_tag}${CEND}"
-    echo "replacing with: ${CGREEN}${DOCKER_IMAGE_TAG}${CEND}"
+    echo "old value: ${CYELLOW}${old_tag}${CEND}" >&2
+    echo "replacing with: ${CGREEN}${DOCKER_IMAGE_TAG}${CEND}" >&2
     DOCKER_IMAGE_TAG="${DOCKER_IMAGE_TAG}" yq e -i "${DEPLOY_REPO_YAML_TAG} = strenv(DOCKER_IMAGE_TAG)" "${deploy_file}"
-    echo "${Info}verified: $(yq e "${DEPLOY_REPO_YAML_TAG}" "${deploy_file}")"
+    echo "${Info}verified: $(yq e "${DEPLOY_REPO_YAML_TAG}" "${deploy_file}")" >&2
   else
-    echo "${Error}${DEPLOY_REPO_YAML_TAG} is null in ${deploy_file}"
+    echo "${Error}${DEPLOY_REPO_YAML_TAG} is null in ${deploy_file}" >&2
     exit 1
   fi
   echo "${old_tag}"
