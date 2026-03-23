@@ -1,8 +1,3 @@
-# .cd_deploy:
-#   rules:
-#     - if: '$DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true" && $FEAT_DOCKER_IMAGE_BUILD == "true"'
-#       when: manual
-
 .deploy_build: &deploy_build
   image: "${CD_DEPLOY_IMAGE}"
   stage: deploy
@@ -16,6 +11,8 @@
       script_download cd-deploy.${TEMPLATE_CONTEXT}.sh
       chmod +x ./run.sh
       shell_exec ./run.sh
+  after_script:
+    - rm -rf ~/.config/glab-cli || true
   extends:
     - .runner_tag
     - .load_artifacts_env

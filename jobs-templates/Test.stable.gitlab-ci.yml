@@ -11,7 +11,7 @@ unit_test:
     - !reference [ .maven-generate-config, script ]
     - !reference [ .npm-generate-config, script ]
     - !reference [ .alias, script ]
-  allow_failure: true
+  allow_failure: false
   extends:
     - .runner_tag
     - .gitlab_auth_vars

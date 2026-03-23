@@ -2,7 +2,8 @@
 # Lightweight container for Python model libraries
 # Designed to be used as an initContainer mounted to a main container
 
-FROM alpine:latest as py_model
+ARG DOCKER_MIRROR_PREFIX=""
+FROM ${DOCKER_MIRROR_PREFIX}alpine:3.22 as py_model
 
 # Build arguments for metadata
 ARG CI_COMMIT_SHORT_SHA="develop"

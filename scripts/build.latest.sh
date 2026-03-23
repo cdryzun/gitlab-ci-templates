@@ -184,9 +184,8 @@ function docker_build_push(){
     docker tag ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}"
 
     echo "${Info}Pushing Docker images..."
-    # Push with clean output - filter repetitive "Waiting" messages
-    docker push ${DOCKER_IMAGE_NAME} 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
-    docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>&1 | grep -E "digest:|Pushed|Layer already exists|Error" || true
+    docker push ${DOCKER_IMAGE_NAME} 2>&1 | grep -v "^[0-9a-f]*: Waiting" || { echo "${Error}Failed to push ${DOCKER_IMAGE_NAME}"; exit 1; }
+    docker push "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>&1 | grep -v "^[0-9a-f]*: Waiting" || { echo "${Error}Failed to push branch tag"; exit 1; }
     docker rmi -f ${DOCKER_IMAGE_NAME} "${DOCKER_IMAGE_NAME%:*}:${BRANCH_TYPE_LIST[${REMOTE_BRANCH}]}" 2>/dev/null || true
     echo "${Info}Docker images pushed successfully"
 }

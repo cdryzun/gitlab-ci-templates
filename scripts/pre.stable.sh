@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -eo pipefail
 
 for sh in _*.sh
 do
