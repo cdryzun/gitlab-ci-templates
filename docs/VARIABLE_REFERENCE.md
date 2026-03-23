@@ -15,6 +15,7 @@ All variables with their defaults and descriptions. Override any of these in you
 | `GO_ARCH` | `amd64` | Target architecture for Go builds. |
 | `GO_GOPROXY` | _(empty)_ | Custom GOPROXY for Go module downloads. |
 | `GO_GOPRIVATE` | _(empty)_ | GOPRIVATE pattern for bypassing proxy on private modules. |
+| `GO_MODULE_PATH` | _(empty)_ | Subdirectory for Go monorepo builds (e.g., `cmd/api`). |
 | `NODE_OPTIONS` | `--max_old_space_size=4096` | Node.js memory limit during build. |
 | `STATIC_FILE_NAME` | _(empty)_ | Frontend output directory (default: `dist`). Set if your build outputs to a different folder. |
 | `PNPM_LOCKFILE_DISABLE` | `false` | Skip pnpm lockfile check during install. |
@@ -67,7 +68,9 @@ All variables with their defaults and descriptions. Override any of these in you
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DEPLOY_REPO` | _(required)_ | Git URL of the Helm values repository. |
-| `DEPLOY_VALUE_FILE` | `values.yaml` | Values file to update in the charts repo. |
+| `DEPLOY_VALUE_FILE` | `values.yaml` | Values file(s) to update. Supports comma-separated list for multiple files. |
+| `DEPLOY_MODE` | `helm` | Deploy mode: `helm` (default) or `kustomize`. |
+| `KUSTOMIZE_IMAGE_NAME` | `${IMG_NAME}` | Image name in kustomization.yaml to update (Kustomize mode only). |
 | `DEPLOY_REPO_YAML_TAG` | `.image.tag` | YAML path to the image tag field (yq syntax). |
 | `DEPLOY_REPO_PROJ` | `${CI_PROJECT_NAME}` | Directory name in the charts repo for this project. |
 | `DEPLOY_COMMIT_MESSAGE` | `chore: helm values updated by gitlab-ci pipeline` | Commit message for auto-updates. |
@@ -84,6 +87,8 @@ All variables with their defaults and descriptions. Override any of these in you
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DOCKER_IMAGE_SCAN_IMAGE` | `false` | Enable container vulnerability scanning. |
+| `TRIVY_SEVERITY` | `HIGH,CRITICAL` | Severity levels to report (Trivy). |
+| `TRIVY_IGNORE_UNFIXED` | `true` | Ignore vulnerabilities without available fix. |
 | `ENFORCE_EXIT` | `false` | Fail pipeline on medium+ severity vulnerabilities. |
 
 ## Builder Images

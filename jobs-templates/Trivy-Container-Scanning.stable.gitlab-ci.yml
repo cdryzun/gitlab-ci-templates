@@ -1,9 +1,4 @@
 
-# .trivy_scan_rules:
-#   rules:
-#     - if: '$DOCKER_IMAGE_SCAN_IMAGE == "true"
-#       && $DOCKER_IMAGE_SCAN_SERVER && $DOCKER_IMAGE_BUILD == "true"'
-
 trivy_scan:
   stage: scan
   image: ${TOOLBOX_IMAGE}
@@ -11,7 +6,6 @@ trivy_scan:
     - !reference [ .utils_shell_function, script ]
     - !reference [ .alias, script ]
     - !reference [ .docker_login, script ]
-#  allow_failure: true
   extends:
     - .runner_tag
     - .harbor_auth
@@ -22,24 +16,49 @@ trivy_scan:
     - |
       script_download _utils.${TEMPLATE_CONTEXT}.sh _utils.sh
     - |
-      # Execute image scan
-      set -eo
+      set -eo pipefail
       set +x
-      # Load utility classes and module scripts
       for sh in _*.sh;do
         [[ -e "$sh" ]] || break
         source "${sh}"
       done
 
-      function scan_image(){
-        if [ ${ENFORCE_EXIT} == "true" ];then
-        trivy client --remote ${DOCKER_IMAGE_SCAN_SERVER} --ignore-unfixed \
-        --severity HIGH,CRITICAL ${1} --exit-code 1
-        else
-        trivy client --remote ${DOCKER_IMAGE_SCAN_SERVER} --ignore-unfixed \
-        --severity HIGH,CRITICAL ${1}
-        fi
-      }
-      scan_image "${DOCKER_IMAGE_NAME}"
+      TRIVY_SEVERITY="${TRIVY_SEVERITY:-HIGH,CRITICAL}"
+      TRIVY_IGNORE_UNFIXED_FLAG=""
+      if [ "${TRIVY_IGNORE_UNFIXED:-true}" == "true" ]; then
+        TRIVY_IGNORE_UNFIXED_FLAG="--ignore-unfixed"
+      fi
+
+      TRIVY_EXIT_CODE=0
+      if [ "${ENFORCE_EXIT}" == "true" ]; then
+        TRIVY_EXIT_CODE=1
+      fi
+
+      echo "${Info}Scanning ${DOCKER_IMAGE_NAME} (severity: ${TRIVY_SEVERITY})"
+
+      # Table output for CI log
+      trivy client --remote ${DOCKER_IMAGE_SCAN_SERVER} \
+        ${TRIVY_IGNORE_UNFIXED_FLAG} \
+        --severity ${TRIVY_SEVERITY} \
+        --exit-code ${TRIVY_EXIT_CODE} \
+        "${DOCKER_IMAGE_NAME}" || SCAN_FAILED=$?
+
+      # JSON report for GitLab artifact
+      trivy client --remote ${DOCKER_IMAGE_SCAN_SERVER} \
+        ${TRIVY_IGNORE_UNFIXED_FLAG} \
+        --severity ${TRIVY_SEVERITY} \
+        --format json \
+        --output trivy-report.json \
+        "${DOCKER_IMAGE_NAME}" 2>/dev/null || true
+
+      if [ "${SCAN_FAILED:-0}" -ne 0 ]; then
+        echo "${Error}Vulnerabilities found exceeding threshold"
+        exit 1
+      fi
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - trivy-report.json
   rules:
     !reference [ .image_scan_rules, rules ]
