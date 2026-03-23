@@ -42,9 +42,6 @@ git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
 git config --global user.name "${GIT_AUTO_COMMIT_NAME}"
 git clone --branch "${REMOTE_BRANCH}" --depth 1 "${_SCHEME}://${GIT_AUTO_COMMIT_NAME}:${GITLAB_REPO_COMMIT_TOKEN}@${_DEPLOY_REPO}.git" repo
 
-# Determine deploy mode: kustomize or helm (default)
-DEPLOY_MODE="${DEPLOY_MODE:-helm}"
-
 # Helper: update image tag in a single values file (Helm mode)
 function update_helm_values() {
   local values_file="${1}"
@@ -108,9 +105,9 @@ if [ ${DEPLOY_REPO_PROJ_NUM} -gt 1 ];then
 else
     cd "${CI_PROJECT_DIR}/repo/${_DEPLOY_REPO_PROJ}"
 
-    if [ "${DEPLOY_MODE}" == "kustomize" ] && [ -f kustomization.yaml ]; then
-      # Kustomize mode
-      echo "${Info}Kustomize mode detected"
+    if [ -f kustomization.yaml ]; then
+      # Auto-detected: Kustomize project
+      echo "${Info}Kustomize project detected (kustomization.yaml found)"
       update_kustomize_image
       dotenv DEPLOY_OLD_IMAGE "${_DEPLOY_REPO_PROJ}___+++kustomize"
     else
