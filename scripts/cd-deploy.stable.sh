@@ -42,36 +42,24 @@ git config --global user.email "${GIT_AUTO_COMMIT_EMAIL}"
 git config --global user.name "${GIT_AUTO_COMMIT_NAME}"
 git clone --branch "${REMOTE_BRANCH}" --depth 1 "${_SCHEME}://${GIT_AUTO_COMMIT_NAME}:${GITLAB_REPO_COMMIT_TOKEN}@${_DEPLOY_REPO}.git" repo
 
-# Helper: update image tag in a single values file (Helm mode)
-function update_helm_values() {
-  local values_file="${1}"
+# Update DEPLOY_VALUE_FILE with new image tag via yq
+# Works for any YAML structure: Helm values.yaml, Kustomize kustomization.yaml, etc.
+# The target field is specified by DEPLOY_REPO_YAML_TAG (e.g., ".image.tag")
+function update_deploy_file() {
+  local deploy_file="${1}"
   local old_tag
-  old_tag=$(yq e "${DEPLOY_REPO_YAML_TAG}" "${values_file}")
+  old_tag=$(yq e "${DEPLOY_REPO_YAML_TAG}" "${deploy_file}")
   old_tag="${old_tag##*:}"
   if [ -n "${old_tag}" ]; then
     echo "old value: ${CYELLOW}${old_tag}${CEND}"
     echo "replacing with: ${CGREEN}${DOCKER_IMAGE_TAG}${CEND}"
-    DOCKER_IMAGE_TAG="${DOCKER_IMAGE_TAG}" yq e -i "${DEPLOY_REPO_YAML_TAG} = strenv(DOCKER_IMAGE_TAG)" "${values_file}"
-    echo "${Info}verified: $(yq e "${DEPLOY_REPO_YAML_TAG}" "${values_file}")"
+    DOCKER_IMAGE_TAG="${DOCKER_IMAGE_TAG}" yq e -i "${DEPLOY_REPO_YAML_TAG} = strenv(DOCKER_IMAGE_TAG)" "${deploy_file}"
+    echo "${Info}verified: $(yq e "${DEPLOY_REPO_YAML_TAG}" "${deploy_file}")"
   else
-    echo "${Error}${DEPLOY_REPO_YAML_TAG} is null in ${values_file}"
+    echo "${Error}${DEPLOY_REPO_YAML_TAG} is null in ${deploy_file}"
     exit 1
   fi
   echo "${old_tag}"
-}
-
-# Helper: update image tag via Kustomize
-function update_kustomize_image() {
-  local img_name="${KUSTOMIZE_IMAGE_NAME:-${IMG_NAME}}"
-  echo "old image: ${CYELLOW}${img_name}${CEND}"
-  echo "new tag: ${CGREEN}${DOCKER_IMAGE_TAG}${CEND}"
-  if command -v kustomize >/dev/null 2>&1; then
-    kustomize edit set image "${img_name}:${DOCKER_IMAGE_TAG}"
-  else
-    # Fallback: use yq to edit kustomization.yaml
-    yq e -i "(.images[] | select(.name == \"${img_name}\")).newTag = \"${DOCKER_IMAGE_TAG}\"" kustomization.yaml
-  fi
-  echo "${Info}verified: $(grep -A2 "${img_name}" kustomization.yaml)"
 }
 
 # Replace image tag for project and mark old image for rollback stage
@@ -105,24 +93,17 @@ if [ ${DEPLOY_REPO_PROJ_NUM} -gt 1 ];then
 else
     cd "${CI_PROJECT_DIR}/repo/${_DEPLOY_REPO_PROJ}"
 
-    if [ -f kustomization.yaml ]; then
-      # Auto-detected: Kustomize project
-      echo "${Info}Kustomize project detected (kustomization.yaml found)"
-      update_kustomize_image
-      dotenv DEPLOY_OLD_IMAGE "${_DEPLOY_REPO_PROJ}___+++kustomize"
-    else
-      # Helm mode: support comma-separated multiple value files
-      IFS=',' read -ra _VALUE_FILES <<< "${DEPLOY_VALUE_FILE}"
-      oldImage=""
-      for _vf in "${_VALUE_FILES[@]}"; do
-        _vf=$(echo "${_vf}" | xargs)  # trim whitespace
-        test -f "${_vf}" || { echo "${Error}values file not found: ${_vf}"; exit 1; }
-        echo "${Info}Updating ${_vf}..."
-        oldImage=$(update_helm_values "${_vf}")
-      done
-      cd "${CI_PROJECT_DIR}"
-      dotenv DEPLOY_OLD_IMAGE "${_DEPLOY_REPO_PROJ}___+++${oldImage}"
-    fi
+    # Support comma-separated multiple deploy files
+    IFS=',' read -ra _DEPLOY_FILES <<< "${DEPLOY_VALUE_FILE}"
+    oldImage=""
+    for _df in "${_DEPLOY_FILES[@]}"; do
+      _df=$(echo "${_df}" | xargs)
+      test -f "${_df}" || { echo "${Error}deploy file not found: ${_df}"; exit 1; }
+      echo "${Info}Updating ${_df} [${DEPLOY_REPO_YAML_TAG}]..."
+      oldImage=$(update_deploy_file "${_df}")
+    done
+    cd "${CI_PROJECT_DIR}"
+    dotenv DEPLOY_OLD_IMAGE "${_DEPLOY_REPO_PROJ}___+++${oldImage}"
 fi
 
 # Detect if current file has changes, commit and push after changes

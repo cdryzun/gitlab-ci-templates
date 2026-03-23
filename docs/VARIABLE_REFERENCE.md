@@ -68,8 +68,7 @@ All variables with their defaults and descriptions. Override any of these in you
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DEPLOY_REPO` | _(required)_ | Git URL of the Helm values repository. |
-| `DEPLOY_VALUE_FILE` | `values.yaml` | Values file(s) to update. Supports comma-separated list for multiple files. |
-| `KUSTOMIZE_IMAGE_NAME` | `${IMG_NAME}` | Image name in kustomization.yaml (auto-detected when kustomization.yaml exists). |
+| `DEPLOY_VALUE_FILE` | `values.yaml` | YAML file(s) to update. Supports comma-separated list. Works with any YAML structure (Helm values, Kustomize, etc). |
 | `DEPLOY_REPO_YAML_TAG` | `.image.tag` | YAML path to the image tag field (yq syntax). |
 | `DEPLOY_REPO_PROJ` | `${CI_PROJECT_NAME}` | Directory name in the charts repo for this project. |
 | `DEPLOY_COMMIT_MESSAGE` | `chore: helm values updated by gitlab-ci pipeline` | Commit message for auto-updates. |
