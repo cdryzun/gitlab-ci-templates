@@ -271,14 +271,18 @@ sequenceDiagram
     Argo->>K8s: 同步部署
 ```
 
-**分支与环境的映射关系：**
+**分支到环境的映射：**
 
-| 代码分支 | 部署目标 | 行为 |
-|---------|---------|------|
-| `feat/*` / `feature/*` | dev 环境 | 可选自动部署 |
-| `dev` | dev 环境 | 自动部署 |
-| `sit` | sit 环境 | 自动部署 |
-| `prd` / `v*.*.*` | prd 环境 | 创建 MR，需审批后合并 |
+CI 推送到 charts 仓库的对应分支，ArgoCD 独立追踪每个分支。
+
+| 代码分支 | Charts 分支 | 行为 |
+|---------|-----------|------|
+| `feat/*` / `feature/*` | `dev` | 可选自动部署（设置 `FEAT_CD_AUTO_DEPLOY=true`） |
+| `dev` | `dev` | 自动部署 |
+| `sit` | `sit` | 自动部署 |
+| `prd` / `v*.*.*` | `prd` | 创建 MR，需审批后合并（不直接 push） |
+
+覆盖目标分支：`CUSTOM_REMOTE_SIT_BRANCH`、`CUSTOM_REMOTE_PRD_BRANCH`。
 
 ---
 

@@ -61,7 +61,7 @@
 .develop_deploy:
   rules:
     - if: '($CI_COMMIT_REF_NAME =~ /^(vk|dev|feat)((-|_)[-_0-9a-z]{1,12})?$/ || $DEPLOY_ENABLE == "true")
-        && $DEPLOY_REPO && DEPLOY_REPO_PROJ'
+        && $DEPLOY_REPO && $DEPLOY_REPO_PROJ'
       variables:
         REMOTE_BRANCH: "dev"
 
@@ -121,9 +121,3 @@
         && $FEAT_CD_AUTO_DEPLOY == "true"'
     - if: '$CI_COMMIT_REF_NAME !~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
         && $DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true"'
-    - if: '$CI_COMMIT_REF_NAME !~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
-        && $DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true"'
-      when: manual
-    - if: '$CI_COMMIT_REF_NAME =~ /^(vk|feat|bugfix|hotfix)((-|_)[-_0-9a-z]{1,32})?(\/[-_0-9a-z]+)?$/
-        && $DEPLOY_REPO && $DOCKER_IMAGE_BUILD == "true" && $FEAT_DOCKER_IMAGE_BUILD == "true"'
-      when: manual

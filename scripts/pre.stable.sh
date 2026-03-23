@@ -46,13 +46,22 @@ if [[ "${RELEASE_BUILD:-false}" == [Tt][Rr][Uu][Ee] ]];then
   dotenv BUILD_ENV prd
   dotenv REMOTE_BRANCH prd
 else
-  if [[ "${_CI_COMMIT_REF_NAME}" == 'sit' || "${_CI_COMMIT_REF_NAME}" == 'prd' ]];then
+  if [[ "${_CI_COMMIT_REF_NAME}" == 'sit' ]];then
     if [[ -n "${_CUSTOM_REMOTE_SIT_BRANCH}" ]];then
       dotenv BUILD_ENV ${_CUSTOM_REMOTE_SIT_BRANCH}
       dotenv REMOTE_BRANCH ${_CUSTOM_REMOTE_SIT_BRANCH}
     else
-      dotenv BUILD_ENV ${_CI_COMMIT_REF_NAME}
-      dotenv REMOTE_BRANCH ${_CI_COMMIT_REF_NAME}
+      dotenv BUILD_ENV sit
+      dotenv REMOTE_BRANCH sit
+    fi
+    dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}-${BUILD_TIME}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
+  elif [[ "${_CI_COMMIT_REF_NAME}" == 'prd' ]];then
+    if [[ -n "${_CUSTOM_REMOTE_PRD_BRANCH}" ]];then
+      dotenv BUILD_ENV ${_CUSTOM_REMOTE_PRD_BRANCH}
+      dotenv REMOTE_BRANCH ${_CUSTOM_REMOTE_PRD_BRANCH}
+    else
+      dotenv BUILD_ENV prd
+      dotenv REMOTE_BRANCH prd
     fi
     dotenv DOCKER_IMAGE_TAG "${_CI_COMMIT_REF_NAME}-${BUILD_TIME}-${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
   elif [[ ${_CI_COMMIT_REF_NAME} =~ ^prd-.*+$ ]];then

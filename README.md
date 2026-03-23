@@ -229,14 +229,18 @@ sequenceDiagram
     Argo->>K8s: sync deployment
 ```
 
-**Environment branching:**
+**Branch-to-environment mapping:**
 
-| Source Branch | Deploy Target | Behavior |
+CI pushes to the corresponding branch in the charts repo. ArgoCD tracks each branch independently.
+
+| Source Branch | Charts Branch | Behavior |
 |---|---|---|
-| `feat/*` / `feature/*` | dev | Auto-deploy (optional) |
-| `dev` | dev | Auto-deploy |
-| `sit` | sit | Auto-deploy |
-| `prd` / `v*.*.*` | prd | Creates MR for approval |
+| `feat/*` / `feature/*` | `dev` | Auto-deploy (set `FEAT_CD_AUTO_DEPLOY=true`) |
+| `dev` | `dev` | Auto-deploy |
+| `sit` | `sit` | Auto-deploy |
+| `prd` / `v*.*.*` | `prd` | Creates MR for approval (never direct push) |
+
+Override target branch: `CUSTOM_REMOTE_SIT_BRANCH`, `CUSTOM_REMOTE_PRD_BRANCH`.
 
 ---
 
