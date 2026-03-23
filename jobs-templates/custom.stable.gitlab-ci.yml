@@ -1,7 +1,7 @@
 include:
   - local: "vars/*.stable.gitlab-ci.yml"
   - local: "utils/*.stable.gitlab-ci.yml"
-  - local: "jobs-templates/SonarQube.gitlab-ci.yml"
+  - local: "jobs-templates/SonarQube.stable.gitlab-ci.yml"
 
 variables:
   extends: .default_vars

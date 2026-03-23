@@ -48,7 +48,7 @@ case ${CMD} in
     create)
     ARGOCD_OPTS="--self-heal --auto-prune --upsert --sync-policy automated  --grpc-web "
     # If parameter 6 is provided, i.e. single application name, operate only on this single application, otherwise operate on all applications
-    if [ $6 ];then
+    if [ -n "${6:-}" ];then
         app=$6
         argocd app ${CMD} ${app}-${ARGO_ENV} --repo ${REPO} --path ${app} --dest-namespace ${NAMESPACE} --dest-server ${CLUSTER}  --project ${ARGO_PROJECT} --revision ${BRANCH} ${ARGOCD_OPTS}
     else
@@ -61,7 +61,7 @@ case ${CMD} in
     sync)
     ARGOCD_OPTS="--async --force  --grpc-web "
     # If parameter 6 is provided, i.e. single application name, operate only on this single application, otherwise operate on all applications
-    if [ $6 ];then
+    if [ -n "${6:-}" ];then
         app=$6
         argocd app set ${app}-${ARGO_ENV} -p podAnnotations.commitUser=$(date +%Y-%m-%d-%H-%M-%S)  --grpc-web
         argocd app ${CMD} ${app}-${ARGO_ENV} --revision ${BRANCH} ${ARGOCD_OPTS}
@@ -76,7 +76,7 @@ case ${CMD} in
     delete)
     ARGOCD_OPTS=" --grpc-web "
     # If parameter 6 is provided, i.e. single application name, operate only on this single application, otherwise operate on all applications
-    if [ $6 ];then
+    if [ -n "${6:-}" ];then
         app=$6
         argocd app ${CMD} ${app}-${ARGO_ENV} ${ARGOCD_OPTS} || argocd app ${CMD} ${app} ${ARGOCD_OPTS} --cascade=false
     else
