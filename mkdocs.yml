@@ -72,6 +72,7 @@ nav:
     - ArgoCD Integration: cd/04-argocd-gitops-integration.md
     - CI/CD Integration: cd/05-cicd-integration.md
     - Multi-Project: cd/06-multi-project-gitops.md
+    - Branching & Release: cd/07-branching-and-release.md
   - Troubleshooting:
     - Overview: troubleshooting/README.md
     - PVE + K3s NodePort: troubleshooting/networking/pve-k3s-nodeport-compatibility.md
