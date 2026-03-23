@@ -184,28 +184,6 @@ function docker_secret(){
     fi
 }
 
-function docker_base_pull_latest(){
-IFS='
-'
-    # get arg load env
-    for ARG in $(cat Dockerfile |grep '^ARG'|grep '_VERSION'|sed "s#ARG##g"|tr -d ' "');do
-        export ${ARG}
-    done
-
-    # pull dockerfile from images (silent mode)
-    for FROM in $(cat Dockerfile |grep ^FROM);do
-        if [[ "${FROM}" =~ '--platform' ]];then
-            IMAGE_NAME=$(echo ${FROM}|awk '{print $3}')
-        else
-            IMAGE_NAME=$(echo ${FROM}|awk '{print $2}')
-        fi
-
-        if [ "${IMAGE_NAME}" != 'scratch' ];then
-            docker pull "${IMAGE_NAME}" >/dev/null 2>&1 || echo "${Tip}Failed to pull ${IMAGE_NAME}, using cached image"
-        fi
-    done
-}
-
 function docker_workspace_prepare(){
     # Execute Docker build workspace pre-preparation command
     # Execute in DOCKER_DAEMON_WORKSPACE directory, used to prepare dependency configuration files needed for build
@@ -252,9 +230,7 @@ function docker_build_push(){
     fi
     # Get current Dockerfile secret id
     docker_secret
-    # Pull latest base image #58
-    docker_base_pull_latest
-    # Disable BuildKit for single-architecture builds (requires buildx plugin)
+    # Build Docker image
     echo "${Info}Building Docker image: ${DOCKER_IMAGE_NAME}"
     DOCKER_BUILDKIT=0 docker build ${DOCKER_SECRET_ARGS}  \
     -t "${DOCKER_IMAGE_NAME}" . \

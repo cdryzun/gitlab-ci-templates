@@ -10,30 +10,9 @@ function shell_exec(){
     bash -euo pipefail -c "${1}"
 }
 
-echo=echo
-for cmd in `echo /bin/echo`; do
-$cmd >/dev/null 2>&1 || continue
-if ! $cmd -e "" | grep -qE '^-e'; then
-    echo=$cmd
-    break
-fi
-done
-
 # Terminal colors
-export CSI=$($echo -e "\033[")
-export CEND="${CSI}0m"
-export CDGREEN="${CSI}32m"
-export CRED="${CSI}1;31m"
-export CGREEN="${CSI}1;32m"
-export CYELLOW="${CSI}1;33m"
-export CBLUE="${CSI}1;34m"
-export CMAGENTA="${CSI}1;35m"
-export CCYAN="${CSI}1;36m"
-export CSUCCESS="$CDGREEN"
-export CFAILURE="$CRED"
-export CQUESTION="$CMAGENTA"
-export CWARNING="$CYELLOW"
-export CMSG="$CCYAN"
+CSI=$(printf '\033[')
+export CEND="${CSI}0m" CRED="${CSI}1;31m" CGREEN="${CSI}1;32m" CYELLOW="${CSI}1;33m"
 export Info="${CGREEN}[Info]: ${CEND}"
 export Error="${CRED}[Error]: ${CEND}"
 export Tip="${CYELLOW}[Note]: ${CEND}"

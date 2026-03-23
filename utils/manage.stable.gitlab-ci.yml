@@ -45,16 +45,6 @@
       # Load shell execution function to prevent alias invalidation issue, depends on bash interpreter usage
       # Usage example: shell_exec "${BUILD_SHELL}"
     - |
-      # Load font color output class
-      echo=echo
-      for cmd in `echo /bin/echo`; do
-        $cmd >/dev/null 2>&1 || continue
-        if ! $cmd -e "" | grep -qE '^-e'; then
-          echo=$cmd
-          break
-        fi
-      done
-    - |
       # Download script from GitHub raw URL
       # Usage: script_download _utils.stable.sh _utils.sh (optional, defaults to run.sh)
       function script_download(){

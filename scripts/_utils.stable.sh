@@ -10,30 +10,9 @@ function shell_exec(){
     bash -euo pipefail -c "${1}"
 }
 
-echo=echo
-for cmd in `echo /bin/echo`; do
-$cmd >/dev/null 2>&1 || continue
-if ! $cmd -e "" | grep -qE '^-e'; then
-    echo=$cmd
-    break
-fi
-done
-
 # Terminal colors
-export CSI=$($echo -e "\033[")
-export CEND="${CSI}0m"
-export CDGREEN="${CSI}32m"
-export CRED="${CSI}1;31m"
-export CGREEN="${CSI}1;32m"
-export CYELLOW="${CSI}1;33m"
-export CBLUE="${CSI}1;34m"
-export CMAGENTA="${CSI}1;35m"
-export CCYAN="${CSI}1;36m"
-export CSUCCESS="$CDGREEN"
-export CFAILURE="$CRED"
-export CQUESTION="$CMAGENTA"
-export CWARNING="$CYELLOW"
-export CMSG="$CCYAN"
+CSI=$(printf '\033[')
+export CEND="${CSI}0m" CRED="${CSI}1;31m" CGREEN="${CSI}1;32m" CYELLOW="${CSI}1;33m"
 export Info="${CGREEN}[Info]: ${CEND}"
 export Error="${CRED}[Error]: ${CEND}"
 export Tip="${CYELLOW}[Note]: ${CEND}"
@@ -184,31 +163,3 @@ function depthProjectExec() {
   fi
 }
 
-# Replace environment prefixes in URLs (sample implementation, customize as needed)
-function convert_url() {
-  local url=$1
-  # Users can configure their own internal URL prefix
-  local internalURL="${INTERNAL_URL_PREFIX:-http://internal.example.com}"
-  local baseURL="${BASE_URL:-https://api.example.com}"
-
-  # Define mapping between environments and internal addresses
-  declare -A envDict
-  envDict=(
-    ["PRE"]="${internalURL}/pre/"
-    ["TEST"]="${internalURL}/test/"
-    ["PROD"]="${internalURL}/prod/"
-  )
-
-  # Check which environment the URL belongs to and replace the prefix
-  for env in "PRE" "TEST" "PROD"; do
-    if [[ "${url}" == *"${env}"* ]]; then
-      # Use | as sed separator to avoid conflict with / in URL
-      echo "${url}" | sed "s|${baseURL}/${env}/|${envDict[$env]}|g"
-      return 0
-    fi
-  done
-
-  # If URL doesn't match any environment, return original URL
-  echo "${url}"
-  return 0
-}
