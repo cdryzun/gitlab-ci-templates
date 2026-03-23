@@ -29,8 +29,13 @@ function unit_test() {
       # Maven project
       shell_exec "${_JAVA_UNIT_TEST_SHELL:-mvn test}"
     elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
-      # Gradle project
-      shell_exec "${_JAVA_UNIT_TEST_SHELL:-gradle test}"
+      # Gradle project: prefer wrapper
+      if [ -f gradlew ]; then
+        chmod +x gradlew
+        shell_exec "${_JAVA_UNIT_TEST_SHELL:-./gradlew test}"
+      else
+        shell_exec "${_JAVA_UNIT_TEST_SHELL:-gradle test}"
+      fi
     fi
   else
     shell_exec "${UNIT_TEST_CMD[${PROJECT_TYPE}]}"

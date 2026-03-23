@@ -2,8 +2,6 @@
 .unit_test_rules:
   rules:
     - if: '$UNIT_TEST_ENABLE == "true"'
-      # variables:
-      #   TEST_IMAGE: "${TEST_IMAGE}"
 
 unit_test:
   stage: test
@@ -25,5 +23,18 @@ unit_test:
       script_download unit-test.${TEMPLATE_CONTEXT}.sh
       chmod +x ./run.sh
       shell_exec ./run.sh
+  artifacts:
+    when: always
+    expire_in: 14 days
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+        - target/failsafe-reports/TEST-*.xml
+        - build/test-results/test/TEST-*.xml
+        - coverage/report.xml
+    paths:
+      - target/surefire-reports/
+      - build/test-results/
+      - coverage/
   rules:
     !reference [ .unit_test_rules, rules ]

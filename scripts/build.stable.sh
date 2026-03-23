@@ -67,8 +67,14 @@ EOF
 
                 shell_exec "${BUILD_SHELL}"
             elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
-                # Gradle project
-                shell_exec "${BUILD_SHELL-gradle clean build -x test}"
+                # Gradle project: prefer wrapper over global gradle
+                if [ -f gradlew ]; then
+                    chmod +x gradlew
+                    GRADLE_CMD="./gradlew"
+                else
+                    GRADLE_CMD="gradle"
+                fi
+                shell_exec "${BUILD_SHELL-${GRADLE_CMD} clean build -x test}"
             else
                 echo "${Error}Maven or Gradle build file not found"
                 exit 1
