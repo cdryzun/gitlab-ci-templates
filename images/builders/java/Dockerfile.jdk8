@@ -1,7 +1,7 @@
 # Java Builder Image - JDK 8
 # For Maven/Gradle builds with SonarQube scanner
 
-FROM eclipse-temurin:8-jdk-jammy
+FROM eclipse-temurin:25-jdk-jammy
 
 LABEL maintainer="cdryzun"
 LABEL description="Java builder image with Maven, Gradle and SonarQube scanner"
