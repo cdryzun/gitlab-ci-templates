@@ -60,7 +60,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/builders/java
           file: images/builders/java/Dockerfile.jdk${{ matrix.jdk }}
@@ -97,7 +97,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/builders/nodejs
           file: images/builders/nodejs/Dockerfile
@@ -136,7 +136,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/builders/python
           file: images/builders/python/Dockerfile
@@ -175,7 +175,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/builders/golang
           file: images/builders/golang/Dockerfile
@@ -246,7 +246,7 @@ jobs:
           install: true
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/builders/golang-nodejs
           file: images/builders/golang-nodejs/Dockerfile
@@ -283,7 +283,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/builders/toolbox
           file: images/builders/toolbox/Dockerfile
@@ -324,7 +324,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/runtimes/nginx
           file: images/runtimes/nginx/Dockerfile
@@ -362,7 +362,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/runtimes/openjdk
           file: images/runtimes/openjdk/Dockerfile.jdk${{ matrix.jdk }}
@@ -395,7 +395,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: images/runtimes/alpine-base
           file: images/runtimes/alpine-base/Dockerfile
