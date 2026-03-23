@@ -230,9 +230,8 @@ function docker_build_push(){
     fi
     # Get current Dockerfile secret id
     docker_secret
-    # Build Docker image
     echo "${Info}Building Docker image: ${DOCKER_IMAGE_NAME}"
-    DOCKER_BUILDKIT=0 docker build ${DOCKER_SECRET_ARGS}  \
+    docker build ${DOCKER_SECRET_ARGS}  \
     -t "${DOCKER_IMAGE_NAME}" . \
     "${DOCKER_BUILD_FLAGS}" \
     --build-arg DOCKER_MIRROR_PREFIX="${DOCKER_MIRROR_PREFIX:-}" \

@@ -107,7 +107,7 @@
   # feat | hotfix | bugfix feature branches whether to build docker image, disabled by default
   FEAT_DOCKER_IMAGE_BUILD: "false"
   # Extra parameters added during docker build, such as "--no-cache" to build without cache, multiple parameters separated by space
-  DOCKER_BUILD_FLAGS: '--no-cache'
+  DOCKER_BUILD_FLAGS: ''
   # Docker Hub mirror prefix for accelerated image pulls (e.g., "proxyhub.example.com/")
   # Must include trailing slash. Leave empty to pull directly from Docker Hub.
   DOCKER_MIRROR_PREFIX: ""

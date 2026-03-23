@@ -55,12 +55,10 @@
         if [ -n "${CI_JOB_TOKEN:-}" ]; then
           _auth_header="JOB-TOKEN: ${CI_JOB_TOKEN}"
         fi
-        curl -fsSL ${_auth_header:+-H "${_auth_header}"} "${TEMPLATE_REPO_RAW_URL}/scripts/${script_name}" -o "${output_name}"
+        curl --retry 3 --retry-delay 2 --max-time 30 -fsSL ${_auth_header:+-H "${_auth_header}"} "${TEMPLATE_REPO_RAW_URL}/scripts/${script_name}" -o "${output_name}"
         set -x
       }
     - |
-      # Download dockerfile template
-      # Usage: dockerfile_download Dockerfile.stable.sh Dockerfile.stable.sh
       function dockerfile_download(){
         set +x
         local dockerfile_name="${1}"
@@ -69,6 +67,6 @@
         if [ -n "${CI_JOB_TOKEN:-}" ]; then
           _auth_header="JOB-TOKEN: ${CI_JOB_TOKEN}"
         fi
-        curl -fsSL ${_auth_header:+-H "${_auth_header}"} "${TEMPLATE_REPO_RAW_URL}/dockerfile/${dockerfile_name}" -o "${DOCKER_DAEMON_WORKSPACE}/${output_name}"
+        curl --retry 3 --retry-delay 2 --max-time 30 -fsSL ${_auth_header:+-H "${_auth_header}"} "${TEMPLATE_REPO_RAW_URL}/dockerfile/${dockerfile_name}" -o "${DOCKER_DAEMON_WORKSPACE}/${output_name}"
         set -x
       }

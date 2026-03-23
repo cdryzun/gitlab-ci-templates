@@ -169,7 +169,7 @@ function docker_build_push(){
 
     # Disable BuildKit for single-architecture builds (requires buildx plugin)
     echo "${Info}Building Docker image: ${DOCKER_IMAGE_NAME}"
-    DOCKER_BUILDKIT=0 docker image build \
+    docker build \
     -t "${DOCKER_IMAGE_NAME}" . \
     "${DOCKER_BUILD_FLAGS}" \
     --build-arg DOCKER_MIRROR_PREFIX="${DOCKER_MIRROR_PREFIX:-}" \
