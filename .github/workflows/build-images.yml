@@ -43,7 +43,7 @@ jobs:
         jdk: ['8', '11', '17', '21']
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && (github.event.inputs.push != 'false') }}
@@ -80,7 +80,7 @@ jobs:
         node: ['20', '22', '24']
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && (github.event.inputs.push != 'false') }}
@@ -119,7 +119,7 @@ jobs:
         python: ['3.11', '3.12', '3.13']
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && (github.event.inputs.push != 'false') }}
@@ -158,7 +158,7 @@ jobs:
         go: ['1.22', '1.23', '1.24']
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && (github.event.inputs.push != 'false') }}
@@ -225,7 +225,7 @@ jobs:
             node: '25'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Login FIRST so credentials are available for buildx
       - name: Login to GitHub Container Registry
@@ -266,7 +266,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && (github.event.inputs.push != 'false') }}
@@ -307,7 +307,7 @@ jobs:
         nginx: ['1.24', '1.27']
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && (github.event.inputs.push != 'false') }}
@@ -345,7 +345,7 @@ jobs:
         jdk: ['8', '11', '17', '21']
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && (github.event.inputs.push != 'false') }}
@@ -378,7 +378,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && (github.event.inputs.push != 'false') }}
